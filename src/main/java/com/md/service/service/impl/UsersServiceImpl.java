@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements UsersService {
 
     @Resource
-    private RedisTemplate<String,Object> redisTemplate;;
+    private RedisTemplate<String,Object> redisTemplate;
 
     @Resource
     private AliSmsSingleSender aliSmsSingleSender;
