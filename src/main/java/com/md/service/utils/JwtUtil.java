@@ -1,15 +1,19 @@
 package com.md.service.utils;
 
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import javax.xml.bind.DatatypeConverter;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -65,5 +69,36 @@ public class JwtUtil {
         return result;
     }
 
+    public String getUid(String token) {
+        if(StringUtils.isBlank(token)){
+            return null;
+        }
+        Claims claims = parseJWT(token);
+        if(claims==null){
+            return null;
+        }
+        return claims.get("user_no", String.class);
+    }
+
+    private Claims parseJWT(String token) {
+        Claims claims = null;
+        try {
+            if (StringUtils.isNotBlank(token)) {
+                //解析jwt
+                String key = Base64.getEncoder().encodeToString(secretKey.getBytes());
+                claims = Jwts.parser().setSigningKey(key)
+                        .parseClaimsJws(token).getBody();
+            }else {
+                log.warn("token is empty!");
+            }
+        } catch (Exception e) {
+            log.error("token parse failed | cause:", e);
+        }
+        return claims;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(UUID.randomUUID().toString().toLowerCase().replaceAll("-", ""));
+    }
 
 }
