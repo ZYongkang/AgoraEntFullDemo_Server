@@ -17,7 +17,7 @@
     <properties>
         <java.version>1.8</java.version>
         <swagger.version>2.9.2</swagger.version>
-        <spring-cloud.version>Greenwich.SR3</spring-cloud.version>
+        <spring-cloud.version>Hoxton.SR1</spring-cloud.version>
     </properties>
 
     <dependencies>
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.14.8</version>
+            <version>1.18.24</version>
         </dependency>
 
         <dependency>
@@ -158,11 +158,11 @@
 <!--            <type>java-source</type>-->
 <!--        </dependency>-->
 
-        <dependency>
-            <groupId>io.agora.rtm</groupId>
-            <artifactId>agora-rtm-sdk</artifactId>
-            <version>1.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.agora.rtm</groupId>-->
+<!--            <artifactId>agora-rtm-sdk</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
 
 
         <dependency>
@@ -246,6 +246,39 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.easemob.im</groupId>
+            <artifactId>im-sdk-core</artifactId>
+            <version>0.5.9-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-parameter-names</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-consul-discovery</artifactId>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
