@@ -66,7 +66,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.14.8</version>
+            <version>1.18.24</version>
         </dependency>
 
         <dependency>
@@ -158,11 +158,11 @@
 <!--            <type>java-source</type>-->
 <!--        </dependency>-->
 
-        <dependency>
-            <groupId>io.agora.rtm</groupId>
-            <artifactId>agora-rtm-sdk</artifactId>
-            <version>1.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.agora.rtm</groupId>-->
+<!--            <artifactId>agora-rtm-sdk</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
 
 
         <dependency>
