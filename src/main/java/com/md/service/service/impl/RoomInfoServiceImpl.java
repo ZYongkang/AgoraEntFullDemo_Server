@@ -9,7 +9,6 @@ import com.md.service.common.CommonKey;
 import com.md.service.common.ErrorCodeEnum;
 import com.md.service.common.RoomStatus;
 import com.md.service.common.RoomUserStatus;
-import com.md.service.config.RtmJavaClient;
 import com.md.service.exception.BaseException;
 import com.md.service.model.dto.RoomInfoDTO;
 import com.md.service.model.dto.RoomPageDTO;
@@ -51,8 +50,8 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo> i
     @Resource
     private UsersService usersService;
 
-    @Resource
-    private RtmJavaClient rtmJavaClient;
+//    @Resource
+//    private RtmJavaClient rtmJavaClient;
 
     @Resource
     private RoomUsersService roomUsersService;
@@ -154,7 +153,7 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo> i
                     rtmRoomDTO.setStatus(RoomUserStatus.on_seat.getCode());
                     rtmRoomDTO.setUserNo(userNo);
                     rtmRoomDTO.setSeat(seat);
-                    rtmJavaClient.sendMessage(roomNo, JsonUtil.toJsonString(rtmRoomDTO));
+//                    rtmJavaClient.sendMessage(roomNo, JsonUtil.toJsonString(rtmRoomDTO));
                 }
             }
         } catch (InterruptedException e) {
@@ -199,7 +198,7 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo> i
         rtmRoomDTO.setRoomNo(roomInfo.getRoomNo());
         rtmRoomDTO.setStatus(RoomStatus.UPDATE_ROOM_INFO.getCode());
         rtmRoomDTO.setData(roomInfo);
-        rtmJavaClient.sendMessage(roomInfo.getRoomNo(),JsonUtil.toJsonString(rtmRoomDTO));
+//        rtmJavaClient.sendMessage(roomInfo.getRoomNo(),JsonUtil.toJsonString(rtmRoomDTO));
     }
 
     @Override
@@ -287,7 +286,7 @@ public class RoomInfoServiceImpl extends ServiceImpl<RoomInfoMapper, RoomInfo> i
             roomUsers.put(userNo,e.getRoomNo());
         });
         if(users.size() > 0){
-            rtmJavaClient.queryPeersOnlineStatus(users,roomUsers);
+//            rtmJavaClient.queryPeersOnlineStatus(users,roomUsers);
         }
     }
 }

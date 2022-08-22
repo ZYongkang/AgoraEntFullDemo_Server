@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.md.service.common.CommonKey;
 import com.md.service.common.ErrorCodeEnum;
 import com.md.service.common.SongStatus;
-import com.md.service.config.RtmJavaClient;
 import com.md.service.exception.BaseException;
 import com.md.service.model.dto.RoomSongInfoDTO;
 import com.md.service.model.dto.RtmSongDTO;
@@ -48,8 +47,8 @@ public class RoomSongServiceImpl extends ServiceImpl<RoomSongMapper, RoomSong> i
     @Resource
     private RoomUsersService roomUsersService;
 
-    @Resource
-    private RtmJavaClient rtmJavaClient;
+//    @Resource
+//    private RtmJavaClient rtmJavaClient;
 
     @Resource
     private RoomInfoService roomInfoService;
@@ -81,7 +80,7 @@ public class RoomSongServiceImpl extends ServiceImpl<RoomSongMapper, RoomSong> i
                 rtmSongDTO.setRoomNo(roomSong.getRoomNo());
                 rtmSongDTO.setSongNo(roomSong.getSongNo());
                 rtmSongDTO.setStatus(SongStatus.and_so.getCode());
-                rtmJavaClient.sendMessage(roomSong.getSongNo(), JsonUtil.toJsonString(rtmSongDTO));
+//                rtmJavaClient.sendMessage(roomSong.getSongNo(), JsonUtil.toJsonString(rtmSongDTO));
                 songsService.init(form.getSongName(),form.getSongUrl(),form.getSongNo(),form.getImageUrl(),form.getSinger());
             }
         } catch (InterruptedException e) {
@@ -182,7 +181,7 @@ public class RoomSongServiceImpl extends ServiceImpl<RoomSongMapper, RoomSong> i
                     RtmSongDTO rtmSongDTO = new RtmSongDTO();
                     rtmSongDTO.setRoomNo(roomInfo.getRoomNo());
                     rtmSongDTO.setStatus(SongStatus.chorus.getCode());
-                    rtmJavaClient.sendMessage(roomInfo.getRoomNo(), JsonUtil.toJsonString(rtmSongDTO));
+//                    rtmJavaClient.sendMessage(roomInfo.getRoomNo(), JsonUtil.toJsonString(rtmSongDTO));
                 }
             }
         } catch (InterruptedException e) {
