@@ -32,10 +32,10 @@ public class JwtFilter extends OncePerRequestFilter {
         log.debug("doFilter: " + request.getRequestURL().toString());
 
         String token = request.getHeader("Authorization");
-        if (token.startsWith("Bearer")) {
-            token = token.substring(7);
-        }
         if (token != null) {
+            if (token.startsWith("Bearer")) {
+                token = token.substring(7);
+            }
             String userNo = jwtUtil.getUserNo(token);
             if (StringUtils.isNotBlank(userNo)) {
                 Users user = usersService.getUserByNo(userNo);

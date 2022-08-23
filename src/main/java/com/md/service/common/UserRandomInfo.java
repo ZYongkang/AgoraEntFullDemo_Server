@@ -15,7 +15,7 @@ public class UserRandomInfo {
         return snList.get(random.nextInt(snList.size() - 1));
     }
 
-    public static String    headImage(){
+    public static String headImage() {
         List<String> snList = Arrays.asList(headImage.split(","));
         Random random = new Random();
         return snList.get(random.nextInt(snList.size() - 1));
