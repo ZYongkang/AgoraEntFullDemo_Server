@@ -1,79 +1,111 @@
 package com.md.mic.controller;
 
+import com.md.mic.pojos.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @RestController
 public class VoiceRoomMicController {
 
     @GetMapping("/voice/room/{roomId}/mic/apply")
-    public String getMicApplyList(@PathVariable("roomId") String roomId) {
-        return "get mic apply list " + roomId;
+    public GetMicApplyListResponse getMicApplyList(@PathVariable("roomId") String roomId,
+            @RequestParam(name = "cursor", required = false) String cursor,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
+        GetMicApplyListResponse response =
+                new GetMicApplyListResponse(0, null, Collections.emptyList());
+        return response;
     }
 
     @PostMapping("/voice/room/{roomId}/mic/apply")
-    public String addMicApply(@PathVariable("roomId") String roomId) {
-        return "add mic apply " + roomId;
+    public AddMicApplyResponse addMicApply(@PathVariable("roomId") String roomId,
+            @RequestBody AddMicApplyRequest request) {
+        AddMicApplyResponse response = new AddMicApplyResponse(Boolean.TRUE);
+        return response;
     }
 
     @DeleteMapping("/voice/room/{roomId}/mic/apply")
-    public String deleteMicApply(@PathVariable("roomId") String roomId) {
-        return "delete mic apply " + roomId;
+    public DeleteMicApplyResponse deleteMicApply(@PathVariable("roomId") String roomId) {
+        DeleteMicApplyResponse response = new DeleteMicApplyResponse(Boolean.TRUE);
+        return response;
     }
 
     @GetMapping("/voice/room/{roomId}/mic")
-    public String getRoomMicInfo(@PathVariable("roomId") String roomId) {
-        return "get room mic info " + roomId;
+    public List<MicInfo> getRoomMicInfo(@PathVariable("roomId") String roomId) {
+        return Collections.emptyList();
     }
 
     @PostMapping("/voice/room/{roomId}/mic/close")
-    public String closeMic(@PathVariable("roomId") String roomId) {
-        return "close mic " + roomId;
+    public CloseMicResponse closeMic(@PathVariable("roomId") String roomId,
+            @RequestBody CloseMicRequest request) {
+        CloseMicResponse response = new CloseMicResponse(Boolean.TRUE);
+        return response;
     }
 
     @DeleteMapping("/voice/room/{roomId}/mic/close")
-    public String openMic(@PathVariable("roomId") String roomId) {
-        return "open mic " + roomId;
+    public OpenMicResponse openMic(@PathVariable("roomId") String roomId,
+            @RequestBody OpenMicRequest request) {
+        OpenMicResponse response = new OpenMicResponse(Boolean.TRUE);
+        return response;
     }
 
     @DeleteMapping("/voice/room/{roomId}/mic/leave")
-    public String leaveMic(@PathVariable("roomId") String roomId) {
-        return "leave mic " + roomId;
+    public LeaveMicResponse leaveMic(@PathVariable("roomId") String roomId,
+            @RequestBody LeaveMicRequest request) {
+        LeaveMicResponse response = new LeaveMicResponse(Boolean.TRUE);
+        return response;
     }
 
     @PostMapping("/voice/room/{roomId}/mic/mute")
-    public String muteMic(@PathVariable("roomId") String roomId) {
-        return "mute mic " + roomId;
+    public MuteMicResponse muteMic(@PathVariable("roomId") String roomId,
+            @RequestBody MuteMicRequest request) {
+        MuteMicResponse response = new MuteMicResponse(Boolean.TRUE);
+        return response;
     }
 
     @DeleteMapping("/voice/room/{roomId}/mic/mute")
-    public String unMuteMic(@PathVariable("roomId") String roomId) {
-        return "unmute mic " + roomId;
+    public UnMuteMicResponse unMuteMic(@PathVariable("roomId") String roomId,
+            @RequestBody UnMuteMicRequest request) {
+        UnMuteMicResponse response = new UnMuteMicResponse(Boolean.TRUE);
+        return response;
     }
 
     @PostMapping("/voice/room/{roomId}/mic/exchange")
-    public String exchangeMic(@PathVariable("roomId") String roomId) {
-        return "exchange mic location " + roomId;
+    public ExchangeMicResponse exchangeMic(@PathVariable("roomId") String roomId,
+            @RequestBody ExchangeMicRequest request) {
+        ExchangeMicResponse response = new ExchangeMicResponse(Boolean.TRUE);
+        return response;
     }
 
     @PostMapping("/voice/room/{roomId}/mic/kick")
-    public String kickUserMic(@PathVariable("roomId") String roomId) {
-        return "kick user mic " + roomId;
+    public KickUserMicResponse kickUserMic(@PathVariable("roomId") String roomId,
+            @RequestBody KickUserMicRequest request) {
+        KickUserMicResponse response = new KickUserMicResponse(Boolean.TRUE);
+        return response;
     }
 
     @PostMapping("/voice/room/{roomId}/mic/lock")
-    public String lockMic(@PathVariable("roomId") String roomId) {
-        return "lock mic " + roomId;
+    public LockMicResponse lockMic(@PathVariable("roomId") String roomId,
+            @RequestBody LockMicRequest request) {
+        LockMicResponse response = new LockMicResponse(Boolean.TRUE);
+        return response;
     }
 
     @DeleteMapping("/voice/room/{roomId}/mic/lock")
-    public String unLockMic(@PathVariable("roomId") String roomId) {
-        return "unlock mic " + roomId;
+    public UnLockMicResponse unLockMic(@PathVariable("roomId") String roomId,
+            @RequestBody UnLockMicRequest request) {
+        UnLockMicResponse response = new UnLockMicResponse(Boolean.TRUE);
+        return response;
     }
 
     @PostMapping("/voice/room/{roomId}/mic/invite")
-    public String invite(@PathVariable("roomId") String roomId) {
-        return "invite user " + roomId;
+    public InviteUserOnMicResponse invite(@PathVariable("roomId") String roomId,
+            @RequestBody InviteUserOnMicRequest request) {
+        InviteUserOnMicResponse response = new InviteUserOnMicResponse(Boolean.TRUE);
+        return response;
     }
+
 }

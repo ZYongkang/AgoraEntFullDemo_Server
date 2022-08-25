@@ -1,29 +1,42 @@
 package com.md.mic.controller;
 
+import com.md.mic.pojos.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
 
 @Slf4j
 @RestController
 public class VoiceRoomController {
 
     @PostMapping("/voice/room/create")
-    public String createVoiceRoom() {
-        return "create room";
+    public CreateRoomResponse createVoiceRoom(@RequestBody CreateRoomRequest request) {
+        CreateRoomResponse createRoomResponse = new CreateRoomResponse(null);
+        return createRoomResponse;
     }
 
     @GetMapping("/voice/room/list")
-    public String getRoomList() {
-        return "get room list";
+    public GetRoomListResponse getRoomList(@RequestParam("cursor") String cursor,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
+        return new GetRoomListResponse(0, null, Collections.emptyList());
     }
 
     @GetMapping("/voice/room/{roomId}")
-    public String getVoiceRoomInfo(@PathVariable("roomId") String roomId) {
-        return "get room info " + roomId;
+    public GetVoiceRoomResponse getVoiceRoomInfo(@PathVariable("roomId") String roomId) {
+        GetVoiceRoomResponse response = new GetVoiceRoomResponse(null, null);
+        return response;
+    }
+
+    @PutMapping("/voice/room/{roomId}")
+    public UpdateRoomInfoResponse updateVoiceRoomInfo(@PathVariable("roomId") String roomId,
+            @RequestBody updateRoomInfoRequest request) {
+        return new UpdateRoomInfoResponse(Boolean.TRUE);
     }
 
     @DeleteMapping("/voice/room/{roomId}")
-    public String deleteVoiceRoom(@PathVariable("roomId") String roomId) {
-        return "delete room " + roomId;
+    public DeleteRoomResponse deleteVoiceRoom(@PathVariable("roomId") String roomId) {
+        return new DeleteRoomResponse(Boolean.TRUE);
     }
+
 }

@@ -1,22 +1,30 @@
 package com.md.mic.controller;
 
+import com.md.mic.pojos.AddGiftRequest;
+import com.md.mic.pojos.AddGiftResponse;
+import com.md.mic.pojos.GetGiftListResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
 
 @Slf4j
 @RestController
 public class VoiceRoomGiftController {
 
     @GetMapping("/voice/room/{roomId}/gift/list")
-    public String listGift(@PathVariable("roomId") String roomId) {
-        return "list gift " + roomId;
+    public GetGiftListResponse listGift(@PathVariable("roomId") String roomId,
+            @RequestParam(name = "cursor", required = false) String cursor,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
+        GetGiftListResponse response =
+                new GetGiftListResponse(0, null, Collections.emptyList());
+        return response;
     }
 
     @PostMapping("/voice/room/{roomId}/gift/add")
-    public String addGift(@PathVariable("roomId") String roomId) {
-        return "add gift " + roomId;
+    public AddGiftResponse addGift(@PathVariable("roomId") String roomId,
+            @RequestBody AddGiftRequest request) {
+        AddGiftResponse response = new AddGiftResponse(Boolean.TRUE);
+        return response;
     }
 }
