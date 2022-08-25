@@ -250,7 +250,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.easemob.im</groupId>
+            <artifactId>im-sdk-core</artifactId>
+            <version>0.5.9-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
