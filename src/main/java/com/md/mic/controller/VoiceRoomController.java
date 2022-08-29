@@ -1,6 +1,7 @@
 package com.md.mic.controller;
 
 import com.md.mic.common.utils.ValidationUtil;
+import com.md.mic.model.User;
 import com.md.mic.pojos.*;
 import com.md.mic.service.VoiceRoomService;
 import com.md.service.model.entity.Users;
@@ -21,7 +22,7 @@ public class VoiceRoomController {
     private VoiceRoomService voiceRoomService;
 
     @PostMapping("/voice/room/create")
-    public CreateRoomResponse createVoiceRoom(@RequestAttribute("user") Users user,
+    public CreateRoomResponse createVoiceRoom(@RequestAttribute("user") User user,
             @RequestBody @Validated CreateRoomRequest request, BindingResult result) {
 
         ValidationUtil.validate(result);

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.md.common.im.ImApi;
 import com.md.mic.model.EasemobUser;
+import com.md.mic.model.User;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.CreateRoomRequest;
 import com.md.mic.pojos.UserDTO;
@@ -11,7 +12,6 @@ import com.md.mic.pojos.VoiceRoomDTO;
 import com.md.mic.repository.VoiceRoomMapper;
 import com.md.mic.service.EasemobUserService;
 import com.md.mic.service.VoiceRoomService;
-import com.md.service.model.entity.Users;
 import com.md.service.service.RoomInfoService;
 import com.md.service.service.RoomUsersService;
 import com.md.service.service.UsersService;
@@ -48,10 +48,10 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
 
     @Override
     @Transactional
-    public VoiceRoomDTO create(Users user, CreateRoomRequest request) {
-        String userNo = user.getUserNo();
+    public VoiceRoomDTO create(User user, CreateRoomRequest request) {
+        String uid = user.getUid();
         LambdaQueryWrapper<EasemobUser> queryWrapper =
-                new LambdaQueryWrapper<EasemobUser>().eq(EasemobUser::getUid, userNo);
+                new LambdaQueryWrapper<EasemobUser>().eq(EasemobUser::getUid, uid);
         String userChatId;
         VoiceRoom voiceRoom;
         try {
@@ -69,7 +69,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             throw e;
         }
         UserDTO owner =
-                new UserDTO(user.getUserNo(), userChatId, user.getName(), user.getHeadUrl());
+                new UserDTO(user.getUid(), userChatId, user.getName(), user.getPortrait());
         return VoiceRoomDTO.from(voiceRoom, owner);
     }
 }

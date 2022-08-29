@@ -1,8 +1,10 @@
 package com.md.mic.common.jwt.filter;
 
-import com.md.service.model.entity.Users;
-import com.md.service.service.UsersService;
-import com.md.service.utils.JwtUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
+import com.md.mic.common.jwt.util.JwtUtil;
+import com.md.mic.model.User;
+import com.md.mic.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +25,8 @@ public class JwtFilter extends OncePerRequestFilter {
     @Resource
     private JwtUtil jwtUtil;
 
-    @Autowired
-    private UsersService usersService;
+    @Resource
+    private UserService userService;
 
     @Override public void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
@@ -36,9 +38,11 @@ public class JwtFilter extends OncePerRequestFilter {
             if (token.startsWith("Bearer")) {
                 token = token.substring(7);
             }
-            String userNo = jwtUtil.getUserNo(token);
-            if (StringUtils.isNotBlank(userNo)) {
-                Users user = usersService.getUserByNo(userNo);
+            String uid = jwtUtil.getUid(token);
+            if (StringUtils.isNotBlank(uid)) {
+                LambdaQueryWrapper<User> queryWrapper =
+                        new LambdaQueryWrapper<User>().eq(User::getUid, uid);
+                User user = userService.getOne(queryWrapper);
                 request.setAttribute("user", user);
             }
         } else {

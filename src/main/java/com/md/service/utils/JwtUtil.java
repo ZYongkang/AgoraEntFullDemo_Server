@@ -69,7 +69,7 @@ public class JwtUtil {
         return result;
     }
 
-    public String getUserNo(String token) {
+    public String getUid(String token) {
         if(StringUtils.isBlank(token)){
             return null;
         }
