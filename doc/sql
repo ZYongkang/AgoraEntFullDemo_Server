@@ -1,3 +1,4 @@
+drop table if exists `users`;
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
   `open_id` varchar(50) NOT NULL DEFAULT '' COMMENT '用户openId',
@@ -19,6 +20,7 @@ CREATE TABLE `users` (
   KEY `idx_users_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户信息';
 
+drop table if exists `room_info`;
 CREATE TABLE `room_info`
 (
     `id`         int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
@@ -44,8 +46,9 @@ CREATE TABLE `room_info`
     KEY `idx_room_name` (`name`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
-  DEFAULT CHARSET = utf8mb4 COMMENT ='房间信息';
+  DEFAULT CHARSET = utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT ='房间信息';
 
+drop table if exists `room_song`;
 CREATE TABLE `room_song`
 (
     `id`          int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
@@ -71,9 +74,9 @@ CREATE TABLE `room_song`
     KEY `idx_room_song_chorus_no` (`chorus_no`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
-  DEFAULT CHARSET = utf8mb4 COMMENT ='房间歌曲';
+  DEFAULT CHARSET = utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT ='房间歌曲';
 
-
+drop table if exists `room_song_users`;
 CREATE TABLE `room_song_users`
 (
     `id`           int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
@@ -92,8 +95,9 @@ CREATE TABLE `room_song_users`
     KEY `idx_room_song_user_id` (`user_id`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
-  DEFAULT CHARSET = utf8mb4 COMMENT ='房间歌曲演唱者';
+  DEFAULT CHARSET = utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT ='房间歌曲演唱者';
 
+drop table if exists `songs`;
 CREATE TABLE `songs`
 (
     `id`          int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
@@ -112,11 +116,12 @@ CREATE TABLE `songs`
     KEY `idx_songs_created_at` (`created_at`),
     KEY `idx_songs_updated_at` (`updated_at`),
     KEY `idx_songs_song_no` (`song_no`),
-    KEY `idx_songs_song_name` (`song_name`),
+    KEY `idx_songs_song_name` (`song_name`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
-  DEFAULT CHARSET = utf8mb4 COMMENT ='歌曲信息';
+  DEFAULT CHARSET = utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT ='歌曲信息';
 
+drop table if exists `room_users`;
 CREATE TABLE `room_users` (
     `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
     `room_no` varchar(100) NOT NULL COMMENT '房间唯一标识',
@@ -136,7 +141,7 @@ CREATE TABLE `room_users` (
     KEY `idx_room_users_room_no` (`room_no`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='房间用户';
 
-
+drop table if exists `verify_log`;
 CREATE TABLE `verify_log`
 (
     `id`         int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
@@ -153,7 +158,7 @@ CREATE TABLE `verify_log`
     KEY `idx_verify_log_user_no` (`updated_at`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
-  DEFAULT CHARSET = utf8mb4 COMMENT ='审核日志';
+  DEFAULT CHARSET = utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT ='审核日志';
 
 drop table if exists easemob_user;
 create table easemob_user
