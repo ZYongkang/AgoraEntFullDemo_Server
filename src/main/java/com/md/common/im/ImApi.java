@@ -12,8 +12,8 @@ import com.easemob.im.server.model.EMRoom;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
 
@@ -35,16 +35,8 @@ public class ImApi {
      * @return 环信userName
      * @throws Exception
      */
-    public String createUser(String userName, String password)
+    public String createUser(@Nonnull String userName, @Nonnull String password)
             throws Exception {
-
-        if (userName == null) {
-            throw new IllegalArgumentException("Paramer 'userName' is required");
-        }
-
-        if (password == null) {
-            throw new IllegalArgumentException("Paramer 'password' is required");
-        }
 
         try {
             return this.emService.user().create(userName, password).block().getUsername();
@@ -61,16 +53,8 @@ public class ImApi {
      * @param userName: 用户名
      * @throws Exception
      */
-    public void deleteUser(String userName, String password)
+    public void deleteUser(@Nonnull String userName, @Nonnull String password)
             throws Exception {
-
-        if (userName == null) {
-            throw new IllegalArgumentException("Paramer 'userName' is required");
-        }
-
-        if (password == null) {
-            throw new IllegalArgumentException("Paramer 'password' is required");
-        }
 
         try {
             this.emService.user().delete(userName).block();
@@ -91,25 +75,10 @@ public class ImApi {
      * @return String :聊天室id
      * @throws Exception
      */
-    public String createChatRoom(String chatRoomName, String owner, List<String> members,
-            String description)
+    public String createChatRoom(@Nonnull String chatRoomName, @Nonnull String owner,
+            @Nonnull List<String> members,
+            @Nonnull String description)
             throws Exception {
-
-        if (chatRoomName == null) {
-            throw new IllegalArgumentException("Paramer 'chatroomName' is required");
-        }
-
-        if (owner == null) {
-            throw new IllegalArgumentException("Paramer 'owner' is required");
-        }
-
-        if (CollectionUtils.isEmpty(members)) {
-            throw new IllegalArgumentException("Paramer 'members' is required");
-        }
-
-        if (description == null) {
-            throw new IllegalArgumentException("Paramer 'description' is required");
-        }
 
         try {
             return emService.room().createRoom(chatRoomName, owner, description, members, 200)
@@ -128,11 +97,7 @@ public class ImApi {
      * @return EMRoom :聊天室详情
      * @throws Exception
      */
-    public EMRoom getChatRoomInfo(String chatRoomId) throws Exception {
-
-        if (chatRoomId == null) {
-            throw new IllegalArgumentException("Paramer 'chatRoomId' is required");
-        }
+    public EMRoom getChatRoomInfo(@Nonnull String chatRoomId) throws Exception {
 
         try {
             return emService.room().getRoom(chatRoomId)
@@ -174,7 +139,7 @@ public class ImApi {
      * @return 聊天室用户的userName列表和cursor
      * @throws Exception
      */
-    public EMPage<String> listChatRoomMembers(String chatRoomId, int limit, String cursor,
+    public EMPage<String> listChatRoomMembers(@Nonnull String chatRoomId, int limit, String cursor,
             String sort)
             throws Exception {
 
@@ -194,7 +159,7 @@ public class ImApi {
      * @param userName   聊天室成员
      * @throws Exception
      */
-    public void removeChatRoomMember(String chatRoomId, String userName)
+    public void removeChatRoomMember(@Nonnull String chatRoomId, @Nonnull String userName)
             throws Exception {
 
         try {
@@ -216,8 +181,9 @@ public class ImApi {
      * @param customExtensions 自定义消息扩展
      * @throws Exception
      */
-    public void sendChatRoomCustomMessage(String fromUserName, String toChatRoomId,
-            String customEvent, Map<String, Object> customContent,
+    public void sendChatRoomCustomMessage(@Nonnull String fromUserName,
+            @Nonnull String toChatRoomId,
+            @Nonnull String customEvent, @Nonnull Map<String, Object> customContent,
             Map<String, Object> customExtensions)
             throws Exception {
 
@@ -242,17 +208,18 @@ public class ImApi {
      *
      * @param operator   操作人
      * @param chatRoomId 接收的聊天室id
-     * @param metatdata  属性k-v
+     * @param metadata   属性k-v
      * @throws Exception
      */
-    public ChatRoomMetadataSetResponse setChatRoomMetadata(String operator, String chatRoomId,
-            Map<String, String> metatdata,
+    public ChatRoomMetadataSetResponse setChatRoomMetadata(@Nonnull String operator,
+            @Nonnull String chatRoomId,
+            @Nonnull Map<String, String> metadata,
             AutoDelete autoDelete)
             throws Exception {
 
         try {
             return emService.metadata()
-                    .setChatRoomMetadata(operator, chatRoomId, metatdata, autoDelete)
+                    .setChatRoomMetadata(operator, chatRoomId, metadata, autoDelete)
                     .block();
         } catch (EMException e) {
             log.error("server error", e);
@@ -269,8 +236,9 @@ public class ImApi {
      * @param keys       属性k列表
      * @throws Exception
      */
-    public ChatRoomMetadataDeleteResponse deleteChatRoomMetadata(String operator, String chatRoomId,
-            List<String> keys)
+    public ChatRoomMetadataDeleteResponse deleteChatRoomMetadata(@Nonnull String operator,
+            @Nonnull String chatRoomId,
+            @Nonnull List<String> keys)
             throws Exception {
 
         try {
@@ -290,7 +258,8 @@ public class ImApi {
      * @param keys       属性k列表
      * @throws Exception
      */
-    public ChatRoomMetadataGetResponse listChatRoomMetadata(String chatRoomId, List<String> keys)
+    public ChatRoomMetadataGetResponse listChatRoomMetadata(@Nonnull String chatRoomId,
+            List<String> keys)
             throws Exception {
 
         try {
