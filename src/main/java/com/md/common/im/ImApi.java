@@ -33,16 +33,17 @@ public class ImApi {
      * @param userName: 用户名
      * @param password: 密码
      * @return 环信userName
-     * @throws Exception
+     * @throws EMException
      */
     public String createUser(@Nonnull String userName, @Nonnull String password)
-            throws Exception {
+            throws EMException {
 
         try {
             return this.emService.user().create(userName, password).block().getUsername();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error("server error,createUser error,userName:{},password:{}", userName, password,
+                    e);
+            throw e;
         }
 
     }
@@ -51,16 +52,16 @@ public class ImApi {
      * 删除用户
      *
      * @param userName: 用户名
-     * @throws Exception
+     * @throws EMException
      */
     public void deleteUser(@Nonnull String userName, @Nonnull String password)
-            throws Exception {
+            throws EMException {
 
         try {
             this.emService.user().delete(userName).block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error("server error,deleteUser error,userName:{}", userName, e);
+            throw e;
         }
 
     }
@@ -73,19 +74,21 @@ public class ImApi {
      * @param members:         成员列表
      * @param description:房间描述
      * @return String :聊天室id
-     * @throws Exception
+     * @throws EMException
      */
     public String createChatRoom(@Nonnull String chatRoomName, @Nonnull String owner,
             @Nonnull List<String> members,
             @Nonnull String description)
-            throws Exception {
+            throws EMException {
 
         try {
             return emService.room().createRoom(chatRoomName, owner, description, members, 200)
                     .block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error(
+                    "server error,createRoom error,chatRoomName:{},owner:{},members:{},description:{}",
+                    chatRoomName, owner, members, description, e);
+            throw e;
         }
 
     }
@@ -95,18 +98,17 @@ public class ImApi {
      *
      * @param chatRoomId: 聊天室id
      * @return EMRoom :聊天室详情
-     * @throws Exception
+     * @throws EMException
      */
-    public EMRoom getChatRoomInfo(@Nonnull String chatRoomId) throws Exception {
+    public EMRoom getChatRoomInfo(@Nonnull String chatRoomId) throws EMException {
 
         try {
             return emService.room().getRoom(chatRoomId)
                     .block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error("server error,getChatRoomInfo error,chatRoomId:{}", chatRoomId, e);
+            throw e;
         }
-
     }
 
     /**
@@ -115,16 +117,18 @@ public class ImApi {
      * @param limit  返回多少个聊天室id
      * @param cursor 开始位置
      * @return 聊天室id列表和cursor
-     * @throws Exception
+     * @throws EMException
      */
     public EMPage<String> listChatRooms(int limit, String cursor)
-            throws Exception {
+            throws EMException {
 
         try {
             return emService.room().listRooms(limit, cursor).block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error(
+                    "server error,listChatRooms error,limit:{},cursor:{},members:{},description:{}",
+                    limit, cursor, e);
+            throw e;
         }
 
     }
@@ -137,17 +141,18 @@ public class ImApi {
      * @param cursor     开始位置
      * @param sort       聊天室成员排序方法 asc:根据加入顺序升序排序  desc:根据加入顺序降序排序
      * @return 聊天室用户的userName列表和cursor
-     * @throws Exception
+     * @throws EMException
      */
     public EMPage<String> listChatRoomMembers(@Nonnull String chatRoomId, int limit, String cursor,
             String sort)
-            throws Exception {
+            throws EMException {
 
         try {
             return emService.room().listRoomMembers(chatRoomId, limit, cursor, sort).block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error("server error,listChatRoomMembers error,chatRoomId:{},limit:{},cursor:{}",
+                    chatRoomId, limit, cursor, e);
+            throw e;
         }
 
     }
@@ -157,18 +162,18 @@ public class ImApi {
      *
      * @param chatRoomId 聊天室id
      * @param userName   聊天室成员
-     * @throws Exception
+     * @throws EMException
      */
     public void removeChatRoomMember(@Nonnull String chatRoomId, @Nonnull String userName)
-            throws Exception {
+            throws EMException {
 
         try {
             emService.room().removeRoomMember(chatRoomId, userName).block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error("server error,removeChatRoomMember error,chatRoomId:{},userName:{}",
+                    chatRoomId, userName, e);
+            throw e;
         }
-
     }
 
     /**
@@ -179,13 +184,13 @@ public class ImApi {
      * @param customEvent      自定义消息类型
      * @param customContent    自定义消息内容
      * @param customExtensions 自定义消息扩展
-     * @throws Exception
+     * @throws EMException
      */
     public void sendChatRoomCustomMessage(@Nonnull String fromUserName,
             @Nonnull String toChatRoomId,
             @Nonnull String customEvent, @Nonnull Map<String, Object> customContent,
             Map<String, Object> customExtensions)
-            throws Exception {
+            throws EMException {
 
         try {
             emService.message().send()
@@ -197,8 +202,10 @@ public class ImApi {
                     .send()
                     .block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error(
+                    "server error,sendChatRoomCustomMessage error,fromUserName:{},toChatRoomId:{},customEvent:{},customContent:{}",
+                    fromUserName, toChatRoomId, customEvent, customContent, e);
+            throw e;
         }
 
     }
@@ -209,21 +216,23 @@ public class ImApi {
      * @param operator   操作人
      * @param chatRoomId 接收的聊天室id
      * @param metadata   属性k-v
-     * @throws Exception
+     * @throws EMException
      */
     public ChatRoomMetadataSetResponse setChatRoomMetadata(@Nonnull String operator,
             @Nonnull String chatRoomId,
             @Nonnull Map<String, String> metadata,
             AutoDelete autoDelete)
-            throws Exception {
+            throws EMException {
 
         try {
             return emService.metadata()
                     .setChatRoomMetadata(operator, chatRoomId, metadata, autoDelete)
                     .block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error(
+                    "server error,setChatRoomMetadata error,operator:{},chatRoomId:{},metadata:{},autoDelete:{}",
+                    operator, chatRoomId, metadata, autoDelete, e);
+            throw e;
         }
 
     }
@@ -234,19 +243,20 @@ public class ImApi {
      * @param operator   操作人
      * @param chatRoomId 接收的聊天室id
      * @param keys       属性k列表
-     * @throws Exception
+     * @throws EMException
      */
     public ChatRoomMetadataDeleteResponse deleteChatRoomMetadata(@Nonnull String operator,
             @Nonnull String chatRoomId,
             @Nonnull List<String> keys)
-            throws Exception {
+            throws EMException {
 
         try {
             return emService.metadata().deleteChatRoomMetadata(operator, chatRoomId, keys)
                     .block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error("server error,deleteChatRoomMetadata error,operator:{},chatRoomId:{},keys:{}",
+                    operator, chatRoomId, keys, e);
+            throw e;
         }
 
     }
@@ -256,18 +266,19 @@ public class ImApi {
      *
      * @param chatRoomId 接收的聊天室id
      * @param keys       属性k列表
-     * @throws Exception
+     * @throws EMException
      */
     public ChatRoomMetadataGetResponse listChatRoomMetadata(@Nonnull String chatRoomId,
             List<String> keys)
-            throws Exception {
+            throws EMException {
 
         try {
             return emService.metadata().listChatRoomMetadata(chatRoomId, keys)
                     .block();
         } catch (EMException e) {
-            log.error("server error", e);
-            throw new IllegalArgumentException("server error");
+            log.error("server error,listChatRoomMetadata error,chatRoomId:{},keys:{}", chatRoomId,
+                    keys, e);
+            throw e;
         }
 
     }
