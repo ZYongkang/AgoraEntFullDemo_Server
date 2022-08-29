@@ -154,3 +154,61 @@ CREATE TABLE `verify_log`
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
   DEFAULT CHARSET = utf8mb4 COMMENT ='审核日志';
+
+drop table if exists easemob_user;
+create table easemob_user
+(
+    `id`         int(10) unsigned not null auto_increment comment 'id',
+    `user_no`    varchar(100)     not null comment '用户唯一标识',
+    `chat_id`    varchar(128)     not null comment '用户对应在环信的用户id',
+    `chat_uuid`  varchar(64)      not null comment '用户对应在的环信用户uuid',
+    `created_at` timestamp        not null comment '创建时间',
+    `updated_at` timestamp        not null comment '最近修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_easemob_user_user_no` (`user_no`)
+) engine =InnoDB default charset=utf8mb4 comment ='用户与环信的关联信息';
+
+drop table if exists voice_room;
+create table voice_room
+(
+    `id`                    int(10) unsigned not null auto_increment comment 'id',
+    `room_no`               varchar(100)     not null comment '房间唯一标识',
+    `chatroom_id`           bigint           not null comment '环信关联房间id',
+    `channel_id`            varchar(128)     not null comment '声网RTC关联的channelId',
+    `allowed_free_join_mic` bool             not null default true comment '是否允许自由上麦',
+    `type`                  int(2)           not null comment '房间类型',
+    `created_at`            timestamp        not null comment '创建时间',
+    `updated_at`            timestamp        not null comment '最近修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_voice_room_room_no` (`room_no`),
+    KEY `idx_voice_room_created_at` (`created_at`)
+) engine=InnoDB default charset=utf8mb4 comment='语聊房信息';
+
+drop table if exists mic_apply_user;
+create table mic_apply_user
+(
+    `id`         int(10) unsigned not null auto_increment comment 'id',
+    `room_no`    varchar(100)     not null comment '房间唯一标识',
+    `user_no`    varchar(100)     not null comment '用户唯一标识',
+    `mic_index`  int(4) comment '申请麦位位置',
+    `created_at` timestamp        not null comment '申请时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_voice_room_room_no` (`room_no`),
+    KEY `idx_voice_room_user_no` (`user_no`),
+    KEY `idx_voice_room_created_at` (`created_at`)
+) engine=InnoDB default charset=utf8mb4 comment='麦位申请信息';
+
+drop table if exists gift_record;
+create table gift_record
+(
+    `id`         int(10) unsigned not null auto_increment comment 'id',
+    `room_no`    varchar(100)     not null comment '房间唯一标识',
+    `user_no`    varchar(100)     not null comment '送礼物用户唯一标识',
+    `to_user_no` varchar(100)     not null comment '收礼物用户唯一标识',
+    `amount`     bigint(10)       not null default 0 comment '贡献值',
+    `created_at` timestamp        not null comment '申请时间',
+    `updated_at` timestamp        not null comment '最近修改时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_voice_room_room_no_user_no` (`room_no`, `user_no`),
+    KEY `idx_voice_room_amount` (`amount`)
+) engine = InnoDB default charset = utf8mb4 comment ='打赏信息';

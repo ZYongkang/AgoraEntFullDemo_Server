@@ -1,7 +1,10 @@
 package com.md.mic.controller;
 
+import com.md.mic.common.utils.ValidationUtil;
 import com.md.mic.pojos.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -11,7 +14,9 @@ import java.util.Collections;
 public class VoiceRoomController {
 
     @PostMapping("/voice/room/create")
-    public CreateRoomResponse createVoiceRoom(@RequestBody CreateRoomRequest request) {
+    public CreateRoomResponse createVoiceRoom(@RequestBody @Validated CreateRoomRequest request,
+            BindingResult result) {
+        ValidationUtil.validate(result);
         CreateRoomResponse createRoomResponse = new CreateRoomResponse(null);
         return createRoomResponse;
     }
