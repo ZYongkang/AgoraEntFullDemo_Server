@@ -1,4 +1,4 @@
-package com.md.service;
+package com.md;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(scanBasePackages = "com.md")
 @EnableScheduling
-@MapperScan("com.md.service.repository")
+@MapperScan("com.md.*.repository")
 @EnableDiscoveryClient
 public class ServiceApplication {
 

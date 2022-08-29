@@ -1,8 +1,7 @@
-package com.md.common.im;
+package com.md.common.im.config;
 
 import com.easemob.im.server.EMProperties;
 import com.easemob.im.server.EMService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

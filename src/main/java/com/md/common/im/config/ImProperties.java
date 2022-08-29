@@ -1,4 +1,4 @@
-package com.md.common.im;
+package com.md.common.im.config;
 
 import lombok.Data;
 
