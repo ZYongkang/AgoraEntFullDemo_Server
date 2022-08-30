@@ -1,7 +1,6 @@
 package com.md.mic.controller;
 
-import com.md.common.im.ImApi;
-import com.md.common.util.TokenProvider;
+import com.md.common.util.token.TokenProvider;
 import com.md.mic.common.jwt.util.JwtUtil;
 import com.md.mic.common.utils.ValidationUtil;
 import com.md.mic.model.User;

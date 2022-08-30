@@ -29,10 +29,4 @@ public class CreateRoomRequest {
     @JsonProperty("sound_effect")
     private String soundEffect;
 
-    @NotNull
-    @JsonProperty("bg_url")
-    private String bgUrl;
-
-    private String announcement;
-
 }

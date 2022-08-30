@@ -1,5 +1,6 @@
 package com.md.mic.pojos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.md.mic.model.VoiceRoom;
 import lombok.Builder;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Value
 @Builder(toBuilder = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VoiceRoomDTO {
 
     private String roomId;

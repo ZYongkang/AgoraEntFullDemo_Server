@@ -1,4 +1,4 @@
-package com.md.common.util;
+package com.md.common.util.token;
 
 
 import javax.crypto.Mac;

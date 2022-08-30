@@ -47,20 +47,27 @@ public class VoiceRoom {
 
     private String owner;
 
-    private String bgUrl;
-
     private String soundEffect;
 
     private String announcement;
 
     public static VoiceRoom create(String name, String chatroomId, Boolean isPrivate,
-            String password, Boolean allowedFreeJoinMic, Integer type, String owner, String bgUrl,
-            String soundEffect, String announcement) {
+            String password, Boolean allowedFreeJoinMic, Integer type, String owner,
+            String soundEffect) {
         String roomId = buildRoomNo(name);
         String channelId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
-        return new VoiceRoom(null, LocalDateTime.now(), LocalDateTime.now(), name, roomId,
-                chatroomId, channelId, isPrivate, password, allowedFreeJoinMic, type,
-                owner, bgUrl, soundEffect, announcement);
+        return VoiceRoom.builder()
+                .name(name)
+                .roomId(roomId)
+                .chatroomId(chatroomId)
+                .channelId(channelId)
+                .isPrivate(isPrivate)
+                .password(password)
+                .allowedFreeJoinMic(allowedFreeJoinMic)
+                .type(type)
+                .owner(owner)
+                .soundEffect(soundEffect)
+                .build();
     }
 
     private static String buildRoomNo(String name) {

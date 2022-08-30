@@ -9,7 +9,6 @@ import lombok.Data;
 @Data
 @Builder(toBuilder = true)
 @TableName("easemob_user")
-@Builder
 public class EasemobUser {
 
     @TableId(value = "id", type = IdType.AUTO)

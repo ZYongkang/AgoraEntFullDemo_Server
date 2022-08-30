@@ -1,4 +1,4 @@
-package com.md.common.util;
+package com.md.common.util.token;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

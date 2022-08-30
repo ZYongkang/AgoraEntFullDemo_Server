@@ -1,4 +1,4 @@
-package com.md.common.util;
+package com.md.common.util.token;
 
 
 public interface PackableEx extends Packable {

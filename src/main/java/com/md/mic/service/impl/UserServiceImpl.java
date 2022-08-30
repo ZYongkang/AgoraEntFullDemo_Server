@@ -2,7 +2,6 @@ package com.md.mic.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.easemob.im.server.exception.EMInvalidArgumentException;
 import com.md.common.im.ImApi;
 import com.md.mic.model.EasemobUser;
 import com.md.mic.model.User;
@@ -19,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -37,24 +35,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> queryWrapper =
                 new LambdaQueryWrapper<User>().eq(User::getDeviceId, deviceId);
         User user = getOne(queryWrapper);
+        EasemobUser easemobUser;
         if (user == null) {
             String chatUid = String.format("u%s",
                     UUID.randomUUID().toString().replace("-", "")
                             .substring(1));
             user = User.create(name, deviceId, portrait);
             save(user);
-            EasemobUser easemobUser = imApi.createUser(user.getUid(), chatUid);
-            easemobUserService.save(easemobUser);
-            return UserDTO.builder().uid(user.getUid())
-                    .chatUid(easemobUser.getChatId())
-                    .chatUuid(easemobUser.getChatUuid())
-                    .name(user.getName())
-                    .portrait(user.getPortrait())
-                    .build();
+            easemobUser = imApi.createUser(user.getUid(), chatUid);
+            try {
+                easemobUserService.save(easemobUser);
+            } catch (Exception e) {
+                log.error("save easemob user failed | err=", e);
+                imApi.deleteUser(chatUid);
+                throw e;
+            }
+        } else {
+            String uid = user.getUid();
+            easemobUser = easemobUserService.getOne(
+                    new LambdaQueryWrapper<EasemobUser>().eq(EasemobUser::getUid, uid));
         }
-        String uid = user.getUid();
-        EasemobUser easemobUser = easemobUserService.getOne(
-                new LambdaQueryWrapper<EasemobUser>().eq(EasemobUser::getUid, uid));
         return UserDTO.builder().uid(user.getUid())
                 .chatUid(easemobUser.getChatId())
                 .chatUuid(easemobUser.getChatUuid())

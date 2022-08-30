@@ -74,7 +74,7 @@ public class ImApi {
      * @param userName: 用户名
      * @throws EMException
      */
-    public void deleteUser(@Nonnull String userName, @Nonnull String password)
+    public void deleteUser(@Nonnull String userName)
             throws EMException {
 
         try {
@@ -102,7 +102,7 @@ public class ImApi {
             throws EMException {
 
         try {
-            return emService.room().createRoom(chatRoomName, owner, description, members, 200)
+            return emService.room().createRoom(chatRoomName, description, owner, members, 200)
                     .block();
         } catch (EMException e) {
             log.error(

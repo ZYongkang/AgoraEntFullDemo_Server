@@ -1,4 +1,4 @@
-package com.md.common.util;
+package com.md.common.util.token;
 
 
 import javax.crypto.Mac;
@@ -9,7 +9,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
-import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
