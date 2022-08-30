@@ -13,7 +13,7 @@ public class RoomListDTO {
     private String channelId;
 
     @JsonProperty("chatroom_id")
-    private Long chatroomId;
+    private String chatroomId;
 
     private String name;
 

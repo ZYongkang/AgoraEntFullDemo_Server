@@ -9,9 +9,13 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.UUID;
 
+import static org.apache.commons.codec.Charsets.UTF_8;
+
 @Value
+@EqualsAndHashCode
 @TableName("voice_room")
 @Builder(toBuilder = true)
 public class VoiceRoom {
@@ -63,11 +67,11 @@ public class VoiceRoom {
         try {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             String s = name + System.currentTimeMillis();
-            String md5Str = new String(md5.digest(s.getBytes(StandardCharsets.UTF_8)),
-                    StandardCharsets.UTF_8);
-            return MdStringUtils.randomDelete(md5Str, 5);
+            String encode = Base64.getEncoder().encodeToString(md5.digest(s.getBytes(UTF_8)));
+            return MdStringUtils.randomDelete(encode, 5);
         } catch (NoSuchAlgorithmException e) {
-            String md5Str = Md5Crypt.md5Crypt(name.getBytes(StandardCharsets.UTF_8));
+            String s = name + System.currentTimeMillis();
+            String md5Str = Md5Crypt.md5Crypt(s.getBytes(UTF_8));
             return MdStringUtils.randomDelete(md5Str, 5);
         }
     }

@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -24,7 +25,6 @@ public class VoiceRoomController {
     @PostMapping("/voice/room/create")
     public CreateRoomResponse createVoiceRoom(@RequestAttribute("user") User user,
             @RequestBody @Validated CreateRoomRequest request, BindingResult result) {
-
         ValidationUtil.validate(result);
         boolean isPrivate = Boolean.TRUE.equals(request.getIsPrivate());
         if(isPrivate && StringUtils.isEmpty(request.getPassword())){
@@ -37,7 +37,9 @@ public class VoiceRoomController {
     @GetMapping("/voice/room/list")
     public GetRoomListResponse getRoomList(@RequestParam(name = "cursor", required = false) String cursor,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
-        return new GetRoomListResponse(0, null, Collections.emptyList());
+        PageInfo<RoomListDTO> pageInfo = voiceRoomService.getByPage(cursor, limit);
+        return new GetRoomListResponse(pageInfo.getTotal(), pageInfo.getCursor(),
+                pageInfo.getList());
     }
 
     @GetMapping("/voice/room/{roomId}")

@@ -21,6 +21,7 @@ public class ImConfiguration {
                 .setAppkey(imProperties.getAppkey())
                 .setClientId(imProperties.getClientId())
                 .setClientSecret(imProperties.getClientSecret())
+                .setBaseUri(imProperties().getBaseUri())
                 .build();
         return new EMService(properties);
     }

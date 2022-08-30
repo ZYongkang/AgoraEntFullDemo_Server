@@ -22,7 +22,7 @@ import java.io.IOException;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Resource
+    @Resource(name = "jwtUtils")
     private JwtUtil jwtUtil;
 
     @Resource

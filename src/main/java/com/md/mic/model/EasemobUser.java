@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder(toBuilder = true)
 @TableName("easemob_user")
 @Builder
 public class EasemobUser {

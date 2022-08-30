@@ -18,7 +18,6 @@ import java.security.Key;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-@Component
 @Slf4j
 public class JwtUtil {
 
