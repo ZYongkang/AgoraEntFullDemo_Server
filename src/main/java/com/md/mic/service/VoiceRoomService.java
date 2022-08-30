@@ -14,4 +14,6 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
     VoiceRoomDTO create(User user, CreateRoomRequest request);
 
     PageInfo<RoomListDTO> getByPage(String cursor, int limit);
+
+    VoiceRoomDTO getByRoomId(String roomId);
 }

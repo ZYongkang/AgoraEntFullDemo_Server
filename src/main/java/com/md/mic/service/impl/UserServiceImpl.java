@@ -82,4 +82,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         return map;
     }
+
+    @Override public UserDTO getByUid(String uid) {
+        LambdaQueryWrapper<User> queryWrapper =
+                new LambdaQueryWrapper<User>().eq(User::getUid, uid);
+        User user = baseMapper.selectOne(queryWrapper);
+        EasemobUser easemobUser = easemobUserService.getByUid(uid);
+        return UserDTO.from(user, easemobUser);
+    }
+
 }

@@ -27,4 +27,7 @@ public class RoomListDTO {
     @JsonProperty("created_at")
     private Long createdAt;
 
+    @JsonProperty("member_count")
+    private Long memberCount;
+
 }

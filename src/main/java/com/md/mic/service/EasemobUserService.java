@@ -5,4 +5,5 @@ import com.md.mic.model.EasemobUser;
 
 public interface EasemobUserService extends IService<EasemobUser> {
 
+    EasemobUser getByUid(String uid);
 }

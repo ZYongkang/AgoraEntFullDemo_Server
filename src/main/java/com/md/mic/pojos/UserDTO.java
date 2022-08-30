@@ -2,6 +2,8 @@ package com.md.mic.pojos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.md.mic.model.EasemobUser;
+import com.md.mic.model.User;
 import lombok.*;
 
 @Value
@@ -20,4 +22,14 @@ public class UserDTO {
     private String name;
 
     private String portrait;
+
+    public static UserDTO from(User user, EasemobUser easemobUser) {
+        return UserDTO.builder()
+                .uid(user.getUid())
+                .chatUid(easemobUser.getChatId())
+                .chatUuid(easemobUser.getChatUuid())
+                .name(user.getName())
+                .portrait(user.getPortrait())
+                .build();
+    }
 }

@@ -3,6 +3,7 @@ package com.md.mic.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.md.common.im.ImApi;
+import com.md.mic.exception.RoomNotFoundException;
 import com.md.mic.model.EasemobUser;
 import com.md.mic.model.User;
 import com.md.mic.model.VoiceRoom;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +45,9 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
 
     @Resource
     private ImApi imApi;
+
+    @Resource
+    private RedisTemplate redisTemplate;
 
     @Value("${local.zone.offset:+8}")
     private String zoneOffset;
@@ -76,7 +81,9 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
                     .name(user.getName())
                     .portrait(user.getPortrait())
                     .build();
-            return VoiceRoomDTO.from(voiceRoom, owner);
+            Long clickCount = getClickCount(voiceRoom.getRoomId());
+            Long memberCount = getMemberCount(voiceRoom.getRoomId());
+            return VoiceRoomDTO.from(voiceRoom, owner, memberCount, clickCount);
         } catch (Exception e) {
             log.error("create room failed | err=", e);
             throw e;
@@ -118,16 +125,66 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             UserDTO userDTO = ownerMap.get(voiceRoom.getOwner());
             long createdAt = voiceRoom.getCreatedAt().toInstant(ZoneOffset.of(zoneOffset))
                     .toEpochMilli();
+            Long memberCount = getMemberCount(voiceRoom.getRoomId());
             return new RoomListDTO(voiceRoom.getRoomId(), voiceRoom.getChannelId(),
                     voiceRoom.getChatroomId(),
                     voiceRoom.getName(), userDTO, voiceRoom.getIsPrivate(),
-                    voiceRoom.getType(), createdAt);
+                    voiceRoom.getType(), createdAt, memberCount);
         }).collect(Collectors.toList());
         PageInfo<RoomListDTO> pageInfo = new PageInfo<>();
         pageInfo.setCursor(cursor);
         pageInfo.setTotal(total);
         pageInfo.setList(list);
         return pageInfo;
-
     }
+
+    @Override public VoiceRoomDTO getByRoomId(String roomId) {
+        LambdaQueryWrapper<VoiceRoom> queryWrapper =
+                new LambdaQueryWrapper<VoiceRoom>().eq(VoiceRoom::getRoomId, roomId);
+        VoiceRoom voiceRoom = baseMapper.selectOne(queryWrapper);
+        if (voiceRoom == null) {
+            throw new RoomNotFoundException(String.format("room %s not found", roomId));
+        }
+
+        UserDTO userDTO = userService.getByUid(voiceRoom.getOwner());
+        long createdAt = voiceRoom.getCreatedAt().toInstant(ZoneOffset.of(zoneOffset))
+                .toEpochMilli();
+        Long memberCount = getMemberCount(voiceRoom.getRoomId());
+        new RoomListDTO(voiceRoom.getRoomId(), voiceRoom.getChannelId(),
+                voiceRoom.getChatroomId(),
+                voiceRoom.getName(), userDTO, voiceRoom.getIsPrivate(),
+                voiceRoom.getType(), createdAt, memberCount);
+        return null;
+    }
+
+    private Long getClickCount(String roomId) {
+        String key = String.format("room:voice:%s:memberCount", roomId);
+        try {
+            return redisTemplate.opsForValue().increment(key, 0L);
+        } catch (Exception e) {
+            log.error("get room click count failed | roomId={}, err=", roomId, e);
+            return 0L;
+        }
+    }
+
+    private Long getMemberCount(String roomId) {
+        String key = String.format("room:voice:%s:clickCount", roomId);
+        try {
+            return redisTemplate.opsForValue().increment(key, 0L);
+        } catch (Exception e) {
+            log.error("get room member count failed | roomId={}, err=", roomId, e);
+            return 0L;
+        }
+    }
+
+    private Long incrClickCount(String roomId) {
+        String key = String.format("room:voice:%s:memberCount", roomId);
+        return redisTemplate.opsForValue().increment(key);
+    }
+
+    private Long incrMemberCount(String roomId) {
+        String key = String.format("room:voice:%s:clickCount", roomId);
+        return redisTemplate.opsForValue().increment(key);
+    }
+
 }

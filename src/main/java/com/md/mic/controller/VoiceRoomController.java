@@ -3,8 +3,8 @@ package com.md.mic.controller;
 import com.md.mic.common.utils.ValidationUtil;
 import com.md.mic.model.User;
 import com.md.mic.pojos.*;
+import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
-import com.md.service.model.entity.Users;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -21,6 +20,9 @@ public class VoiceRoomController {
 
     @Autowired
     private VoiceRoomService voiceRoomService;
+
+    @Autowired
+    private VoiceRoomMicService voiceRoomMicService;
 
     @PostMapping("/voice/room/create")
     public CreateRoomResponse createVoiceRoom(@RequestAttribute("user") User user,
@@ -44,7 +46,9 @@ public class VoiceRoomController {
 
     @GetMapping("/voice/room/{roomId}")
     public GetVoiceRoomResponse getVoiceRoomInfo(@PathVariable("roomId") String roomId) {
-        GetVoiceRoomResponse response = new GetVoiceRoomResponse(null, null);
+        VoiceRoomDTO voiceRoomDTO = voiceRoomService.getByRoomId(roomId);
+        List<MicInfo> micInfo = voiceRoomMicService.getByRoomId(roomId);
+        GetVoiceRoomResponse response = new GetVoiceRoomResponse(voiceRoomDTO, micInfo);
         return response;
     }
 

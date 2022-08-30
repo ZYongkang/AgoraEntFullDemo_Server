@@ -32,8 +32,10 @@ public class VoiceRoomDTO {
 
     private UserDTO owner;
 
-    private Long membersCount;
+    @JsonProperty("member_count")
+    private Long memberCount;
 
+    @JsonProperty("click_count")
     private Long clickCount;
 
     private String announcement;
@@ -44,11 +46,12 @@ public class VoiceRoomDTO {
     @JsonProperty("member_list")
     private List<UserDTO> memberList;
 
-    public static VoiceRoomDTO from(VoiceRoom voiceRoom, UserDTO owner) {
+    public static VoiceRoomDTO from(VoiceRoom voiceRoom, UserDTO owner, Long memberCount,
+            Long clickCount) {
         return new VoiceRoomDTO(voiceRoom.getRoomId(), voiceRoom.getChannelId(),
                 voiceRoom.getChatroomId(), voiceRoom.getName(), voiceRoom.getType(),
                 voiceRoom.getIsPrivate(), voiceRoom.getAllowedFreeJoinMic(),
-                owner, 0L, 0L, voiceRoom.getAnnouncement(),
+                owner, memberCount, clickCount, voiceRoom.getAnnouncement(),
                 Collections.emptyList(), Collections.emptyList());
     }
 

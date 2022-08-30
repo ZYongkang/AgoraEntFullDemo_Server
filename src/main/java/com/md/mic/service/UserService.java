@@ -12,4 +12,6 @@ public interface UserService extends IService<User> {
     UserDTO loginDevice(String deviceId, String name, String portrait);
 
     Map<String, UserDTO> findByUidList(List<String> ownerUidList);
+
+    UserDTO getByUid(String uid);
 }
