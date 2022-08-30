@@ -168,35 +168,19 @@ CREATE TABLE `verify_log`
 
 
 # voice room
-drop table if exists user;
-create table user
-(
-    `id`         int(10) unsigned not null auto_increment comment 'id',
-    `uid`    varchar(100)     not null comment '用户唯一标识',
-    `name`    varchar(100)     not null comment '昵称',
-    `portrait` varchar(100)     not null comment '头像',
-    `device_id`     varchar(100)       not null comment '设备id',
-    `phone`     varchar(20)       not null comment '手机号',
-    `created_at` timestamp        not null comment '申请时间',
-    `updated_at` timestamp        not null comment '最近修改时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uniq_user_uid` (`uid`),
-    KEY `idx_user_device_id` (`device_id`),
-    KEY `idx_user_phone` (`phone`)
-) engine = InnoDB default charset = utf8mb4 comment ='用户信息';
-
 drop table if exists easemob_user;
 create table easemob_user
 (
     `id`         int(10) unsigned not null auto_increment comment 'id',
-    `uid`    varchar(100)     not null comment '用户唯一标识',
+    `uid`        varchar(100)     not null comment '用户唯一标识',
     `chat_id`    varchar(128)     not null comment '用户对应在环信的用户id',
     `chat_uuid`  varchar(64)      not null comment '用户对应在的环信用户uuid',
     `created_at` timestamp        not null comment '创建时间',
     `updated_at` timestamp        not null comment '最近修改时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uniq_easemob_user_uid` (`uid`)
-) engine =InnoDB default charset=utf8mb4 comment ='用户与环信的关联信息';
+) engine = InnoDB default charset = utf8mb4 comment ='用户与环信的关联信息';
+
 
 drop table if exists voice_room;
 create table voice_room
@@ -205,8 +189,14 @@ create table voice_room
     `room_id`               varchar(100)     not null comment '房间唯一标识',
     `chatroom_id`           bigint           not null comment '环信关联房间id',
     `channel_id`            varchar(128)     not null comment '声网RTC关联的channelId',
+    `name`                  varchar(100)     NOT NULL DEFAULT '' COMMENT '房间名字',
+    `is_private`            int(1)           NOT NULL default 0 COMMENT '是否公开 0 公开 1加密',
+    `password`              varchar(10)      NOT NULL DEFAULT '' COMMENT '密码',
     `allowed_free_join_mic` bool             not null default true comment '是否允许自由上麦',
     `type`                  int(2)           not null comment '房间类型',
+    `owner`                 varchar(100)     not null comment '房主uid',
+    `sound_effect`          varchar(256)     not null comment '房间音效',
+    `announcement`          varchar(256) comment '房间公告',
     `created_at`            timestamp        not null comment '创建时间',
     `updated_at`            timestamp        not null comment '最近修改时间',
     PRIMARY KEY (`id`),
@@ -219,7 +209,7 @@ create table mic_apply_user
 (
     `id`         int(10) unsigned not null auto_increment comment 'id',
     `room_id`    varchar(100)     not null comment '房间唯一标识',
-    `uid`    varchar(100)     not null comment '用户唯一标识',
+    `uid`        varchar(100)     not null comment '用户唯一标识',
     `mic_index`  int(4) comment '申请麦位位置',
     `created_at` timestamp        not null comment '申请时间',
     PRIMARY KEY (`id`),
@@ -241,3 +231,43 @@ create table gift_record
     UNIQUE KEY `uniq_voice_room_room_no_user_no` (`room_no`, `user_no`),
     KEY `idx_voice_room_amount` (`amount`)
 ) engine = InnoDB default charset = utf8mb4 comment ='打赏信息';
+
+CREATE TABLE `songs`
+(
+    `id`         int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
+    `song_no`    varchar(100)     NOT NULL COMMENT '歌曲',
+    `song_name`  varchar(100)     NOT NULL COMMENT '歌曲名称',
+    `song_url`   varchar(500)     NOT NULL COMMENT '歌曲',
+    `image_url`  varchar(500)     NOT NULL COMMENT '歌曲图片',
+    `singer`     varchar(100)     NOT NULL COMMENT '作者',
+    `type`       varchar(10)      NOT NULL COMMENT '分类',
+    `lyric`      varchar(500)     NOT NULL COMMENT '歌词',
+    `created_at` timestamp        NULL     DEFAULT NULL COMMENT '创建时间',
+    `updated_at` timestamp        NULL     DEFAULT NULL COMMENT '修改时间',
+    `status`     int(1)           NOT NULL DEFAULT 0 COMMENT '1已唱 0 未唱',
+    `deleted_at` timestamp        NULL     DEFAULT null COMMENT '删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_songs_created_at` (`created_at`),
+    KEY `idx_songs_updated_at` (`updated_at`),
+    KEY `idx_songs_song_no` (`song_no`),
+    KEY `idx_songs_song_name` (`song_name`)
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COMMENT ='歌曲信息';
+
+
+drop table if exists `user`;
+create table `user`
+(
+    `id`        int(10) unsigned not null auto_increment comment 'id',
+    `uid`       varchar(100)     not null comment '用户唯一标识',
+    `name`      varchar(100)     not null comment '昵称',
+    `portrait`  varchar(100)     not null comment '头像',
+    `device_id` varchar(100)     not null comment '设备id',
+    `phone`     varchar(20) comment '手机号',
+    `created_at` timestamp        not null comment '申请时间',
+    `updated_at` timestamp        not null comment '最近修改时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uniq_user_uid` (`uid`),
+    KEY `idx_user_device_id` (`device_id`),
+    KEY `idx_user_phone` (`phone`)
+) engine = InnoDB default charset = utf8mb4 comment ='用户信息';
+
