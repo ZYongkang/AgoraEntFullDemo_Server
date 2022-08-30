@@ -114,6 +114,25 @@ public class ImApi {
     }
 
     /**
+     * 销毁聊天室
+     *
+     * @param chatRoomId: 聊天室id
+     * @throws EMException
+     */
+    public void deleteChatRoom(@Nonnull String chatRoomId)
+            throws EMException {
+
+        try {
+            emService.room().destroyRoom(chatRoomId).block();
+        } catch (EMException e) {
+            log.error(
+                    "server error,createRoom error,chatRoomId:{}", chatRoomId, e);
+            throw e;
+        }
+
+    }
+
+    /**
      * 获取聊天室详情
      *
      * @param chatRoomId: 聊天室id
