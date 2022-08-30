@@ -9,13 +9,17 @@ import com.easemob.im.server.api.metadata.chatroom.set.ChatRoomMetadataSetRespon
 import com.easemob.im.server.model.EMKeyValue;
 import com.easemob.im.server.model.EMPage;
 import com.easemob.im.server.model.EMRoom;
+import com.easemob.im.server.model.EMUser;
+import com.md.mic.model.EasemobUser;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * imAPI。
@@ -28,21 +32,37 @@ public class ImApi {
     private EMService emService;
 
     /**
-     * 创建用户
+     * 不指定密码创建用户
      *
-     * @param userName: 用户名
-     * @param password: 密码
-     * @return 环信userName
+     * @param uid
+     * @param username
+     * @return
      * @throws EMException
      */
-    public String createUser(@Nonnull String userName, @Nonnull String password)
+    public EasemobUser createUser(@Nonnull String uid, @Nonnull String username)
             throws EMException {
+        return createUser(uid, username, null);
+    }
 
+    /**
+     * 创建用户
+     *
+     * @param uid
+     * @param username
+     * @param password
+     * @return
+     */
+    public EasemobUser createUser(@Nonnull String uid, @Nonnull String username,
+            String password) {
+        if (StringUtils.isBlank(password)) {
+            password = UUID.randomUUID().toString().replace("-", "");
+        }
         try {
-            return this.emService.user().create(userName, password).block().getUsername();
+            EMUser emUser = this.emService.user().create(username, password).block();
+            return EasemobUser.builder().uid(uid).chatId(emUser.getUsername())
+                    .chatUuid(emUser.getUuid()).build();
         } catch (EMException e) {
-            log.error("server error,createUser error,userName:{},password:{}", userName, password,
-                    e);
+            log.error("server error,createUser error,userName:{},uid:{}", username, uid, e);
             throw e;
         }
 
