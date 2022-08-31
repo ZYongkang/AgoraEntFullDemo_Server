@@ -15,7 +15,6 @@ import com.md.mic.repository.VoiceRoomMapper;
 import com.md.mic.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -31,9 +30,6 @@ import java.util.stream.Collectors;
 @Service
 public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom>
         implements VoiceRoomService {
-
-    @Resource
-    private RedissonClient redissonClient;
 
     @Resource
     private EasemobUserService easemobUserService;
@@ -161,13 +157,16 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         List<GiftRecord> records =
                 giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(),
                         voiceRoom.getOwner(), rankingLength);
-        ArrayList<String> uidList = records.stream().map(GiftRecord::getUid).distinct()
-                .collect(Collectors.toCollection(Lists::newArrayList));
-        Map<String, UserDTO> userDTOMap = userService.findByUidList(uidList);
-        List<GiftRecordDTO> list = records.stream().map(giftRecord -> {
-            UserDTO dto = userDTOMap.get(giftRecord.getUid());
-            return new GiftRecordDTO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
-        }).collect(Collectors.toList());
+        List<GiftRecordDTO> list = new ArrayList<>();
+        if (records != null && !records.isEmpty()) {
+            ArrayList<String> uidList = records.stream().map(GiftRecord::getUid).distinct()
+                    .collect(Collectors.toCollection(Lists::newArrayList));
+            Map<String, UserDTO> userDTOMap = userService.findByUidList(uidList);
+            list = records.stream().map(giftRecord -> {
+                UserDTO dto = userDTOMap.get(giftRecord.getUid());
+                return new GiftRecordDTO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
+            }).collect(Collectors.toList());
+        }
         VoiceRoomDTO voiceRoomDTO = VoiceRoomDTO.from(voiceRoom, userDTO, memberCount, clickCount);
         return voiceRoomDTO.toBuilder().memberList(memberList)
                 .rankingList(list)
@@ -206,6 +205,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         if (!owner.equals(voiceRoom.getOwner())) {
             throw new VoiceRoomSecurityException("not the owner can't operate");
         }
+        imApi.deleteChatRoom(voiceRoom.getChatroomId());
         voiceRoomUserService.deleteByRoomId(roomId);
         baseMapper.deleteById(voiceRoom.getId());
     }

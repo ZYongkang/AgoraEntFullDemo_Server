@@ -13,9 +13,7 @@ import java.util.Collections;
 public class VoiceRoomGiftController {
 
     @GetMapping("/voice/room/{roomId}/gift/list")
-    public GetGiftListResponse listGift(@PathVariable("roomId") String roomId,
-            @RequestParam(name = "cursor", required = false) String cursor,
-            @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
+    public GetGiftListResponse listGift(@PathVariable("roomId") String roomId) {
         GetGiftListResponse response =
                 new GetGiftListResponse(0, null, Collections.emptyList());
         return response;
