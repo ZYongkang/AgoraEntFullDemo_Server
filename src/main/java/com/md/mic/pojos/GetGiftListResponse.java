@@ -8,10 +8,6 @@ import java.util.List;
 @Value
 public class GetGiftListResponse {
 
-    private Integer total;
-
-    private String cursor;
-
     @JsonProperty("ranking_list")
     private List<GiftRecordDTO> rankingList;
 
