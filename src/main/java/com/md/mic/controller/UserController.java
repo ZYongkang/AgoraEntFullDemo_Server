@@ -2,7 +2,7 @@ package com.md.mic.controller;
 
 import com.md.common.util.token.TokenProvider;
 import com.md.mic.common.jwt.util.JwtUtil;
-import com.md.mic.common.utils.ValidationUtil;
+import com.md.common.util.ValidationUtil;
 import com.md.mic.model.User;
 import com.md.mic.pojos.*;
 import com.md.mic.service.UserService;

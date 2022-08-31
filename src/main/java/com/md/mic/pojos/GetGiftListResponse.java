@@ -13,6 +13,6 @@ public class GetGiftListResponse {
     private String cursor;
 
     @JsonProperty("ranking_list")
-    private List<GiftRecord> rankingList;
+    private List<GiftRecordDTO> rankingList;
 
 }

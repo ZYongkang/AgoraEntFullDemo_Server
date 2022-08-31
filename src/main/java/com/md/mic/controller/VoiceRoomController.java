@@ -1,6 +1,7 @@
 package com.md.mic.controller;
 
-import com.md.mic.common.utils.ValidationUtil;
+import com.md.common.util.ValidationUtil;
+import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.model.User;
 import com.md.mic.pojos.*;
 import com.md.mic.service.VoiceRoomMicService;
@@ -48,18 +49,27 @@ public class VoiceRoomController {
     public GetVoiceRoomResponse getVoiceRoomInfo(@PathVariable("roomId") String roomId) {
         VoiceRoomDTO voiceRoomDTO = voiceRoomService.getByRoomId(roomId);
         List<MicInfo> micInfo = voiceRoomMicService.getByRoomId(roomId);
-        GetVoiceRoomResponse response = new GetVoiceRoomResponse(voiceRoomDTO, micInfo);
-        return response;
+        return new GetVoiceRoomResponse(voiceRoomDTO, micInfo);
     }
 
     @PutMapping("/voice/room/{roomId}")
     public UpdateRoomInfoResponse updateVoiceRoomInfo(@PathVariable("roomId") String roomId,
-            @RequestBody updateRoomInfoRequest request) {
+            @RequestBody updateRoomInfoRequest request,
+            @RequestAttribute("user") User user) {
+        if (user == null) {
+            throw new VoiceRoomSecurityException("not the owner can't operate");
+        }
+        voiceRoomService.updateByRoomId(roomId, request, user.getUid());
         return new UpdateRoomInfoResponse(Boolean.TRUE);
     }
 
     @DeleteMapping("/voice/room/{roomId}")
-    public DeleteRoomResponse deleteVoiceRoom(@PathVariable("roomId") String roomId) {
+    public DeleteRoomResponse deleteVoiceRoom(@PathVariable("roomId") String roomId,
+            @RequestAttribute("user") User user) {
+        if (user == null) {
+            throw new VoiceRoomSecurityException("not the owner can't operate");
+        }
+        voiceRoomService.deleteByRoomId(roomId, user.getUid());
         return new DeleteRoomResponse(Boolean.TRUE);
     }
 

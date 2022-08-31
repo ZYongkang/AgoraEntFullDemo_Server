@@ -1,10 +1,12 @@
 package com.md.mic.pojos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.md.mic.model.EasemobUser;
 import com.md.mic.model.User;
-import lombok.*;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder(toBuilder = true)
@@ -16,7 +18,7 @@ public class UserDTO {
     @JsonProperty("chat_uid")
     private String chatUid;
 
-    @JsonProperty("chat_uuid")
+    @JsonIgnore
     private String chatUuid;
 
     private String name;

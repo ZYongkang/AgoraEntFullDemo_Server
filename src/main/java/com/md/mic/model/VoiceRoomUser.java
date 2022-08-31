@@ -1,13 +1,15 @@
 package com.md.mic.model;
 
 import com.baomidou.mybatisplus.annotation.*;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Value;
 
 import java.time.LocalDateTime;
 
-@Data
-@TableName("gift_record")
-public class GiftRecord {
+@Value
+@Builder(toBuilder = true)
+@TableName("voice_room_user")
+public class VoiceRoomUser {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
@@ -22,7 +24,4 @@ public class GiftRecord {
 
     private String uid;
 
-    private String toUid;
-
-    private Long amount;
 }

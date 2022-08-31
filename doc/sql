@@ -221,14 +221,14 @@ drop table if exists gift_record;
 create table gift_record
 (
     `id`         int(10) unsigned not null auto_increment comment 'id',
-    `room_no`    varchar(100)     not null comment '房间唯一标识',
-    `user_no`    varchar(100)     not null comment '送礼物用户唯一标识',
-    `to_user_no` varchar(100)     not null comment '收礼物用户唯一标识',
+    `room_id`    varchar(100)     not null comment '房间唯一标识',
+    `uid`    varchar(100)     not null comment '送礼物用户唯一标识',
+    `to_uid` varchar(100)     not null comment '收礼物用户唯一标识',
     `amount`     bigint(10)       not null default 0 comment '贡献值',
     `created_at` timestamp        not null comment '申请时间',
     `updated_at` timestamp        not null comment '最近修改时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uniq_voice_room_room_no_user_no` (`room_no`, `user_no`),
+    UNIQUE KEY `uniq_voice_room_room_no_user_no` (`room_id`, `uid`),
     KEY `idx_voice_room_amount` (`amount`)
 ) engine = InnoDB default charset = utf8mb4 comment ='打赏信息';
 

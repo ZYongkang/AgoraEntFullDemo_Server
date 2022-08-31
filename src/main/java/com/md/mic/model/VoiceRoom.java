@@ -56,17 +56,10 @@ public class VoiceRoom {
             String soundEffect) {
         String roomId = buildRoomNo(name);
         String channelId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
-        return VoiceRoom.builder()
-                .name(name)
-                .roomId(roomId)
-                .chatroomId(chatroomId)
-                .channelId(channelId)
-                .isPrivate(isPrivate)
-                .password(password)
-                .allowedFreeJoinMic(allowedFreeJoinMic)
-                .type(type)
-                .owner(owner)
-                .soundEffect(soundEffect)
+        return VoiceRoom.builder().name(name).roomId(roomId).chatroomId(chatroomId)
+                .channelId(channelId).isPrivate(isPrivate).password(password)
+                .allowedFreeJoinMic(allowedFreeJoinMic).type(type)
+                .owner(owner).soundEffect(soundEffect)
                 .build();
     }
 
@@ -82,4 +75,54 @@ public class VoiceRoom {
             return MdStringUtils.randomDelete(md5Str, 5);
         }
     }
+
+    public VoiceRoom updateName(String name) {
+        return VoiceRoom.builder().id(id).name(name).roomId(roomId).chatroomId(chatroomId)
+                .channelId(channelId).isPrivate(isPrivate).password(password)
+                .allowedFreeJoinMic(allowedFreeJoinMic).type(type).owner(owner)
+                .soundEffect(soundEffect).announcement(announcement)
+                .build();
+    }
+
+    public VoiceRoom updateIsPrivate(Boolean isPrivate) {
+        return VoiceRoom.builder().id(id).name(name).roomId(roomId).chatroomId(chatroomId)
+                .channelId(channelId).isPrivate(isPrivate).password(password)
+                .allowedFreeJoinMic(allowedFreeJoinMic).type(type).owner(owner)
+                .soundEffect(soundEffect).announcement(announcement)
+                .build();
+    }
+
+    public VoiceRoom updatePassword(String password) {
+        return VoiceRoom.builder().id(id).name(name).roomId(roomId)
+                .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
+                .password(password).allowedFreeJoinMic(allowedFreeJoinMic)
+                .type(type).owner(owner).soundEffect(soundEffect).announcement(announcement)
+                .build();
+    }
+
+    public VoiceRoom updateAllowedFreeJoinMic(Boolean allowedFreeJoinMic) {
+        return VoiceRoom.builder().id(id).name(name).roomId(roomId)
+                .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
+                .password(password).allowedFreeJoinMic(allowedFreeJoinMic)
+                .type(type).owner(owner).soundEffect(soundEffect).announcement(announcement)
+                .build();
+    }
+
+    public VoiceRoom updateType(Integer type) {
+        return VoiceRoom.builder().id(id).name(name).roomId(roomId)
+                .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
+                .password(password).allowedFreeJoinMic(allowedFreeJoinMic)
+                .type(type).owner(owner).soundEffect(soundEffect).announcement(announcement)
+                .build();
+    }
+
+    public VoiceRoom updateAnnouncement(String announcement) {
+        return VoiceRoom.builder().id(id).name(name).roomId(roomId)
+                .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
+                .password(password).allowedFreeJoinMic(allowedFreeJoinMic)
+                .type(type).owner(owner).soundEffect(soundEffect).announcement(announcement)
+                .build();
+    }
+
+
 }

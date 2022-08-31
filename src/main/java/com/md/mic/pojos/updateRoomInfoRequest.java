@@ -15,8 +15,8 @@ public class updateRoomInfoRequest {
 
     private String password;
 
-    @JsonProperty("use_rebot")
-    private Boolean useRebot;
+    @JsonProperty("use_robot")
+    private Boolean useRobot;
 
     @JsonProperty("allowed_free_join_mic")
     private Boolean allowedFreeJoinMic;

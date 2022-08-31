@@ -41,7 +41,7 @@ public class VoiceRoomDTO {
     private String announcement;
 
     @JsonProperty("ranking_list")
-    private List<GiftRecord> rankingList;
+    private List<GiftRecordDTO> rankingList;
 
     @JsonProperty("member_list")
     private List<UserDTO> memberList;
