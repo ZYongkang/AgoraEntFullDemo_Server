@@ -45,6 +45,14 @@ public enum ErrorCodeEnum {
 
     please_dont_upload_contains_politically_sensitive_content(90003,"请不要上传包含政治敏感内容"),
 
+    add_mic_apply_error(50001,"申请上麦失败"),
+    no_mic_apply_record(50002,"没有申请上麦记录"),
+    mic_not_init(50003,"麦位未初始化"),
+    mic_not_belong_you(50004,"麦位不属于你"),
+    mic_is_lock(50005,"麦位已上锁"),
+    mic_is_concurrent_operation(50006,"麦位正在被其他人修改"),
+    mic_is_cannot_be_modified(50007,"麦位当前状态不允许被修改为目标状态"),
+
 
 
 
