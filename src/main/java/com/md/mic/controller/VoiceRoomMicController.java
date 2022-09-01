@@ -44,7 +44,7 @@ public class VoiceRoomMicController {
         if(roomInfo==null){
             throw new IllegalArgumentException("room is not be found!");
         }
-        micApplyUserService.addMicApply(user.getUid(),roomId,request);
+        response.setResult(micApplyUserService.addMicApply(user.getUid(),roomId,request,roomInfo.getAllowFreeJoinMic()));
         return response;
     }
 
@@ -134,7 +134,7 @@ public class VoiceRoomMicController {
             throw new IllegalArgumentException("room is not be found!");
         }
         if(!roomInfo.getOwner().getUid().equals(user.getUid())){
-            throw new IllegalArgumentException("only the admin can mute mic");
+            throw new IllegalArgumentException("only the admin can unmute mic");
         }
         this.voiceRoomMicService.unMuteMic(roomId,request.getIndex());
 
@@ -157,40 +157,88 @@ public class VoiceRoomMicController {
             throw new IllegalArgumentException("room is not be found!");
         }
         if(!roomInfo.getOwner().getUid().equals(user.getUid())){
-            throw new IllegalArgumentException("only the admin can mute mic");
+            throw new IllegalArgumentException("only the admin can kick mic");
         }
-        this.voiceRoomMicService.unMuteMic(roomId,request.getIndex());
+        this.voiceRoomMicService.kickUserMic(roomId,request.getIndex(),request.getUid());
 
         return response;
     }
 
     @PostMapping("/voice/room/{roomId}/mic/lock")
-    public LockMicResponse lockMic(@PathVariable("roomId") String roomId,
+    public LockMicResponse lockMic(@RequestAttribute("user") User user,@PathVariable("roomId") String roomId,
             @RequestBody LockMicRequest request) {
+
         LockMicResponse response = new LockMicResponse(Boolean.TRUE);
+        VoiceRoomDTO roomInfo=voiceRoomService.getByRoomId(roomId);
+        if(roomInfo==null){
+            throw new IllegalArgumentException("room is not be found!");
+        }
+        if(!roomInfo.getOwner().getUid().equals(user.getUid())){
+            throw new IllegalArgumentException("only the admin can lock mic");
+        }
+        this.voiceRoomMicService.lockMic(roomId,request.getIndex());
+
         return response;
     }
 
     @DeleteMapping("/voice/room/{roomId}/mic/lock")
-    public UnLockMicResponse unLockMic(@PathVariable("roomId") String roomId,
+    public UnLockMicResponse unLockMic(@RequestAttribute("user") User user,@PathVariable("roomId") String roomId,
             @RequestBody UnLockMicRequest request) {
         UnLockMicResponse response = new UnLockMicResponse(Boolean.TRUE);
+        VoiceRoomDTO roomInfo=voiceRoomService.getByRoomId(roomId);
+        if(roomInfo==null){
+            throw new IllegalArgumentException("room is not be found!");
+        }
+        if(!roomInfo.getOwner().getUid().equals(user.getUid())){
+            throw new IllegalArgumentException("only the admin can unlock mic");
+        }
+        this.voiceRoomMicService.unLockMic(roomId,request.getIndex());
         return response;
     }
 
+    //群主邀请上麦
     @PostMapping("/voice/room/{roomId}/mic/invite")
-    public InviteUserOnMicResponse invite(@PathVariable("roomId") String roomId,
+    public InviteUserOnMicResponse invite(@RequestAttribute("user") User user,@PathVariable("roomId") String roomId,
             @RequestBody InviteUserOnMicRequest request) {
         InviteUserOnMicResponse response = new InviteUserOnMicResponse(Boolean.TRUE);
+        VoiceRoomDTO roomInfo=voiceRoomService.getByRoomId(roomId);
+        if(roomInfo==null){
+            throw new IllegalArgumentException("room is not be found!");
+        }
+        if(!roomInfo.getOwner().getUid().equals(user.getUid())){
+            throw new IllegalArgumentException("only the admin can invite");
+        }
+        this.voiceRoomMicService.invite(roomId,request.getIndex(),request.getUid());
         return response;
     }
 
     //群主同意上麦申请
     @PostMapping("/voice/room/{roomId}/mic/apply/agree")
-    public ApplyAgreeOnMicResponse agreeApply(@PathVariable("roomId") String roomId,
+    public ApplyAgreeOnMicResponse agreeApply(@RequestAttribute("user") User user,@PathVariable("roomId") String roomId,
             @RequestBody ApplyAgreeOnMicRequest request) {
         ApplyAgreeOnMicResponse response = new ApplyAgreeOnMicResponse(Boolean.TRUE);
+        VoiceRoomDTO roomInfo=voiceRoomService.getByRoomId(roomId);
+        if(roomInfo==null){
+            throw new IllegalArgumentException("room is not be found!");
+        }
+        if(!roomInfo.getOwner().getUid().equals(user.getUid())){
+            throw new IllegalArgumentException("only the admin can invite");
+        }
         Boolean result=micApplyUserService.agreeApply(roomId,request.getUid());
+        response.setResult(result);
+        return response;
+    }
+
+    //用户同意邀请上麦申请
+    @GetMapping("/voice/room/{roomId}/mic/invite/agree")
+    public InviteAgreeOnMicResponse agreeInvite(@RequestAttribute("user") User user,@PathVariable("roomId") String roomId,
+            @RequestBody ApplyAgreeOnMicRequest request) {
+        InviteAgreeOnMicResponse response = new InviteAgreeOnMicResponse(Boolean.TRUE);
+        VoiceRoomDTO roomInfo=voiceRoomService.getByRoomId(roomId);
+        if(roomInfo==null){
+            throw new IllegalArgumentException("room is not be found!");
+        }
+        Boolean result=voiceRoomMicService.agreeInvite(roomId,request.getUid());
         response.setResult(result);
         return response;
     }

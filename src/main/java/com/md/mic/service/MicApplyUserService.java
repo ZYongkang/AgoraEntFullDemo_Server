@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface MicApplyUserService extends IService<MicApplyUser> {
 
-    void addMicApply(String uid, String roomId, AddMicApplyRequest request);
+    Boolean addMicApply(String uid, String roomId, AddMicApplyRequest request,Boolean freeMic);
 
     void deleteMicApply(String uid, String roomId);
 

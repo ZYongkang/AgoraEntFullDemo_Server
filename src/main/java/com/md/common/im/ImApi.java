@@ -221,14 +221,14 @@ public class ImApi {
      * @param fromUserName     发送的成员
      * @param toChatRoomId     接收的聊天室id
      * @param customEvent      自定义消息类型
-     * @param customContent    自定义消息内容
-     * @param customExtensions 自定义消息扩展
+     * @param customExtensions    自定义消息内容
+     * @param extension 自定义消息扩展
      * @throws EMException
      */
     public void sendChatRoomCustomMessage(@Nonnull String fromUserName,
             @Nonnull String toChatRoomId,
-            @Nonnull String customEvent, @Nonnull Map<String, Object> customContent,
-            Map<String, Object> customExtensions)
+            @Nonnull String customEvent, @Nonnull Map<String, Object> customExtensions,
+            Map<String, Object> extension)
             throws EMException {
 
         try {
@@ -236,14 +236,14 @@ public class ImApi {
                     .fromUser(fromUserName)
                     .toRoom(toChatRoomId)
                     .custom(msg -> msg.customEvent(customEvent)
-                            .customExtensions(EMKeyValue.of(customContent)))
-                    .extension(msg -> msg.addAll(EMKeyValue.of(customExtensions)))
+                            .customExtensions(EMKeyValue.of(customExtensions)))
+                    .extension(msg -> msg.addAll(EMKeyValue.of(extension)))
                     .send()
                     .block();
         } catch (EMException e) {
             log.error(
-                    "server error,sendChatRoomCustomMessage error,fromUserName:{},toChatRoomId:{},customEvent:{},customContent:{}",
-                    fromUserName, toChatRoomId, customEvent, customContent, e);
+                    "server error,sendChatRoomCustomMessage error,fromUserName:{},toChatRoomId:{},customEvent:{},customExtensions:{}",
+                    fromUserName, toChatRoomId, customEvent, customExtensions, e);
             throw e;
         }
 

@@ -49,9 +49,12 @@ public enum ErrorCodeEnum {
     no_mic_apply_record(50002,"没有申请上麦记录"),
     mic_not_init(50003,"麦位未初始化"),
     mic_not_belong_you(50004,"麦位不属于你"),
+
     mic_is_lock(50005,"麦位已上锁"),
     mic_is_concurrent_operation(50006,"麦位正在被其他人修改"),
     mic_is_cannot_be_modified(50007,"麦位当前状态不允许被修改为目标状态"),
+    mic_not_current_user(50008,"麦位不是当前人"),
+    mic_index_is_not_null(50009,"麦位索引不允许为空");
 
 
 
