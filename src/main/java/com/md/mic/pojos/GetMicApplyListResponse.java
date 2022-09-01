@@ -7,9 +7,9 @@ import java.util.List;
 @Value
 public class GetMicApplyListResponse {
 
-    private Integer total;
+    private Long total;
 
     private String cursor;
 
-    private List<UserDTO> members;
+    private List<MicApplyDTO> micApply;
 }

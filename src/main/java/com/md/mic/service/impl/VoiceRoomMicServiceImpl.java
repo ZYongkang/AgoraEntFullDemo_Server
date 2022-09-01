@@ -71,14 +71,14 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public Boolean setRoomMicInfo(String roomId, String uid, Integer micIndex,Boolean inOrder) {
+    public Boolean setRoomMicInfo(String roomId, String uid, Integer micIndex, Boolean inOrder) {
 
         Boolean hasMic = false;
 
-        if(micIndex==null && !inOrder){
+        if (micIndex == null && !inOrder) {
             throw new BaseException(ErrorCodeEnum.mic_index_is_not_null);
         }
-        if(micIndex!=null){
+        if (micIndex != null) {
             try {
                 this.updateVoiceRoomMicInfo(roomId, uid, micIndex,
                         MicOperateStatus.UP_MIC.getStatus(), Boolean.FALSE);
@@ -89,10 +89,10 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             }
         }
 
-        if(!hasMic && inOrder){
+        if (!hasMic && inOrder) {
 
             //按顺序上麦
-            for (int index = 1; index < micCount ; index++) {
+            for (int index = 1; index < micCount; index++) {
                 try {
                     this.updateVoiceRoomMicInfo(roomId, uid, index,
                             MicOperateStatus.UP_MIC.getStatus(), Boolean.FALSE);
@@ -107,6 +107,53 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         }
         return hasMic;
 
+    }
+
+    @Override
+    public void initMic(VoiceRoomDTO voiceRoomDTO) {
+        String roomId = voiceRoomDTO.getRoomId();
+        String owner = voiceRoomDTO.getOwner().getUid();
+        Boolean lockkey = redisTemplate.opsForValue()
+                .setIfAbsent(buildMicLockKey(roomId), buildMicLockKey(roomId),
+                        Duration.ofMillis(5000));
+
+        try {
+            if (lockkey) {
+
+                Map<String, String> metadata =
+                        imApi.listChatRoomMetadata(roomId, Arrays.asList(buildMicKey(0)))
+                                .getMetadata();
+                if (metadata.size() > 0) {
+                    throw new BaseException(ErrorCodeEnum.mic_init_already);
+                }
+
+                Map<String, String> metadataMap = new HashMap<>();
+                for (int micIndex = 0; micIndex < micCount; micIndex++) {
+                    String micKey = buildMicKey(micIndex);
+                    MicMetadataValue micMetadataValue = new MicMetadataValue();
+                    micMetadataValue.setUid(null);
+                    micMetadataValue.setStatus(MicStatus.FREE.getStatus());
+                    if (micIndex == 0) {
+                        micMetadataValue.setUid(owner);
+                    }
+                    metadataMap.put(micKey, JSONObject.toJSONString(micMetadataValue));
+                }
+                //
+                List<String> successKeys =
+                        imApi.setChatRoomMetadata(OPERATOR, roomId, metadataMap, AutoDelete.DELETE)
+                                .getSuccessKeys();
+                if (successKeys.size() != micCount) {
+                    imApi.deleteChatRoomMetadata(OPERATOR, roomId, successKeys);
+                    throw new BaseException(ErrorCodeEnum.mic_init_error);
+                }
+            }
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (lockkey) {
+                redisTemplate.delete(lockkey);
+            }
+        }
     }
 
     @Override
@@ -139,6 +186,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     public void openMic(String uid, String roomId, Integer micIndex) {
 
         String metadataKey = buildMicKey(micIndex);
+
         Map<String, String> metadata =
                 imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey)).getMetadata();
 
@@ -309,26 +357,138 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void invite(String roomId, Integer index, String uid) {
+    public void invite(VoiceRoomDTO roomInfo, Integer index, String uid) {
         UserDTO userDTO = this.userService.getByUid(uid);
         if (userDTO == null) {
             throw new BaseException(ErrorCodeEnum.user_not_exist);
         }
+        UserDTO applyUser = userService.getByUid(uid);
+
         Map<String, Object> customExtensions = new HashMap<>();
-        customExtensions.put("user", JSONObject.toJSONString(userDTO));
-        this.imApi.sendChatRoomCustomMessage(userDTO.getChatUid(), roomId,
+        customExtensions.put("user", applyUser);
+        customExtensions.put("mic_index", index);
+        customExtensions.put("room_id", roomInfo.getRoomId());
+        this.imApi.sendUserCustomMessage(roomInfo.getOwner().getChatUid(), applyUser.getChatUid(),
                 CustomEventType.INVITE_SITE.getValue(), customExtensions, new HashMap<>());
     }
 
     @Override
-    public Boolean agreeInvite(String roomId, String uid) {
-        return setRoomMicInfo(roomId,uid,null,Boolean.TRUE);
+    public Boolean agreeInvite(String roomId, String uid, Integer micIndex) {
+        if (micIndex == null) {
+            return setRoomMicInfo(roomId, uid, null, Boolean.TRUE);
+        } else {
+            return setRoomMicInfo(roomId, uid, micIndex, Boolean.FALSE);
+        }
+
+    }
+
+    @Override
+    public void exchangeMic(String roomId, Integer from, Integer to, String uid) {
+        String fromMicKey = buildMicKey(from);
+        String toMicKey = buildMicKey(to);
+
+        Map<String, String> metadata =
+                imApi.listChatRoomMetadata(roomId, Arrays.asList(fromMicKey, toMicKey))
+                        .getMetadata();
+
+        if (metadata.containsKey(fromMicKey) && metadata.containsKey(toMicKey)) {
+            MicMetadataValue fromMicMetadataValue =
+                    JSONObject.parseObject(metadata.get(fromMicKey), MicMetadataValue.class);
+
+            MicMetadataValue toMicMetadataValue =
+                    JSONObject.parseObject(metadata.get(toMicKey), MicMetadataValue.class);
+
+            if (StringUtils.isEmpty(fromMicMetadataValue.getUid()) || !fromMicMetadataValue.getUid()
+                    .equals(uid)) {
+                throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
+            }
+
+            if (toMicMetadataValue.getStatus() != MicStatus.FREE.getStatus()) {
+                throw new BaseException(ErrorCodeEnum.mic_index_is_not_free);
+            }
+
+            this.exchangeMicInfo(roomId, uid, from, to);
+
+        } else {
+            throw new BaseException(ErrorCodeEnum.mic_not_init);
+        }
+
+    }
+
+    private void exchangeMicInfo(String roomId, String uid, Integer from, Integer to) {
+
+        String fromMicKey = buildMicKey(from);
+
+        String toMicKey = buildMicKey(to);
+
+        Boolean lockFromkey = redisTemplate.opsForValue()
+                .setIfAbsent(buildMicLockKey(from), fromMicKey, Duration.ofMillis(5000));
+
+        Boolean lockTokey = redisTemplate.opsForValue()
+                .setIfAbsent(buildMicLockKey(to), toMicKey, Duration.ofMillis(5000));
+
+        try {
+            if (lockFromkey && lockTokey) {
+
+                Map<String, String> metadata =
+                        imApi.listChatRoomMetadata(roomId, Arrays.asList(fromMicKey, toMicKey))
+                                .getMetadata();
+
+                if (metadata.containsKey(fromMicKey) && metadata.containsKey(toMicKey)) {
+
+                    MicMetadataValue fromMicMetadataValue =
+                            JSONObject
+                                    .parseObject(metadata.get(fromMicKey), MicMetadataValue.class);
+
+                    MicMetadataValue toMicMetadataValue =
+                            JSONObject.parseObject(metadata.get(toMicKey), MicMetadataValue.class);
+
+                    if (StringUtils.isEmpty(fromMicMetadataValue.getUid()) || !fromMicMetadataValue
+                            .getUid().equals(uid)) {
+                        throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
+                    }
+
+                    if (toMicMetadataValue.getStatus() != MicStatus.FREE.getStatus()) {
+                        throw new BaseException(ErrorCodeEnum.mic_index_is_not_free);
+                    }
+
+                    int currentStatus = fromMicMetadataValue.getStatus();
+
+                    fromMicMetadataValue.setUid(null);
+                    fromMicMetadataValue.setStatus(MicStatus.FREE.getStatus());
+                    toMicMetadataValue.setUid(uid);
+                    toMicMetadataValue.setStatus(currentStatus);
+
+                    metadata = new HashMap<>();
+                    metadata.put(fromMicKey, JSONObject.toJSONString(fromMicMetadataValue));
+                    metadata.put(toMicKey, JSONObject.toJSONString(toMicMetadataValue));
+                    imApi.setChatRoomMetadata(OPERATOR, roomId, metadata, AutoDelete.DELETE);
+
+                } else {
+                    throw new BaseException(ErrorCodeEnum.mic_not_init);
+                }
+            } else {
+                throw new BaseException(ErrorCodeEnum.mic_is_concurrent_operation);
+            }
+        } catch (Exception e) {
+            log.error("exchangeMicInfo error,roomId:{},from:{},to:{},uid:{}", roomId, from, to, uid,
+                    e);
+            throw e;
+        } finally {
+            if (lockFromkey) {
+                redisTemplate.delete(lockFromkey);
+            }
+            if (lockTokey) {
+                redisTemplate.delete(lockTokey);
+            }
+        }
+
     }
 
     private void updateVoiceRoomMicInfo(String roomId, String uid, Integer micIndex,
             Integer micOperateStatus, Boolean isAdminOperate) {
         String metadataKey = buildMicKey(micIndex);
-        String redisLockKey = metadataKey + "_lock";
+        String redisLockKey = buildMicLockKey(micIndex);
         Boolean isContinue = redisTemplate.opsForValue()
                 .setIfAbsent(redisLockKey, metadataKey, Duration.ofMillis(5000));
         try {
@@ -352,85 +512,81 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                         throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
                     }
 
-                    //上麦条件
-                    if (micOperateStatus == MicOperateStatus.UP_MIC.getStatus()
-                            && micMetadataValue.getStatus() != MicStatus.FREE.getStatus()) {
-                        throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
-                    } else {
-                        updateStatus = MicStatus.NORMAL.getStatus();
-                        updateUid = uid;
-                    }
-
-                    //开麦条件(闭麦才可以开麦)
-                    if (micOperateStatus == MicOperateStatus.OPEN_MIC.getStatus()
-                            && micMetadataValue.getStatus() != MicStatus.CLOSE.getStatus()) {
-                        throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
-                    } else {
-                        updateStatus = MicStatus.NORMAL.getStatus();
-                    }
-
-                    //闭麦条件(只有开麦才可以闭麦)
-                    if (micOperateStatus == MicOperateStatus.CLOSE_MIC.getStatus()
-                            && micMetadataValue.getStatus() != MicStatus.NORMAL.getStatus()) {
-                        throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
-                    } else {
-                        updateStatus = MicStatus.CLOSE.getStatus();
-                    }
-
-                    //下麦条件
-                    if (micOperateStatus == MicOperateStatus.LEAVE_MIC.getStatus()) {
-                        throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
-                    } else {
-                        updateStatus = MicStatus.FREE.getStatus();
-                        updateUid = null;
-                    }
-
-                    //管理员禁言
-                    if (micOperateStatus == MicOperateStatus.MUTE_MIC.getStatus() && (
-                            !isAdminOperate || StringUtils.isEmpty(micMetadataValue.getUid())
-                                    || micMetadataValue.getStatus() != MicStatus.MUTE
-                                    .getStatus())) {
-                        throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
-                    } else {
-                        updateStatus = MicStatus.MUTE.getStatus();
-                    }
-
-                    //管理员取消禁言
-                    if (micOperateStatus == MicOperateStatus.UNMUTE_MIC.getStatus() && (
-                            !isAdminOperate || micMetadataValue.getStatus() != MicStatus.MUTE
-                                    .getStatus())) {
-                        throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
-                    } else {
-                        updateStatus = MicStatus.NORMAL.getStatus();
-                    }
-
-                    //管理员踢人下麦
-                    if (micOperateStatus == MicOperateStatus.KICK_MIC.getStatus() && (
-                            !isAdminOperate || StringUtils.isEmpty(micMetadataValue.getUid()))) {
-                        throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
-                    } else {
-                        updateStatus = MicStatus.FREE.getStatus();
-                        updateUid = null;
-                    }
-
-                    //管理员锁麦
-                    if (micOperateStatus == MicOperateStatus.LOCK_MIC.getStatus() && (
-                            !isAdminOperate || micMetadataValue.getStatus() != MicStatus.FREE
-                                    .getStatus())) {
-                        throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
-                    } else {
-                        updateStatus = MicStatus.LOCK.getStatus();
-                        updateUid = null;
-                    }
-
-                    //管理员取消锁麦
-                    if (micOperateStatus == MicOperateStatus.UNLOCK_MIC.getStatus() && (
-                            !isAdminOperate || micMetadataValue.getStatus() != MicStatus.LOCK
-                                    .getStatus())) {
-                        throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
-                    } else {
-                        updateStatus = MicStatus.FREE.getStatus();
-                        updateUid = null;
+                    switch (MicOperateStatus.parse(micOperateStatus)) {
+                        case UP_MIC:
+                            if (micMetadataValue.getStatus() == MicStatus.FREE.getStatus()) {
+                                updateStatus = MicStatus.NORMAL.getStatus();
+                                updateUid = uid;
+                            } else {
+                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                            }
+                            break;
+                        case OPEN_MIC:
+                            if (micMetadataValue.getStatus() == MicStatus.CLOSE.getStatus()) {
+                                updateStatus = MicStatus.NORMAL.getStatus();
+                                updateUid = uid;
+                            } else {
+                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                            }
+                            break;
+                        case CLOSE_MIC:
+                            if (micMetadataValue.getStatus() == MicStatus.NORMAL.getStatus()) {
+                                updateStatus = MicStatus.CLOSE.getStatus();
+                                updateUid = uid;
+                            } else {
+                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                            }
+                            break;
+                        case LEAVE_MIC:
+                            updateStatus = MicStatus.FREE.getStatus();
+                            updateUid = null;
+                            break;
+                        case MUTE_MIC:
+                            if (isAdminOperate && !StringUtils.isEmpty(micMetadataValue.getUid())
+                                    && micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()) {
+                                updateStatus = MicStatus.MUTE.getStatus();
+                                updateUid = uid;
+                            } else {
+                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                            }
+                            break;
+                        case UNMUTE_MIC:
+                            if (isAdminOperate && micMetadataValue.getStatus() == MicStatus.MUTE
+                                    .getStatus()) {
+                                updateStatus = MicStatus.NORMAL.getStatus();
+                                updateUid = uid;
+                            } else {
+                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                            }
+                            break;
+                        case LOCK_MIC:
+                            if (isAdminOperate && micMetadataValue.getStatus() == MicStatus.FREE
+                                    .getStatus()) {
+                                updateStatus = MicStatus.LOCK.getStatus();
+                                updateUid = null;
+                            } else {
+                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                            }
+                            break;
+                        case UNLOCK_MIC:
+                            if (isAdminOperate && micMetadataValue.getStatus() == MicStatus.LOCK
+                                    .getStatus()) {
+                                updateStatus = MicStatus.FREE.getStatus();
+                                updateUid = null;
+                            } else {
+                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                            }
+                            break;
+                        case KICK_MIC:
+                            if (isAdminOperate && !StringUtils.isEmpty(micMetadataValue.getUid())) {
+                                updateStatus = MicStatus.FREE.getStatus();
+                                updateUid = null;
+                            } else {
+                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                            }
+                            break;
+                        default:
+                            break;
                     }
 
                     //更新麦位信息
@@ -484,5 +640,13 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     private String buildMicKey(Integer micIndex) {
         return METADATA_PREFIX_KEY + "_" + micIndex;
+    }
+
+    private String buildMicLockKey(Integer micIndex) {
+        return buildMicKey(micIndex) + "_lock";
+    }
+
+    private String buildMicLockKey(String roomId) {
+        return roomId + "_lock";
     }
 }

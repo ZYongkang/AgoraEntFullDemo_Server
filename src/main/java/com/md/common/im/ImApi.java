@@ -249,6 +249,41 @@ public class ImApi {
 
     }
 
+
+    /**
+     * 发送自定义消息 个人
+     *
+     * @param fromUserName     发送的成员
+     * @param toUserName     接收的成员
+     * @param customEvent      自定义消息类型
+     * @param customExtensions    自定义消息内容
+     * @param extension 自定义消息扩展
+     * @throws EMException
+     */
+    public void sendUserCustomMessage(@Nonnull String fromUserName,
+            @Nonnull String toUserName,
+            @Nonnull String customEvent, @Nonnull Map<String, Object> customExtensions,
+            Map<String, Object> extension)
+            throws EMException {
+
+        try {
+            emService.message().send()
+                    .fromUser(fromUserName)
+                    .toUser(toUserName)
+                    .custom(msg -> msg.customEvent(customEvent)
+                            .customExtensions(EMKeyValue.of(customExtensions)))
+                    .extension(msg -> msg.addAll(EMKeyValue.of(extension)))
+                    .send()
+                    .block();
+        } catch (EMException e) {
+            log.error(
+                    "server error,sendUserCustomMessage error,fromUserName:{},toUserName:{},customEvent:{},customExtensions:{}",
+                    fromUserName, toUserName, customEvent, customExtensions, e);
+            throw e;
+        }
+
+    }
+
     /**
      * 设置聊天室属性
      *

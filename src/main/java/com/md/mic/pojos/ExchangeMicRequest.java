@@ -1,8 +1,9 @@
 package com.md.mic.pojos;
 
+import lombok.Data;
 import lombok.Value;
 
-@Value
+@Data
 public class ExchangeMicRequest {
 
     private Integer from;

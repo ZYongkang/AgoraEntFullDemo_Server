@@ -1,7 +1,7 @@
 package com.md.mic.service;
 
-import com.md.mic.pojos.CloseMicRequest;
 import com.md.mic.pojos.MicInfo;
+import com.md.mic.pojos.VoiceRoomDTO;
 
 import java.util.List;
 
@@ -11,9 +11,11 @@ public interface VoiceRoomMicService {
 
     List<MicInfo> getRoomMicInfo(String roomId);
 
-    Boolean setRoomMicInfo(String roomId, String uid, Integer micIndex,Boolean inOrder);
+    Boolean setRoomMicInfo(String roomId, String uid, Integer micIndex, Boolean inOrder);
 
-    void closeMic(String uid, String roomId,Integer micIndex);
+    void initMic(VoiceRoomDTO voiceRoomDTO);
+
+    void closeMic(String uid, String roomId, Integer micIndex);
 
     void openMic(String uid, String roomId, Integer index);
 
@@ -29,7 +31,9 @@ public interface VoiceRoomMicService {
 
     void unLockMic(String roomId, Integer index);
 
-    void invite(String roomId, Integer index, String uid);
+    void invite(VoiceRoomDTO roomInfo, Integer index, String uid);
 
-    Boolean agreeInvite(String roomId, String uid);
+    Boolean agreeInvite(String roomId, String uid, Integer micIndex);
+
+    void exchangeMic(String roomId, Integer from, Integer to, String uid);
 }
