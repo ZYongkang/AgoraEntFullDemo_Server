@@ -15,9 +15,9 @@ public class MicApplyUser {
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
-    private String roomNo;
+    private String roomId;
 
-    private String userNo;
+    private String uid;
 
     private Integer micIndex;
 }
