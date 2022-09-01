@@ -35,20 +35,29 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     private VoiceRoomMicService voiceRoomMicService;
 
     @Override
-    public void addMicApply(String uid, String roomId, AddMicApplyRequest request) {
+    public Boolean addMicApply(String uid, String roomId, AddMicApplyRequest request,Boolean freeMic) {
         Integer micIndex = request == null ? null : request.getMicIndex();
-        try {
-            MicApplyUser micApplyUser = new MicApplyUser();
-            if (micIndex != null) {
-                micApplyUser.setMicIndex(micIndex);
+        if(!freeMic){
+            try {
+                MicApplyUser micApplyUser = new MicApplyUser();
+                if (micIndex != null) {
+                    micApplyUser.setMicIndex(micIndex);
+                }
+                micApplyUser.setRoomNo(roomId);
+                micApplyUser.setUserNo(uid);
+                this.save(micApplyUser);
+                return Boolean.TRUE;
+            } catch (Exception e) {
+                log.error("addMicApply error,userNo:{},roomId:{}", uid, roomId, e);
+                throw new BaseException(ErrorCodeEnum.add_mic_apply_error);
             }
-            micApplyUser.setRoomNo(roomId);
-            micApplyUser.setUserNo(uid);
-            this.save(micApplyUser);
-        } catch (Exception e) {
-            log.error("addMicApply error,userNo:{},roomId:{}", uid, roomId, e);
-            throw new BaseException(ErrorCodeEnum.add_mic_apply_error);
+        }else{
+            if(micIndex==null){
+                throw new BaseException(ErrorCodeEnum.mic_index_is_not_null);
+            }
+            return this.voiceRoomMicService.setRoomMicInfo(roomId,uid,micIndex,Boolean.FALSE);
         }
+
     }
 
     @Override
@@ -79,7 +88,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
 
         Integer micIndex=micApplyUser.getMicIndex();
 
-        return voiceRoomMicService.setRoomMicInfoInOrder(roomId,uid,micIndex);
+        return voiceRoomMicService.setRoomMicInfo(roomId,uid,micIndex,Boolean.TRUE);
 
 
     }

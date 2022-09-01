@@ -3,16 +3,15 @@ package com.md.mic.pojos;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.Value;
 
 @Data
-public class AddMicApplyResponse {
+public class InviteAgreeOnMicResponse {
 
     @JsonProperty("result")
     private Boolean result;
 
     @JsonCreator
-    public AddMicApplyResponse(@JsonProperty("result") Boolean result) {
+    public InviteAgreeOnMicResponse(@JsonProperty("result") Boolean result) {
         this.result = result;
     }
 }

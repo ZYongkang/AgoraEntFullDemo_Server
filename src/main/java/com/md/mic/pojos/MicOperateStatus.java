@@ -11,7 +11,10 @@ public enum MicOperateStatus {
     CLOSE_MIC(2, "闭麦"),
     LEAVE_MIC(3, "下麦"),
     MUTE_MIC(4, "禁言麦位"),
-    UNMUTE_MIC(5, "取消禁言");
+    UNMUTE_MIC(5, "取消禁言"),
+    KICK_MIC(6, "踢人下麦"),
+    LOCK_MIC(7, "锁麦"),
+    UNLOCK_MIC(8, "取消锁麦");
 
     private Integer status;
     private String desc;
