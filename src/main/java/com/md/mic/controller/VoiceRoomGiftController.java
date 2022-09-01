@@ -1,5 +1,6 @@
 package com.md.mic.controller;
 
+import com.md.mic.common.config.GiftId;
 import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.model.GiftRecord;
 import com.md.mic.model.User;
@@ -42,7 +43,7 @@ public class VoiceRoomGiftController {
         if (giftRecordList == null || giftRecordList.isEmpty()) {
             return new GetGiftListResponse(Collections.emptyList());
         }
-        List<String> uidList = giftRecordList.stream().map(giftRecord -> giftRecord.getUid())
+        List<String> uidList = giftRecordList.stream().map(GiftRecord::getUid)
                 .collect(Collectors.toList());
         Map<String, UserDTO> userDTOMap = userService.findByUidList(uidList);
         List<GiftRecordDTO> list = giftRecordList.stream().map(giftRecord -> {
@@ -60,7 +61,9 @@ public class VoiceRoomGiftController {
         if (user == null) {
             throw new UserNotFoundException("send gift user not found");
         }
-        AddGiftResponse response = new AddGiftResponse(Boolean.TRUE);
-        return response;
+        GiftId giftId = GiftId.of(request.getGiftId());
+        giftRecordService.addGiftRecord(roomId, user.getUid(), giftId, request.getNum(),
+                request.getToUid());
+        return new AddGiftResponse(Boolean.TRUE);
     }
 }

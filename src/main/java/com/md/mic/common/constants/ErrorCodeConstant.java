@@ -8,4 +8,6 @@ public interface ErrorCodeConstant {
 
     String roomUnSupportedOperation = "200401";
 
+    String giftNotFound = "300404";
+
 }

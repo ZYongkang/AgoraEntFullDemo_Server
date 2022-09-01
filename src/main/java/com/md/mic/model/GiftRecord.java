@@ -1,11 +1,14 @@
 package com.md.mic.model;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Value;
 
 import java.time.LocalDateTime;
 
-@Data
+@Value
+@Builder(toBuilder = true)
 @TableName("gift_record")
 public class GiftRecord {
 
@@ -25,4 +28,23 @@ public class GiftRecord {
     private String toUid;
 
     private Long amount;
+
+    public static GiftRecord create(String roomId, String uid, String toUid, Long amount) {
+        return GiftRecord.builder().roomId(roomId)
+                .uid(uid).toUid(toUid).amount(amount)
+                .build();
+    }
+
+    public GiftRecord addAmount(Long amount) {
+        amount = this.amount + amount;
+        return GiftRecord.builder()
+                .id(id)
+                .createdAt(createdAt)
+                .roomId(roomId)
+                .uid(uid)
+                .toUid(toUid)
+                .amount(amount)
+                .build();
+    }
+
 }
