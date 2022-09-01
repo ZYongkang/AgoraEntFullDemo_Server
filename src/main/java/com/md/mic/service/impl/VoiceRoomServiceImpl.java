@@ -120,6 +120,8 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             cursor = Base64.getUrlEncoder()
                     .encodeToString(String.valueOf(id).getBytes(StandardCharsets.UTF_8));
             voiceRoomList.remove(voiceRoom);
+        } else {
+            cursor = null;
         }
         List<String> ownerUidList =
                 voiceRoomList.stream().map(VoiceRoom::getOwner).collect(Collectors.toList());
@@ -151,8 +153,8 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         UserDTO userDTO = userService.getByUid(voiceRoom.getOwner());
         Long memberCount = getMemberCount(voiceRoom.getRoomId());
         Long clickCount = getClickCount(voiceRoom.getRoomId());
-        List<UserDTO> memberList =
-                voiceRoomUserService.getPageByRoomId(voiceRoom.getRoomId(), null, 10);
+        PageInfo<UserDTO> pageInfo =
+                voiceRoomUserService.findPageByRoomId(voiceRoom.getRoomId(), null, 10);
 
         List<GiftRecord> records =
                 giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(),
@@ -168,7 +170,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             }).collect(Collectors.toList());
         }
         VoiceRoomDTO voiceRoomDTO = VoiceRoomDTO.from(voiceRoom, userDTO, memberCount, clickCount);
-        return voiceRoomDTO.toBuilder().memberList(memberList)
+        return voiceRoomDTO.toBuilder().memberList(pageInfo.getList())
                 .rankingList(list)
                 .build();
     }
@@ -240,7 +242,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         return redisTemplate.opsForValue().increment(key);
     }
 
-    private VoiceRoom findByRoomId(String roomId) {
+    public VoiceRoom findByRoomId(String roomId) {
         LambdaQueryWrapper<VoiceRoom> queryWrapper =
                 new LambdaQueryWrapper<VoiceRoom>().eq(VoiceRoom::getRoomId, roomId);
         return baseMapper.selectOne(queryWrapper);

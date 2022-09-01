@@ -24,4 +24,8 @@ public class VoiceRoomUser {
 
     private String uid;
 
+    public static VoiceRoomUser create(String roomId, String uid) {
+        return VoiceRoomUser.builder().roomId(roomId).uid(uid).build();
+    }
+
 }

@@ -9,7 +9,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GetRoomUserListResponse {
 
-    private Integer total;
+    private Long total;
 
     private String cursor;
 

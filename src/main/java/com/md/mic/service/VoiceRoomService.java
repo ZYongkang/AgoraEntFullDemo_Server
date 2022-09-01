@@ -13,6 +13,8 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     VoiceRoomDTO getByRoomId(String roomId);
 
+    VoiceRoom findByRoomId(String roomId);
+
     void updateByRoomId(String roomId, updateRoomInfoRequest request, String owner);
 
     void deleteByRoomId(String roomId, String owner);
