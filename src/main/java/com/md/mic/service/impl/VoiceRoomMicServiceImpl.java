@@ -153,7 +153,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             throw e;
         } finally {
             if (lockkey) {
-                redisTemplate.delete(lockkey);
+                redisTemplate.delete(buildMicLockKey(chatroomId));
             }
         }
     }
