@@ -110,16 +110,16 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void initMic(String roomId, String ownerUid) {
+    public void initMic(String chatroomId, String ownerUid) {
         Boolean lockkey = redisTemplate.opsForValue()
-                .setIfAbsent(buildMicLockKey(roomId), buildMicLockKey(roomId),
+                .setIfAbsent(buildMicLockKey(chatroomId), buildMicLockKey(chatroomId),
                         Duration.ofMillis(5000));
 
         try {
             if (lockkey) {
 
                 Map<String, String> metadata =
-                        imApi.listChatRoomMetadata(roomId, Arrays.asList(buildMicKey(0)))
+                        imApi.listChatRoomMetadata(chatroomId, Arrays.asList(buildMicKey(0)))
                                 .getMetadata();
                 if (metadata.size() > 0) {
                     throw new BaseException(ErrorCodeEnum.mic_init_already);
@@ -138,10 +138,10 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 }
                 //
                 List<String> successKeys =
-                        imApi.setChatRoomMetadata(OPERATOR, roomId, metadataMap, AutoDelete.DELETE)
+                        imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadataMap, AutoDelete.DELETE)
                                 .getSuccessKeys();
                 if (successKeys.size() != micCount) {
-                    imApi.deleteChatRoomMetadata(OPERATOR, roomId, successKeys);
+                    imApi.deleteChatRoomMetadata(OPERATOR, chatroomId, successKeys);
                     throw new BaseException(ErrorCodeEnum.mic_init_error);
                 }
             }

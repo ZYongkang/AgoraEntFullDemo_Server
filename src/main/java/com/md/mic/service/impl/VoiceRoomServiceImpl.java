@@ -74,12 +74,13 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
                     request.getPassword(), request.getAllowFreeJoinMic(),
                     request.getType(), uid, request.getSoundEffect());
-            voiceRoomMicService.initMic(voiceRoom.getRoomId(), voiceRoom.getOwner());
+            voiceRoomMicService.initMic(voiceRoom.getChatroomId(), voiceRoom.getOwner());
             try {
                 save(voiceRoom);
             } catch (Exception e) {
                 log.error("save voice room failed | room={}, err=", voiceRoom, e);
-                // todo imAPi.deleteChatRoom(chatRoomId);
+                // todo voiceRoomMicService.clear(voiceRoom.getChatroomId());
+                imApi.deleteChatRoom(voiceRoom.getChatroomId());
                 throw e;
             }
             UserDTO owner = UserDTO.builder().uid(user.getUid())
