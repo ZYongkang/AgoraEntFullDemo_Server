@@ -7,6 +7,7 @@ import com.md.common.im.ImApi;
 import com.md.mic.pojos.*;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
+import com.md.mic.service.VoiceRoomService;
 import com.md.service.common.ErrorCodeEnum;
 import com.md.service.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,9 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private VoiceRoomService voiceRoomService;
+
     @Resource
     private RedisTemplate redisTemplate;
 
@@ -52,26 +56,26 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Override
     public List<MicInfo> getByRoomId(String roomId) {
-        return getRoomMicInfo(roomId);
+        return getRoomMicInfo(voiceRoomService.getByRoomId(roomId).getChatroomId());
     }
 
     @Override
-    public List<MicInfo> getRoomMicInfo(String roomId) {
+    public List<MicInfo> getRoomMicInfo(String chatroomId) {
         try {
             ChatRoomMetadataGetResponse chatRoomMetadataGetResponse =
-                    imApi.listChatRoomMetadata(roomId, allMics);
+                    imApi.listChatRoomMetadata(chatroomId, allMics);
             Map<String, String> metadata = chatRoomMetadataGetResponse.getMetadata();
             List<MicInfo> micInfo = buildMicInfo(metadata);
             return micInfo;
         } catch (Exception e) {
-            log.error("getRoomMicInfo error,roomId:{}", roomId, e);
+            log.error("getRoomMicInfo error,roomId:{}", chatroomId, e);
             return Collections.emptyList();
         }
 
     }
 
     @Override
-    public Boolean setRoomMicInfo(String roomId, String uid, Integer micIndex, Boolean inOrder) {
+    public Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex, Boolean inOrder) {
 
         Boolean hasMic = false;
 
@@ -80,11 +84,11 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         }
         if (micIndex != null) {
             try {
-                this.updateVoiceRoomMicInfo(roomId, uid, micIndex,
+                this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                         MicOperateStatus.UP_MIC.getStatus(), Boolean.FALSE);
                 hasMic = true;
             } catch (Exception e) {
-                log.warn("on mic failure,roomId:{},uid:{},index:{}", roomId, uid, micIndex,
+                log.warn("on mic failure,chatroomId:{},uid:{},index:{}", chatroomId, uid, micIndex,
                         e);
             }
         }
@@ -94,12 +98,12 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             //按顺序上麦
             for (int index = 1; index < micCount; index++) {
                 try {
-                    this.updateVoiceRoomMicInfo(roomId, uid, index,
+                    this.updateVoiceRoomMicInfo(chatroomId, uid, index,
                             MicOperateStatus.UP_MIC.getStatus(), Boolean.FALSE);
                     hasMic = true;
                     break;
                 } catch (Exception e) {
-                    log.warn("on mic failure,roomId:{},uid:{},index:{}", roomId, uid, index,
+                    log.warn("on mic failure,roomId:{},uid:{},index:{}", chatroomId, uid, index,
                             e);
                 }
 
@@ -155,10 +159,10 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void closeMic(String uid, String roomId, Integer micIndex) {
+    public void closeMic(String uid, String chatroomId, Integer micIndex) {
         String metadataKey = buildMicKey(micIndex);
         Map<String, String> metadata =
-                imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey)).getMetadata();
+                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey)).getMetadata();
 
         if (metadata.containsKey(metadataKey)) {
             MicMetadataValue micMetadataValue =
@@ -169,7 +173,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
             }
             if (micMetadataValue.getStatus() == MicStatus.NORMAL.getStatus()) {
-                this.updateVoiceRoomMicInfo(roomId, uid, micIndex,
+                this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                         MicOperateStatus.CLOSE_MIC.getStatus(), Boolean.FALSE);
             } else {
                 throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
@@ -181,12 +185,12 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void openMic(String uid, String roomId, Integer micIndex) {
+    public void openMic(String uid, String chatroomId, Integer micIndex) {
 
         String metadataKey = buildMicKey(micIndex);
 
         Map<String, String> metadata =
-                imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey)).getMetadata();
+                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey)).getMetadata();
 
         if (metadata.containsKey(metadataKey)) {
             MicMetadataValue micMetadataValue =
@@ -197,7 +201,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
             }
             if (micMetadataValue.getStatus() == MicStatus.CLOSE.getStatus()) {
-                this.updateVoiceRoomMicInfo(roomId, uid, micIndex,
+                this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                         MicOperateStatus.OPEN_MIC.getStatus(), Boolean.FALSE);
             } else {
                 throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
@@ -209,10 +213,10 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void leaveMic(String uid, String roomId, Integer micIndex) {
+    public void leaveMic(String uid, String chatroomId, Integer micIndex) {
         String metadataKey = buildMicKey(micIndex);
         Map<String, String> metadata =
-                imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey)).getMetadata();
+                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey)).getMetadata();
 
         if (metadata.containsKey(metadataKey)) {
             MicMetadataValue micMetadataValue =
@@ -223,7 +227,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
             }
 
-            this.updateVoiceRoomMicInfo(roomId, uid, micIndex,
+            this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                     MicOperateStatus.LEAVE_MIC.getStatus(), Boolean.FALSE);
 
         } else {
@@ -232,11 +236,11 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void muteMic(String roomId, Integer micIndex) {
+    public void muteMic(String chatroomId, Integer micIndex) {
 
         String metadataKey = buildMicKey(micIndex);
         Map<String, String> metadata =
-                imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey)).getMetadata();
+                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey)).getMetadata();
 
         if (metadata.containsKey(metadataKey)) {
             MicMetadataValue micMetadataValue =
@@ -247,7 +251,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
             }
 
-            this.updateVoiceRoomMicInfo(roomId, null, micIndex,
+            this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.MUTE_MIC.getStatus(), Boolean.TRUE);
 
         } else {
@@ -256,10 +260,10 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void unMuteMic(String roomId, Integer micIndex) {
+    public void unMuteMic(String chatroomId, Integer micIndex) {
         String metadataKey = buildMicKey(micIndex);
         Map<String, String> metadata =
-                imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey)).getMetadata();
+                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey)).getMetadata();
 
         if (metadata.containsKey(metadataKey)) {
             MicMetadataValue micMetadataValue =
@@ -270,7 +274,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
             }
 
-            this.updateVoiceRoomMicInfo(roomId, null, micIndex,
+            this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.UNMUTE_MIC.getStatus(), Boolean.TRUE);
 
         } else {
@@ -279,12 +283,12 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void kickUserMic(String roomId, Integer micIndex, String uid) {
+    public void kickUserMic(String chatroomId, Integer micIndex, String uid) {
 
         String metadataKey = buildMicKey(micIndex);
 
         Map<String, String> metadata =
-                imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey)).getMetadata();
+                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey)).getMetadata();
 
         if (metadata.containsKey(metadataKey)) {
             MicMetadataValue micMetadataValue =
@@ -298,7 +302,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_not_current_user);
             }
 
-            this.updateVoiceRoomMicInfo(roomId, null, micIndex,
+            this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.KICK_MIC.getStatus(), Boolean.TRUE);
 
         } else {
@@ -307,12 +311,12 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void lockMic(String roomId, Integer micIndex) {
+    public void lockMic(String chatroomId, Integer micIndex) {
 
         String metadataKey = buildMicKey(micIndex);
 
         Map<String, String> metadata =
-                imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey)).getMetadata();
+                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey)).getMetadata();
 
         if (metadata.containsKey(metadataKey)) {
             MicMetadataValue micMetadataValue =
@@ -322,7 +326,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
             }
 
-            this.updateVoiceRoomMicInfo(roomId, null, micIndex,
+            this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.LOCK_MIC.getStatus(), Boolean.TRUE);
 
         } else {
@@ -331,12 +335,12 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void unLockMic(String roomId, Integer micIndex) {
+    public void unLockMic(String chatroomId, Integer micIndex) {
 
         String metadataKey = buildMicKey(micIndex);
 
         Map<String, String> metadata =
-                imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey)).getMetadata();
+                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey)).getMetadata();
 
         if (metadata.containsKey(metadataKey)) {
             MicMetadataValue micMetadataValue =
@@ -346,7 +350,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
             }
 
-            this.updateVoiceRoomMicInfo(roomId, null, micIndex,
+            this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.UNLOCK_MIC.getStatus(), Boolean.TRUE);
 
         } else {
@@ -371,22 +375,22 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public Boolean agreeInvite(String roomId, String uid, Integer micIndex) {
+    public Boolean agreeInvite(String chatroomId, String uid, Integer micIndex) {
         if (micIndex == null) {
-            return setRoomMicInfo(roomId, uid, null, Boolean.TRUE);
+            return setRoomMicInfo(chatroomId, uid, null, Boolean.TRUE);
         } else {
-            return setRoomMicInfo(roomId, uid, micIndex, Boolean.FALSE);
+            return setRoomMicInfo(chatroomId, uid, micIndex, Boolean.FALSE);
         }
 
     }
 
     @Override
-    public void exchangeMic(String roomId, Integer from, Integer to, String uid) {
+    public void exchangeMic(String chatroomId, Integer from, Integer to, String uid) {
         String fromMicKey = buildMicKey(from);
         String toMicKey = buildMicKey(to);
 
         Map<String, String> metadata =
-                imApi.listChatRoomMetadata(roomId, Arrays.asList(fromMicKey, toMicKey))
+                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(fromMicKey, toMicKey))
                         .getMetadata();
 
         if (metadata.containsKey(fromMicKey) && metadata.containsKey(toMicKey)) {
@@ -405,7 +409,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_index_is_not_free);
             }
 
-            this.exchangeMicInfo(roomId, uid, from, to);
+            this.exchangeMicInfo(chatroomId, uid, from, to);
 
         } else {
             throw new BaseException(ErrorCodeEnum.mic_not_init);
@@ -413,7 +417,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     }
 
-    private void exchangeMicInfo(String roomId, String uid, Integer from, Integer to) {
+    private void exchangeMicInfo(String chatroomId, String uid, Integer from, Integer to) {
 
         String fromMicKey = buildMicKey(from);
 
@@ -429,7 +433,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             if (lockFromkey && lockTokey) {
 
                 Map<String, String> metadata =
-                        imApi.listChatRoomMetadata(roomId, Arrays.asList(fromMicKey, toMicKey))
+                        imApi.listChatRoomMetadata(chatroomId, Arrays.asList(fromMicKey, toMicKey))
                                 .getMetadata();
 
                 if (metadata.containsKey(fromMicKey) && metadata.containsKey(toMicKey)) {
@@ -460,7 +464,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     metadata = new HashMap<>();
                     metadata.put(fromMicKey, JSONObject.toJSONString(fromMicMetadataValue));
                     metadata.put(toMicKey, JSONObject.toJSONString(toMicMetadataValue));
-                    imApi.setChatRoomMetadata(OPERATOR, roomId, metadata, AutoDelete.DELETE);
+                    imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadata, AutoDelete.DELETE);
 
                 } else {
                     throw new BaseException(ErrorCodeEnum.mic_not_init);
@@ -469,7 +473,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_is_concurrent_operation);
             }
         } catch (Exception e) {
-            log.error("exchangeMicInfo error,roomId:{},from:{},to:{},uid:{}", roomId, from, to, uid,
+            log.error("exchangeMicInfo error,roomId:{},from:{},to:{},uid:{}", chatroomId, from, to, uid,
                     e);
             throw e;
         } finally {
@@ -483,7 +487,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     }
 
-    private void updateVoiceRoomMicInfo(String roomId, String uid, Integer micIndex,
+    private void updateVoiceRoomMicInfo(String chatroomId, String uid, Integer micIndex,
             Integer micOperateStatus, Boolean isAdminOperate) {
         String metadataKey = buildMicKey(micIndex);
         String redisLockKey = buildMicLockKey(micIndex);
@@ -492,7 +496,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         try {
             if (isContinue) {
                 Map<String, String> metadata =
-                        imApi.listChatRoomMetadata(roomId, Arrays.asList(metadataKey))
+                        imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey))
                                 .getMetadata();
                 if (metadata.containsKey(metadataKey)) {
 
@@ -592,7 +596,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     micMetadataValue.setUid(updateUid);
                     metadata = new HashMap<>();
                     metadata.put(metadataKey, JSONObject.toJSONString(micMetadataValue));
-                    imApi.setChatRoomMetadata(OPERATOR, roomId, metadata, AutoDelete.DELETE);
+                    imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadata, AutoDelete.DELETE);
                 } else {
                     throw new BaseException(ErrorCodeEnum.mic_not_init);
                 }

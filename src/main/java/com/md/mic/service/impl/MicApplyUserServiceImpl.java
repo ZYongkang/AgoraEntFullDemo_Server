@@ -74,7 +74,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
             if (micIndex == null) {
                 throw new BaseException(ErrorCodeEnum.mic_index_is_not_null);
             }
-            return this.voiceRoomMicService.setRoomMicInfo(roomId, uid, micIndex, Boolean.FALSE);
+            return this.voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex, Boolean.FALSE);
         }
 
     }
@@ -106,7 +106,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
 
         Integer micIndex = micApplyUser.getMicIndex();
 
-        return voiceRoomMicService.setRoomMicInfo(roomId, uid, micIndex, Boolean.TRUE);
+        return voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex, Boolean.TRUE);
 
     }
 
