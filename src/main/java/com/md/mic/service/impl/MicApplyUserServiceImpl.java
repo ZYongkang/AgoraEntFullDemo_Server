@@ -1,12 +1,10 @@
 package com.md.mic.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.easemob.im.server.api.metadata.chatroom.get.ChatRoomMetadataGetResponse;
 import com.md.common.im.ImApi;
 import com.md.mic.model.MicApplyUser;
-import com.md.mic.pojos.*;
+import com.md.mic.pojos.AddMicApplyRequest;
 import com.md.mic.repository.MicApplyUserMapper;
 import com.md.mic.service.MicApplyUserService;
 import com.md.mic.service.UserService;
@@ -16,9 +14,6 @@ import com.md.service.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.util.*;
 
 @Slf4j
 @Service

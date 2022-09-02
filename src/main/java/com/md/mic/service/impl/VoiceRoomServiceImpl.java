@@ -114,6 +114,15 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
                             .last(" limit " + limitSize);
             voiceRoomList = baseMapper.selectList(queryWrapper);
         }
+
+        if (voiceRoomList == null || voiceRoomList.isEmpty()) {
+            PageInfo<RoomListDTO> pageInfo = new PageInfo<>();
+            pageInfo.setCursor(null);
+            pageInfo.setTotal(0L);
+            pageInfo.setList(Collections.emptyList());
+            return pageInfo;
+        }
+
         if (voiceRoomList.size() == limitSize) {
             VoiceRoom voiceRoom = voiceRoomList.get(limitSize - 1);
             Integer id = voiceRoom.getId();
@@ -177,7 +186,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
 
     @Override
     @Transactional
-    public void updateByRoomId(String roomId, updateRoomInfoRequest request, String owner) {
+    public void updateByRoomId(String roomId, UpdateRoomInfoRequest request, String owner) {
         VoiceRoom voiceRoom = findByRoomId(roomId);
         if (!owner.equals(voiceRoom.getOwner())) {
             throw new VoiceRoomSecurityException("not the owner can't operate");

@@ -3,7 +3,7 @@ package com.md.mic.controller;
 import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.model.User;
 import com.md.mic.pojos.*;
-import com.md.mic.service.UserService;
+import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
 import com.md.mic.service.VoiceRoomUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -21,6 +22,9 @@ public class VoiceRoomUserController {
 
     @Resource
     private VoiceRoomService voiceRoomService;
+
+    @Resource
+    private VoiceRoomMicService voiceRoomMicService;
 
     @GetMapping("/voice/room/{roomId}/members/list")
     public GetRoomUserListResponse getRoomMemberList(@PathVariable("roomId") String roomId,
@@ -44,7 +48,8 @@ public class VoiceRoomUserController {
         }
         voiceRoomUserService.addVoiceRoomUser(roomId, user, request.getPassword());
         VoiceRoomDTO voiceRoomDTO = voiceRoomService.getByRoomId(roomId);
-        return new JoinRoomResponse(voiceRoomDTO);
+        List<MicInfo> micInfo = voiceRoomMicService.getByRoomId(roomId);
+        return new JoinRoomResponse(voiceRoomDTO, micInfo);
     }
 
     @DeleteMapping("/voice/room/{roomId}/members/leave")
@@ -53,6 +58,7 @@ public class VoiceRoomUserController {
         if (user == null) {
             throw new UserNotFoundException("join room user must not be null");
         }
+        voiceRoomUserService.deleteVoiceRoomUser(roomId, user.getUid());
         return new LeaveRoomResponse(Boolean.TRUE);
     }
 
@@ -63,6 +69,7 @@ public class VoiceRoomUserController {
         if (user == null) {
             throw new UserNotFoundException("join room user must not be null");
         }
+        voiceRoomUserService.kickVoiceRoomUser(roomId, user.getUid(), request.getUid());
         return new KickRoomResponse(Boolean.TRUE);
     }
 

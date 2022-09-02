@@ -64,6 +64,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override public Map<String, UserDTO> findByUidList(List<String> ownerUidList) {
+        if (ownerUidList == null || ownerUidList.isEmpty()) {
+            return new HashMap<>();
+        }
         LambdaQueryWrapper<User> queryWrapper =
                 new LambdaQueryWrapper<User>().in(User::getUid, ownerUidList);
         List<User> userList = baseMapper.selectList(queryWrapper);

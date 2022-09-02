@@ -126,7 +126,7 @@ public class ImApi {
             emService.room().destroyRoom(chatRoomId).block();
         } catch (EMException e) {
             log.error(
-                    "server error,createRoom error,chatRoomId:{}", chatRoomId, e);
+                    "server error,deleteChatRoom error,chatRoomId:{}", chatRoomId, e);
             throw e;
         }
 

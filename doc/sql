@@ -271,3 +271,14 @@ create table `user`
     KEY `idx_user_phone` (`phone`)
 ) engine = InnoDB default charset = utf8mb4 comment ='用户信息';
 
+drop table if exists `voice_room_user`;
+create table `voice_room_user`
+(
+    `id`        int(10) unsigned not null auto_increment comment 'id',
+    `room_id`      varchar(100)     not null comment '房间唯一标识',
+    `uid`       varchar(100)     not null comment '用户唯一标识',
+    `created_at` timestamp        not null comment '加入时间',
+    `updated_at` timestamp        not null comment '最近修改时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uniq_voice_room_user_room_id_uid` (`room_id`, `uid`)
+) engine = InnoDB default charset = utf8mb4 comment ='房间用户信息';

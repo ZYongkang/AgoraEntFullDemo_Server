@@ -5,6 +5,6 @@ import com.md.mic.common.constants.ErrorCodeConstant;
 public class VoiceRoomSecurityException extends VoiceRoomException {
 
     public VoiceRoomSecurityException(String message) {
-        super(ErrorCodeConstant.roomNotSupportOpeartor, message);
+        super(ErrorCodeConstant.roomUnSupportedOperation, message);
     }
 }

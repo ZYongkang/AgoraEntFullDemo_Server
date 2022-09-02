@@ -8,7 +8,6 @@ import com.md.mic.model.VoiceRoom;
 import com.md.mic.model.VoiceRoomUser;
 import com.md.mic.pojos.PageInfo;
 import com.md.mic.pojos.UserDTO;
-import com.md.mic.pojos.VoiceRoomDTO;
 import com.md.mic.repository.VoiceRoomUserMapper;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomService;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +38,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
                 new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId);
         List<VoiceRoomUser> voiceRoomUserList = baseMapper.selectList(queryWrapper);
+        if (voiceRoomUserList == null || voiceRoomUserList.isEmpty()) {
+            return;
+        }
         List<Integer> idList =
                 voiceRoomUserList.stream().map(VoiceRoomUser::getId).collect(Collectors.toList());
         baseMapper.deleteBatchIds(idList);
@@ -105,9 +106,33 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         if (Boolean.TRUE.equals(voiceRoom.getIsPrivate()) && !voiceRoom.getPassword().equals(password)) {
             throw new VoiceRoomSecurityException("wrong password");
         }
-        VoiceRoomUser voiceRoomUser = VoiceRoomUser.create(roomId, user.getUid());
-        save(voiceRoomUser);
+        LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
+                new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
+                        .eq(VoiceRoomUser::getUid, user.getUid());
+        VoiceRoomUser voiceRoomUser = baseMapper.selectOne(queryWrapper);
+        if (voiceRoomUser == null) {
+            voiceRoomUser = VoiceRoomUser.create(roomId, user.getUid());
+            save(voiceRoomUser);
+        }
         return voiceRoomUser;
+    }
+
+    @Override public void deleteVoiceRoomUser(String roomId, String uid) {
+        LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
+                new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
+                        .eq(VoiceRoomUser::getUid, uid);
+        baseMapper.delete(queryWrapper);
+    }
+
+    @Override public void kickVoiceRoomUser(String roomId, String ownerUid, String kickUid) {
+        VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
+        if (!ownerUid.equals(voiceRoom.getOwner())) {
+            throw new VoiceRoomSecurityException("not the owner can't operate");
+        }
+        LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
+                new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
+                        .eq(VoiceRoomUser::getUid, kickUid);
+        baseMapper.delete(queryWrapper);
     }
 
 }

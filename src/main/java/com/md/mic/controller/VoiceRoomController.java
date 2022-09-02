@@ -54,7 +54,7 @@ public class VoiceRoomController {
 
     @PutMapping("/voice/room/{roomId}")
     public UpdateRoomInfoResponse updateVoiceRoomInfo(@PathVariable("roomId") String roomId,
-            @RequestBody updateRoomInfoRequest request,
+            @RequestBody UpdateRoomInfoRequest request,
             @RequestAttribute("user") User user) {
         if (user == null) {
             throw new VoiceRoomSecurityException("not the owner can't operate");

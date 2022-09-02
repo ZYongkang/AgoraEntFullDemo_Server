@@ -15,7 +15,7 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     VoiceRoom findByRoomId(String roomId);
 
-    void updateByRoomId(String roomId, updateRoomInfoRequest request, String owner);
+    void updateByRoomId(String roomId, UpdateRoomInfoRequest request, String owner);
 
     void deleteByRoomId(String roomId, String owner);
 }
