@@ -44,6 +44,9 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     private GiftRecordService giftRecordService;
 
     @Resource
+    private VoiceRoomMicService voiceRoomMicService;
+
+    @Resource
     private ImApi imApi;
 
     @Resource
@@ -71,6 +74,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
                     request.getPassword(), request.getAllowFreeJoinMic(),
                     request.getType(), uid, request.getSoundEffect());
+            voiceRoomMicService.initMic(voiceRoom.getRoomId(), voiceRoom.getOwner());
             try {
                 save(voiceRoom);
             } catch (Exception e) {

@@ -110,9 +110,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void initMic(VoiceRoomDTO voiceRoomDTO) {
-        String roomId = voiceRoomDTO.getRoomId();
-        String owner = voiceRoomDTO.getOwner().getUid();
+    public void initMic(String roomId, String ownerUid) {
         Boolean lockkey = redisTemplate.opsForValue()
                 .setIfAbsent(buildMicLockKey(roomId), buildMicLockKey(roomId),
                         Duration.ofMillis(5000));
@@ -134,7 +132,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     micMetadataValue.setUid(null);
                     micMetadataValue.setStatus(MicStatus.FREE.getStatus());
                     if (micIndex == 0) {
-                        micMetadataValue.setUid(owner);
+                        micMetadataValue.setUid(ownerUid);
                     }
                     metadataMap.put(micKey, JSONObject.toJSONString(micMetadataValue));
                 }

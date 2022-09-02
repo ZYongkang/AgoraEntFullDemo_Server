@@ -13,7 +13,7 @@ public interface VoiceRoomMicService {
 
     Boolean setRoomMicInfo(String roomId, String uid, Integer micIndex, Boolean inOrder);
 
-    void initMic(VoiceRoomDTO voiceRoomDTO);
+    void initMic(String roomId, String ownerUid);
 
     void closeMic(String uid, String roomId, Integer micIndex);
 
