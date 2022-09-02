@@ -64,7 +64,7 @@ public class VoiceRoomMicController {
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
-        return voiceRoomMicService.getRoomMicInfo(roomId);
+        return voiceRoomMicService.getRoomMicInfo(roomInfo.getChatroomId());
     }
 
     //闭麦
@@ -77,7 +77,7 @@ public class VoiceRoomMicController {
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
-        this.voiceRoomMicService.closeMic(user.getUid(), roomId, request.getIndex());
+        this.voiceRoomMicService.closeMic(user.getUid(), roomInfo.getChatroomId(), request.getIndex());
         return response;
     }
 
@@ -91,7 +91,7 @@ public class VoiceRoomMicController {
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
-        this.voiceRoomMicService.openMic(user.getUid(), roomId, request.getIndex());
+        this.voiceRoomMicService.openMic(user.getUid(), roomInfo.getChatroomId(), request.getIndex());
         return response;
     }
 
@@ -105,7 +105,7 @@ public class VoiceRoomMicController {
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
-        this.voiceRoomMicService.leaveMic(user.getUid(), roomId, request.getIndex());
+        this.voiceRoomMicService.leaveMic(user.getUid(), roomInfo.getChatroomId(), request.getIndex());
         return response;
     }
 
@@ -122,7 +122,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().getUid().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can mute mic");
         }
-        this.voiceRoomMicService.muteMic(roomId, request.getIndex());
+        this.voiceRoomMicService.muteMic(roomInfo.getChatroomId(), request.getIndex());
 
         return response;
     }
@@ -140,7 +140,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().getUid().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can unmute mic");
         }
-        this.voiceRoomMicService.unMuteMic(roomId, request.getIndex());
+        this.voiceRoomMicService.unMuteMic(roomInfo.getChatroomId(), request.getIndex());
 
         return response;
     }
@@ -156,7 +156,7 @@ public class VoiceRoomMicController {
             throw new IllegalArgumentException("room is not be found!");
         }
         this.voiceRoomMicService
-                .exchangeMic(roomId, request.getFrom(), request.getTo(), user.getUid());
+                .exchangeMic(roomInfo.getChatroomId(), request.getFrom(), request.getTo(), user.getUid());
         return response;
     }
 
@@ -172,7 +172,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().getUid().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can kick mic");
         }
-        this.voiceRoomMicService.kickUserMic(roomId, request.getIndex(), request.getUid());
+        this.voiceRoomMicService.kickUserMic(roomInfo.getChatroomId(), request.getIndex(), request.getUid());
 
         return response;
     }
@@ -190,7 +190,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().getUid().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can lock mic");
         }
-        this.voiceRoomMicService.lockMic(roomId, request.getIndex());
+        this.voiceRoomMicService.lockMic(roomInfo.getChatroomId(), request.getIndex());
 
         return response;
     }
@@ -207,7 +207,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().getUid().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can unlock mic");
         }
-        this.voiceRoomMicService.unLockMic(roomId, request.getIndex());
+        this.voiceRoomMicService.unLockMic(roomInfo.getChatroomId(), request.getIndex());
         return response;
     }
 
@@ -257,7 +257,7 @@ public class VoiceRoomMicController {
             throw new IllegalArgumentException("room is not be found!");
         }
         Boolean result =
-                voiceRoomMicService.agreeInvite(roomId, request.getUid(), request.getIndex());
+                voiceRoomMicService.agreeInvite(roomInfo.getChatroomId(), request.getUid(), request.getIndex());
         response.setResult(result);
         return response;
     }
