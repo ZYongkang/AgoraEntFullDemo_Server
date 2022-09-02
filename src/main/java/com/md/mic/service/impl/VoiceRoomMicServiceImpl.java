@@ -115,8 +115,10 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Override
     public void initMic(String chatroomId, String ownerUid) {
+
+        String redisLockKey= buildMicLockKey(chatroomId);
         Boolean lockkey = redisTemplate.opsForValue()
-                .setIfAbsent(buildMicLockKey(chatroomId), buildMicLockKey(chatroomId),
+                .setIfAbsent(redisLockKey, buildMicLockKey(chatroomId),
                         Duration.ofMillis(5000));
 
         try {
@@ -153,7 +155,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             throw e;
         } finally {
             if (lockkey) {
-                redisTemplate.delete(buildMicLockKey(chatroomId));
+                redisTemplate.delete(buildMicLockKey(redisLockKey));
             }
         }
     }
