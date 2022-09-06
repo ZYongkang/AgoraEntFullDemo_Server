@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.md.common.im.ImApi;
+import com.md.mic.exception.MicApplyException;
+import com.md.mic.exception.MicApplyRecordIsNullException;
+import com.md.mic.exception.MicIndexNullException;
 import com.md.mic.model.MicApplyUser;
 import com.md.mic.pojos.*;
 import com.md.mic.repository.MicApplyUserMapper;
@@ -68,11 +71,11 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
                 return Boolean.TRUE;
             } catch (Exception e) {
                 log.error("addMicApply error,userNo:{},roomId:{}", uid, roomId, e);
-                throw new BaseException(ErrorCodeEnum.add_mic_apply_error);
+                throw new MicApplyException();
             }
         } else {
             if (micIndex == null) {
-                throw new BaseException(ErrorCodeEnum.mic_index_is_not_null);
+                throw new MicIndexNullException();
             }
             return this.voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex, Boolean.FALSE);
         }
@@ -87,7 +90,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
         wrapper.eq("room_id", roomId);
         int count = this.baseMapper.delete(wrapper);
         if (count == 0) {
-            throw new BaseException(ErrorCodeEnum.no_mic_apply_record);
+            throw new MicApplyRecordIsNullException();
         }
 
     }
@@ -101,7 +104,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
         wrapper.eq("room_id", roomId);
         MicApplyUser micApplyUser = this.getOne(wrapper);
         if (micApplyUser == null) {
-            throw new BaseException(ErrorCodeEnum.no_mic_apply_record);
+            throw new MicApplyRecordIsNullException();
         }
 
         Integer micIndex = micApplyUser.getMicIndex();

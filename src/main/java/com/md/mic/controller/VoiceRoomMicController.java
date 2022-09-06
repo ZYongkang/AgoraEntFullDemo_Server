@@ -247,10 +247,10 @@ public class VoiceRoomMicController {
     }
 
     //用户同意邀请上麦申请
-    @GetMapping("/voice/room/{roomId}/mic/invite/agree")
+    @PostMapping("/voice/room/{roomId}/mic/invite/agree")
     public InviteAgreeOnMicResponse agreeInvite(@RequestAttribute("user") User user,
             @PathVariable("roomId") String roomId,
-            @RequestBody ApplyAgreeOnMicRequest request) {
+            @RequestBody InviteAgreeOnMicRequest request) {
         InviteAgreeOnMicResponse response = new InviteAgreeOnMicResponse(Boolean.TRUE);
         VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
         if (roomInfo == null) {
