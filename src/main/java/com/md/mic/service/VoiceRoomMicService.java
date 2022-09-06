@@ -35,5 +35,7 @@ public interface VoiceRoomMicService {
 
     Boolean agreeInvite(String chatroomId, String uid, Integer micIndex);
 
+    Boolean refuseInvite(VoiceRoomDTO roomInfo, String uid);
+
     void exchangeMic(String chatroomId, Integer from, Integer to, String uid);
 }

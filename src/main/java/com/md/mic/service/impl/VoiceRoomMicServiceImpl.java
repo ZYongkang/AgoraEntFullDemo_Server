@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.easemob.im.server.api.metadata.chatroom.AutoDelete;
 import com.easemob.im.server.api.metadata.chatroom.get.ChatRoomMetadataGetResponse;
 import com.md.common.im.ImApi;
+import com.md.mic.exception.*;
 import com.md.mic.pojos.*;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
@@ -11,6 +12,8 @@ import com.md.mic.service.VoiceRoomService;
 import com.md.service.common.ErrorCodeEnum;
 import com.md.service.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.Redisson;
+import org.redisson.api.RLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,6 +24,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -37,6 +42,9 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Resource
     private RedisTemplate redisTemplate;
+
+    @Resource
+    private Redisson redisson;
 
     private static final String OPERATOR = "admin";
 
@@ -75,12 +83,13 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex, Boolean inOrder) {
+    public Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex,
+            Boolean inOrder) {
 
         Boolean hasMic = false;
 
         if (micIndex == null && !inOrder) {
-            throw new BaseException(ErrorCodeEnum.mic_index_is_not_null);
+            throw new MicIndexNullException();
         }
         if (micIndex != null) {
             try {
@@ -116,10 +125,15 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     @Override
     public void initMic(String chatroomId, String ownerUid) {
 
-        String redisLockKey= buildMicLockKey(chatroomId);
-        Boolean lockkey = redisTemplate.opsForValue()
-                .setIfAbsent(redisLockKey, buildMicLockKey(chatroomId),
-                        Duration.ofMillis(5000));
+        String redisLockKey = buildMicLockKey(chatroomId);
+
+        RLock micLock = redisson.getLock(redisLockKey);
+        Boolean lockkey = false;
+        try {
+            lockkey = micLock.tryLock(5000, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("get redis lock error", e);
+        }
 
         try {
             if (lockkey) {
@@ -139,23 +153,25 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     micMetadataValue.setStatus(MicStatus.FREE.getStatus());
                     if (micIndex == 0) {
                         micMetadataValue.setUid(ownerUid);
+                        micMetadataValue.setStatus(MicStatus.NORMAL.getStatus());
                     }
                     metadataMap.put(micKey, JSONObject.toJSONString(micMetadataValue));
                 }
                 //
                 List<String> successKeys =
-                        imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadataMap, AutoDelete.DELETE)
+                        imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadataMap,
+                                AutoDelete.DELETE)
                                 .getSuccessKeys();
                 if (successKeys.size() != micCount) {
                     imApi.deleteChatRoomMetadata(OPERATOR, chatroomId, successKeys);
-                    throw new BaseException(ErrorCodeEnum.mic_init_error);
+                    throw new MicInitException();
                 }
             }
         } catch (Exception e) {
             throw e;
         } finally {
             if (lockkey) {
-                redisTemplate.delete(buildMicLockKey(redisLockKey));
+                micLock.unlock();
             }
         }
     }
@@ -172,17 +188,17 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
             if (StringUtils.isEmpty(micMetadataValue.getUid()) || !micMetadataValue.getUid()
                     .equals(uid)) {
-                throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
+                throw new MicNotBelongYouException();
             }
             if (micMetadataValue.getStatus() == MicStatus.NORMAL.getStatus()) {
                 this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                         MicOperateStatus.CLOSE_MIC.getStatus(), Boolean.FALSE);
             } else {
-                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                throw new MicStatusCannotBeModifiedException();
             }
 
         } else {
-            throw new BaseException(ErrorCodeEnum.mic_not_init);
+            throw new MicInitException();
         }
     }
 
@@ -200,17 +216,17 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
             if (StringUtils.isEmpty(micMetadataValue.getUid()) || !micMetadataValue.getUid()
                     .equals(uid)) {
-                throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
+                throw new MicNotBelongYouException();
             }
             if (micMetadataValue.getStatus() == MicStatus.CLOSE.getStatus()) {
                 this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                         MicOperateStatus.OPEN_MIC.getStatus(), Boolean.FALSE);
             } else {
-                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                throw new MicStatusCannotBeModifiedException();
             }
 
         } else {
-            throw new BaseException(ErrorCodeEnum.mic_not_init);
+            throw new MicInitException();
         }
     }
 
@@ -226,14 +242,14 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
             if (StringUtils.isEmpty(micMetadataValue.getUid()) || !micMetadataValue.getUid()
                     .equals(uid)) {
-                throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
+                throw new MicNotBelongYouException();
             }
 
             this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                     MicOperateStatus.LEAVE_MIC.getStatus(), Boolean.FALSE);
 
         } else {
-            throw new BaseException(ErrorCodeEnum.mic_not_init);
+            throw new MicInitException();
         }
     }
 
@@ -250,14 +266,14 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
             if (StringUtils.isEmpty(micMetadataValue.getUid())
                     || micMetadataValue.getStatus() == MicStatus.MUTE.getStatus()) {
-                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                throw new MicStatusCannotBeModifiedException();
             }
 
             this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.MUTE_MIC.getStatus(), Boolean.TRUE);
 
         } else {
-            throw new BaseException(ErrorCodeEnum.mic_not_init);
+            throw new MicInitException();
         }
     }
 
@@ -273,14 +289,14 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
             if (StringUtils.isEmpty(micMetadataValue.getUid())
                     || micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()) {
-                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                throw new MicStatusCannotBeModifiedException();
             }
 
             this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.UNMUTE_MIC.getStatus(), Boolean.TRUE);
 
         } else {
-            throw new BaseException(ErrorCodeEnum.mic_not_init);
+            throw new MicInitException();
         }
     }
 
@@ -297,18 +313,18 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     JSONObject.parseObject(metadata.get(metadataKey), MicMetadataValue.class);
 
             if (StringUtils.isEmpty(micMetadataValue.getUid())) {
-                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                throw new MicStatusCannotBeModifiedException();
             }
 
             if (!micMetadataValue.getUid().equals(uid)) {
-                throw new BaseException(ErrorCodeEnum.mic_not_current_user);
+                throw new MicNotCurrentUserException();
             }
 
             this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.KICK_MIC.getStatus(), Boolean.TRUE);
 
         } else {
-            throw new BaseException(ErrorCodeEnum.mic_not_init);
+            throw new MicInitException();
         }
     }
 
@@ -325,14 +341,14 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     JSONObject.parseObject(metadata.get(metadataKey), MicMetadataValue.class);
 
             if (micMetadataValue.getStatus() != MicStatus.FREE.getStatus()) {
-                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                throw new MicStatusCannotBeModifiedException();
             }
 
             this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.LOCK_MIC.getStatus(), Boolean.TRUE);
 
         } else {
-            throw new BaseException(ErrorCodeEnum.mic_not_init);
+            throw new MicInitException();
         }
     }
 
@@ -349,14 +365,14 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     JSONObject.parseObject(metadata.get(metadataKey), MicMetadataValue.class);
 
             if (micMetadataValue.getStatus() != MicStatus.LOCK.getStatus()) {
-                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                throw new MicStatusCannotBeModifiedException();
             }
 
             this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                     MicOperateStatus.UNLOCK_MIC.getStatus(), Boolean.TRUE);
 
         } else {
-            throw new BaseException(ErrorCodeEnum.mic_not_init);
+            throw new MicInitException();
         }
     }
 
@@ -387,6 +403,26 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
+    public Boolean refuseInvite(VoiceRoomDTO roomInfo, String uid) {
+
+        UserDTO userDTO = this.userService.getByUid(uid);
+
+        if (userDTO == null) {
+            throw new BaseException(ErrorCodeEnum.user_not_exist);
+        }
+        UserDTO applyUser = userService.getByUid(uid);
+
+        Map<String, Object> customExtensions = new HashMap<>();
+        customExtensions.put("user", applyUser);
+        customExtensions.put("room_id", roomInfo.getRoomId());
+        this.imApi.sendUserCustomMessage(userDTO.getChatUid(), roomInfo.getOwner().getChatUid(),
+                CustomEventType.INVITE_SITE.getValue(), customExtensions, new HashMap<>());
+
+        return Boolean.TRUE;
+
+    }
+
+    @Override
     public void exchangeMic(String chatroomId, Integer from, Integer to, String uid) {
         String fromMicKey = buildMicKey(from);
         String toMicKey = buildMicKey(to);
@@ -404,17 +440,17 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
             if (StringUtils.isEmpty(fromMicMetadataValue.getUid()) || !fromMicMetadataValue.getUid()
                     .equals(uid)) {
-                throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
+                throw new MicNotBelongYouException();
             }
 
             if (toMicMetadataValue.getStatus() != MicStatus.FREE.getStatus()) {
-                throw new BaseException(ErrorCodeEnum.mic_index_is_not_free);
+                throw new MicStatusCannotBeModifiedException();
             }
 
             this.exchangeMicInfo(chatroomId, uid, from, to);
 
         } else {
-            throw new BaseException(ErrorCodeEnum.mic_not_init);
+            throw new MicInitException();
         }
 
     }
@@ -449,11 +485,11 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
                     if (StringUtils.isEmpty(fromMicMetadataValue.getUid()) || !fromMicMetadataValue
                             .getUid().equals(uid)) {
-                        throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
+                        throw new MicNotBelongYouException();
                     }
 
                     if (toMicMetadataValue.getStatus() != MicStatus.FREE.getStatus()) {
-                        throw new BaseException(ErrorCodeEnum.mic_index_is_not_free);
+                        throw new MicStatusCannotBeModifiedException();
                     }
 
                     int currentStatus = fromMicMetadataValue.getStatus();
@@ -469,13 +505,14 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadata, AutoDelete.DELETE);
 
                 } else {
-                    throw new BaseException(ErrorCodeEnum.mic_not_init);
+                    throw new MicInitException();
                 }
             } else {
                 throw new BaseException(ErrorCodeEnum.mic_is_concurrent_operation);
             }
         } catch (Exception e) {
-            log.error("exchangeMicInfo error,roomId:{},from:{},to:{},uid:{}", chatroomId, from, to, uid,
+            log.error("exchangeMicInfo error,roomId:{},from:{},to:{},uid:{}", chatroomId, from, to,
+                    uid,
                     e);
             throw e;
         } finally {
@@ -513,7 +550,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     if (!isAdminOperate && !StringUtils.isEmpty(micMetadataValue.getUid())
                             && !micMetadataValue.getUid()
                             .equals(uid)) {
-                        throw new BaseException(ErrorCodeEnum.mic_not_belong_you);
+                        throw new MicNotBelongYouException();
                     }
 
                     switch (MicOperateStatus.parse(micOperateStatus)) {
@@ -522,7 +559,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 updateStatus = MicStatus.NORMAL.getStatus();
                                 updateUid = uid;
                             } else {
-                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                                throw new MicStatusCannotBeModifiedException();
                             }
                             break;
                         case OPEN_MIC:
@@ -530,7 +567,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 updateStatus = MicStatus.NORMAL.getStatus();
                                 updateUid = uid;
                             } else {
-                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                                throw new MicStatusCannotBeModifiedException();
                             }
                             break;
                         case CLOSE_MIC:
@@ -538,7 +575,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 updateStatus = MicStatus.CLOSE.getStatus();
                                 updateUid = uid;
                             } else {
-                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                                throw new MicStatusCannotBeModifiedException();
                             }
                             break;
                         case LEAVE_MIC:
@@ -551,7 +588,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 updateStatus = MicStatus.MUTE.getStatus();
                                 updateUid = uid;
                             } else {
-                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                                throw new MicStatusCannotBeModifiedException();
                             }
                             break;
                         case UNMUTE_MIC:
@@ -560,7 +597,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 updateStatus = MicStatus.NORMAL.getStatus();
                                 updateUid = uid;
                             } else {
-                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                                throw new MicStatusCannotBeModifiedException();
                             }
                             break;
                         case LOCK_MIC:
@@ -569,7 +606,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 updateStatus = MicStatus.LOCK.getStatus();
                                 updateUid = null;
                             } else {
-                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                                throw new MicStatusCannotBeModifiedException();
                             }
                             break;
                         case UNLOCK_MIC:
@@ -578,7 +615,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 updateStatus = MicStatus.FREE.getStatus();
                                 updateUid = null;
                             } else {
-                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                                throw new MicStatusCannotBeModifiedException();
                             }
                             break;
                         case KICK_MIC:
@@ -586,7 +623,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 updateStatus = MicStatus.FREE.getStatus();
                                 updateUid = null;
                             } else {
-                                throw new BaseException(ErrorCodeEnum.mic_is_cannot_be_modified);
+                                throw new MicStatusCannotBeModifiedException();
                             }
                             break;
                         default:
@@ -600,7 +637,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     metadata.put(metadataKey, JSONObject.toJSONString(micMetadataValue));
                     imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadata, AutoDelete.DELETE);
                 } else {
-                    throw new BaseException(ErrorCodeEnum.mic_not_init);
+                    throw new MicInitException();
                 }
             } else {
                 throw new BaseException(ErrorCodeEnum.mic_is_concurrent_operation);
@@ -638,7 +675,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             micInfos.add(micInfo);
 
         }
-        micInfos.stream().sorted(Comparator.comparing(mic -> mic.getIndex()));
+        micInfos = micInfos.stream().sorted(Comparator.comparing(mic -> mic.getIndex())).collect(
+                Collectors.toList());
         return micInfos;
     }
 
