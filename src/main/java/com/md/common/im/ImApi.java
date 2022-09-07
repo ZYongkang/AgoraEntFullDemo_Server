@@ -216,6 +216,43 @@ public class ImApi {
     }
 
     /**
+     * 设置群公告
+     *
+     * @param chatRoomId   聊天室id
+     * @param announcement 通知
+     * @throws EMException
+     */
+    public void setAnnouncement(@Nonnull String chatRoomId, @Nonnull String announcement)
+            throws EMException {
+
+        try {
+            emService.room().updateRoomAnnouncement(chatRoomId, announcement).block();
+        } catch (EMException e) {
+            log.error("server error,setAnnouncement error,chatRoomId:{},announcement:{}",
+                    chatRoomId, announcement, e);
+            throw e;
+        }
+    }
+
+    /**
+     * 获取群公告
+     *
+     * @param chatRoomId 聊天室id
+     * @throws EMException
+     */
+    public String getAnnouncement(@Nonnull String chatRoomId)
+            throws EMException {
+
+        try {
+            return emService.room().getRoomAnnouncement((chatRoomId)).block();
+        } catch (EMException e) {
+            log.error("server error,getAnnouncement error,chatRoomId:{}",
+                    chatRoomId, e);
+            throw e;
+        }
+    }
+
+    /**
      * 发送自定义消息
      *
      * @param fromUserName     发送的成员
