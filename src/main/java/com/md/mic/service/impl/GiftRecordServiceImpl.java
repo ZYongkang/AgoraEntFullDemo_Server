@@ -5,8 +5,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.md.mic.common.config.GiftId;
 import com.md.mic.model.GiftRecord;
 import com.md.mic.model.VoiceRoom;
-import com.md.mic.model.VoiceRoomUser;
-import com.md.mic.pojos.AddGiftRequest;
 import com.md.mic.repository.GiftRecordMapper;
 import com.md.mic.service.GiftRecordService;
 import com.md.mic.service.VoiceRoomService;
@@ -29,7 +27,8 @@ public class GiftRecordServiceImpl extends ServiceImpl<GiftRecordMapper, GiftRec
     @Override
     public List<GiftRecord> getRankingListByRoomId(String roomId, String toUid, int limit) {
         LambdaQueryWrapper<GiftRecord> queryWrapper =
-                new LambdaQueryWrapper<GiftRecord>().eq(GiftRecord::getRoomId, roomId)
+                new LambdaQueryWrapper<GiftRecord>()
+                        .eq(GiftRecord::getRoomId, roomId)
                         .eq(GiftRecord::getToUid, toUid)
                         .orderByDesc(GiftRecord::getAmount)
                         .last(" limit " + limit);

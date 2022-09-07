@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -27,8 +28,8 @@ public class JwtUtil {
     @Value("${jwt.token.exp-time}")
     private String exTime;
 
-    @Resource
-    private RedisTemplate redisTemplate;
+    @Resource(name = "voiceRedisTemplate")
+    private StringRedisTemplate redisTemplate;
 
     /**
      * 用户登录成功后生成Jwt

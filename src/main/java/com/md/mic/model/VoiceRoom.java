@@ -5,7 +5,6 @@ import com.md.service.utils.MdStringUtils;
 import lombok.*;
 import org.apache.commons.codec.digest.Md5Crypt;
 
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -54,7 +53,7 @@ public class VoiceRoom {
     public static VoiceRoom create(String name, String chatroomId, Boolean isPrivate,
             String password, Boolean allowedFreeJoinMic, Integer type, String owner,
             String soundEffect) {
-        String roomId = buildRoomNo(name);
+        String roomId = buildRoomId(name);
         String channelId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         return VoiceRoom.builder().name(name).roomId(roomId).chatroomId(chatroomId)
                 .channelId(channelId).isPrivate(isPrivate).password(password)
@@ -63,11 +62,11 @@ public class VoiceRoom {
                 .build();
     }
 
-    private static String buildRoomNo(String name) {
+    private static String buildRoomId(String name) {
         try {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             String s = name + System.currentTimeMillis();
-            String encode = Base64.getEncoder().encodeToString(md5.digest(s.getBytes(UTF_8)));
+            String encode = Base64.getUrlEncoder().encodeToString(md5.digest(s.getBytes(UTF_8)));
             return MdStringUtils.randomDelete(encode, 5);
         } catch (NoSuchAlgorithmException e) {
             String s = name + System.currentTimeMillis();

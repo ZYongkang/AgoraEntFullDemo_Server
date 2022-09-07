@@ -2,7 +2,10 @@ package com.md.mic.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.md.common.im.ImApi;
+import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.model.EasemobUser;
 import com.md.mic.model.User;
 import com.md.mic.pojos.UserDTO;
@@ -10,10 +13,14 @@ import com.md.mic.repository.UserMapper;
 import com.md.mic.service.EasemobUserService;
 import com.md.mic.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +35,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private EasemobUserService easemobUserService;
+
+    @Resource(name = "voiceRedisTemplate")
+    private StringRedisTemplate redisTemplate;
+
+    @Value("${voice.room.redis.cache.ttl:PT1H}")
+    private Duration ttl;
+
+    @Resource
+    private ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -87,11 +103,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override public UserDTO getByUid(String uid) {
-        LambdaQueryWrapper<User> queryWrapper =
-                new LambdaQueryWrapper<User>().eq(User::getUid, uid);
-        User user = baseMapper.selectOne(queryWrapper);
+        if (StringUtils.isBlank(uid)) {
+            throw new IllegalArgumentException("uid must not be empty");
+        }
+        Boolean hasKey = redisTemplate.hasKey(key(uid));
+        User user = null;
+        if (Boolean.TRUE.equals(hasKey)) {
+            String json = redisTemplate.opsForValue().get(key(uid));
+            try {
+                user = objectMapper.readValue(json, User.class);
+            } catch (JsonProcessingException e) {
+                log.error("parse user json cache failed | uid={}, json={}, e=", uid,
+                        json, e);
+            }
+        }
+        if (user == null) {
+            LambdaQueryWrapper<User> queryWrapper =
+                    new LambdaQueryWrapper<User>().eq(User::getUid, uid);
+            user = baseMapper.selectOne(queryWrapper);
+            try {
+                String json = objectMapper.writeValueAsString(user);
+                redisTemplate.opsForValue().set(key(uid), json, ttl);
+            } catch (JsonProcessingException e) {
+                log.error("write user json cache failed | uid={}, user={}, e=", uid,
+                        user, e);
+            }
+        }
+        if (user == null) {
+            throw new UserNotFoundException("user " + uid + " not found");
+        }
         EasemobUser easemobUser = easemobUserService.getByUid(uid);
         return UserDTO.from(user, easemobUser);
+    }
+
+    private String key(String uid) {
+        return String.format("voiceRoom:user:uid:%s", uid);
     }
 
 }

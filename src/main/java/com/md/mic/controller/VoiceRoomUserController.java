@@ -1,7 +1,7 @@
 package com.md.mic.controller;
 
 import com.md.mic.exception.UserNotFoundException;
-import com.md.mic.model.User;
+import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.pojos.*;
 import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
@@ -30,6 +30,9 @@ public class VoiceRoomUserController {
     public GetRoomUserListResponse getRoomMemberList(@PathVariable("roomId") String roomId,
             @RequestParam(name = "cursor", required = false) String cursor,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
+        if (limit > 100) {
+            throw new IllegalArgumentException("exceeded maximum paging limit");
+        }
         PageInfo<UserDTO> pageInfo =
                 voiceRoomUserService.findPageByRoomId(roomId, cursor, limit);
         if (pageInfo.getList() == null || pageInfo.getList().isEmpty()) {
@@ -42,11 +45,11 @@ public class VoiceRoomUserController {
     @PostMapping("/voice/room/{roomId}/members/join")
     public JoinRoomResponse joinRoom(@PathVariable("roomId") String roomId,
             @RequestBody JoinRoomRequest request,
-            @RequestAttribute("user") User user) {
+            @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new UserNotFoundException("join room user must not be null");
         }
-        voiceRoomUserService.addVoiceRoomUser(roomId, user, request.getPassword());
+        voiceRoomUserService.addVoiceRoomUser(roomId, user.getUid(), request.getPassword());
         VoiceRoomDTO voiceRoomDTO = voiceRoomService.getByRoomId(roomId);
         List<MicInfo> micInfo = voiceRoomMicService.getByRoomId(roomId);
         return new JoinRoomResponse(voiceRoomDTO, micInfo);
@@ -54,9 +57,9 @@ public class VoiceRoomUserController {
 
     @DeleteMapping("/voice/room/{roomId}/members/leave")
     public LeaveRoomResponse leaveRoom(@PathVariable("roomId") String roomId,
-            @RequestAttribute("user") User user) {
+            @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
-            throw new UserNotFoundException("join room user must not be null");
+            throw new UserNotFoundException("leave room user must not be null");
         }
         voiceRoomUserService.deleteVoiceRoomUser(roomId, user.getUid());
         return new LeaveRoomResponse(Boolean.TRUE);
@@ -65,9 +68,9 @@ public class VoiceRoomUserController {
     @DeleteMapping("/voice/room/{roomId}/members/kick")
     public KickRoomResponse kickRoom(@PathVariable("roomId") String roomId,
             @RequestBody KickRoomRequest request,
-            @RequestAttribute("user") User user) {
+            @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
-            throw new UserNotFoundException("join room user must not be null");
+            throw new VoiceRoomSecurityException("not the owner can't operate");
         }
         voiceRoomUserService.kickVoiceRoomUser(roomId, user.getUid(), request.getUid());
         return new KickRoomResponse(Boolean.TRUE);

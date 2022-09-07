@@ -2,13 +2,12 @@ package com.md.mic.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.md.common.im.ImApi;
 import com.md.mic.exception.RoomNotFoundException;
 import com.md.mic.exception.VoiceRoomSecurityException;
-import com.md.mic.model.EasemobUser;
 import com.md.mic.model.GiftRecord;
-import com.md.mic.model.User;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
 import com.md.mic.repository.VoiceRoomMapper;
@@ -16,12 +15,13 @@ import com.md.mic.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,9 +30,6 @@ import java.util.stream.Collectors;
 @Service
 public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom>
         implements VoiceRoomService {
-
-    @Resource
-    private EasemobUserService easemobUserService;
 
     @Resource
     private UserService userService;
@@ -49,8 +46,14 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     @Resource
     private ImApi imApi;
 
+    @Resource(name = "voiceRedisTemplate")
+    private StringRedisTemplate redisTemplate;
+
+    @Value("${voice.room.redis.cache.ttl:PT1H}")
+    private Duration ttl;
+
     @Resource
-    private RedisTemplate redisTemplate;
+    private ObjectMapper objectMapper;
 
     @Value("${local.zone.offset:+8}")
     private String zoneOffset;
@@ -60,15 +63,12 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
 
     @Override
     @Transactional
-    public VoiceRoomDTO create(User user, CreateRoomRequest request) {
-        String uid = user.getUid();
-        LambdaQueryWrapper<EasemobUser> queryWrapper =
-                new LambdaQueryWrapper<EasemobUser>().eq(EasemobUser::getUid, uid);
+    public VoiceRoomDTO create(UserDTO owner, CreateRoomRequest request) {
+        String uid = owner.getUid();
         String userChatId;
         VoiceRoom voiceRoom;
         try {
-            EasemobUser easemobUser = easemobUserService.getOne(queryWrapper);
-            userChatId = easemobUser.getChatId();
+            userChatId = owner.getChatUid();
             String chatRoomId = imApi.createChatRoom(request.getName(), userChatId,
                     Collections.singletonList(userChatId), request.getName());
             voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
@@ -83,14 +83,8 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
                 imApi.deleteChatRoom(voiceRoom.getChatroomId());
                 throw e;
             }
-            UserDTO owner = UserDTO.builder().uid(user.getUid())
-                    .chatUuid(easemobUser.getChatUuid())
-                    .chatUid(userChatId)
-                    .name(user.getName())
-                    .portrait(user.getPortrait())
-                    .build();
-            Long clickCount = getClickCount(voiceRoom.getRoomId());
-            Long memberCount = getMemberCount(voiceRoom.getRoomId());
+            Long clickCount = 0L;
+            Long memberCount = 0L;
             return VoiceRoomDTO.from(voiceRoom, owner, memberCount, clickCount);
         } catch (Exception e) {
             log.error("create room failed | err=", e);
@@ -158,9 +152,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     }
 
     @Override public VoiceRoomDTO getByRoomId(String roomId) {
-        LambdaQueryWrapper<VoiceRoom> queryWrapper =
-                new LambdaQueryWrapper<VoiceRoom>().eq(VoiceRoom::getRoomId, roomId);
-        VoiceRoom voiceRoom = baseMapper.selectOne(queryWrapper);
+        VoiceRoom voiceRoom = findByRoomId(roomId);
         if (voiceRoom == null) {
             throw new RoomNotFoundException(String.format("room %s not found", roomId));
         }
@@ -210,6 +202,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         }
         if (StringUtils.isNotBlank(request.getAnnouncement())) {
             voiceRoom = voiceRoom.updateAnnouncement(request.getAnnouncement());
+            // todo imApi.setAnnouncement(voiceRoom.getChatroomId(), request.getAnnouncement());
         }
         updateById(voiceRoom);
     }
@@ -244,16 +237,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             log.error("get room member count failed | roomId={}, err=", roomId, e);
             return 0L;
         }
-    }
-
-    private Long incrClickCount(String roomId) {
-        String key = String.format("room:voice:%s:memberCount", roomId);
-        return redisTemplate.opsForValue().increment(key);
-    }
-
-    private Long incrMemberCount(String roomId) {
-        String key = String.format("room:voice:%s:clickCount", roomId);
-        return redisTemplate.opsForValue().increment(key);
     }
 
     public VoiceRoom findByRoomId(String roomId) {

@@ -3,7 +3,6 @@ package com.md.mic.controller;
 import com.md.mic.common.config.GiftId;
 import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.model.GiftRecord;
-import com.md.mic.model.User;
 import com.md.mic.pojos.*;
 import com.md.mic.service.GiftRecordService;
 import com.md.mic.service.UserService;
@@ -57,9 +56,9 @@ public class VoiceRoomGiftController {
     @PostMapping("/voice/room/{roomId}/gift/add")
     public AddGiftResponse addGift(@PathVariable("roomId") String roomId,
             @RequestBody AddGiftRequest request,
-            @RequestAttribute("user") User user) {
+            @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
-            throw new UserNotFoundException("send gift user not found");
+            throw new UserNotFoundException("user must not be null");
         }
         GiftId giftId = GiftId.of(request.getGiftId());
         giftRecordService.addGiftRecord(roomId, user.getUid(), giftId, request.getNum(),

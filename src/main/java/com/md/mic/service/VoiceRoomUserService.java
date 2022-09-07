@@ -1,7 +1,6 @@
 package com.md.mic.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.md.mic.model.User;
 import com.md.mic.model.VoiceRoomUser;
 import com.md.mic.pojos.PageInfo;
 import com.md.mic.pojos.UserDTO;
@@ -14,7 +13,7 @@ public interface VoiceRoomUserService extends IService<VoiceRoomUser> {
 
     VoiceRoomUser findByRoomIdAndUid(String roomId, String uid);
 
-    VoiceRoomUser addVoiceRoomUser(String roomId, User user, String password);
+    VoiceRoomUser addVoiceRoomUser(String roomId, String uid, String password);
 
     void deleteVoiceRoomUser(String roomId, String uid);
 

@@ -3,10 +3,13 @@ package com.md.mic.model;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Value;
 
-@Data
+@Value
 @Builder(toBuilder = true)
 @TableName("easemob_user")
 public class EasemobUser {
@@ -19,4 +22,12 @@ public class EasemobUser {
     private String chatId;
 
     private String chatUuid;
+
+    @JsonCreator
+    public EasemobUser(Integer id, String uid, String chatId, String chatUuid) {
+        this.id = id;
+        this.uid = uid;
+        this.chatId = chatId;
+        this.chatUuid = chatUuid;
+    }
 }

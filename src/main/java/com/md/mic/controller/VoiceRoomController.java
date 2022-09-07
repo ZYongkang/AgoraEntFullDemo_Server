@@ -1,8 +1,7 @@
 package com.md.mic.controller;
 
 import com.md.common.util.ValidationUtil;
-import com.md.mic.exception.VoiceRoomSecurityException;
-import com.md.mic.model.User;
+import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.pojos.*;
 import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
@@ -26,11 +25,15 @@ public class VoiceRoomController {
     private VoiceRoomMicService voiceRoomMicService;
 
     @PostMapping("/voice/room/create")
-    public CreateRoomResponse createVoiceRoom(@RequestAttribute("user") User user,
-            @RequestBody @Validated CreateRoomRequest request, BindingResult result) {
+    public CreateRoomResponse createVoiceRoom(
+            @RequestBody @Validated CreateRoomRequest request, BindingResult result,
+            @RequestAttribute(name = "user", required = false) UserDTO user) {
         ValidationUtil.validate(result);
+        if (user == null) {
+            throw new UserNotFoundException("user must not be null");
+        }
         boolean isPrivate = Boolean.TRUE.equals(request.getIsPrivate());
-        if(isPrivate && StringUtils.isEmpty(request.getPassword())){
+        if (isPrivate && StringUtils.isEmpty(request.getPassword())) {
             throw new IllegalArgumentException("private room password must not be null!");
         }
         VoiceRoomDTO roomDTO = voiceRoomService.create(user, request);
@@ -40,6 +43,9 @@ public class VoiceRoomController {
     @GetMapping("/voice/room/list")
     public GetRoomListResponse getRoomList(@RequestParam(name = "cursor", required = false) String cursor,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
+        if (limit > 100) {
+            throw new IllegalArgumentException("exceeded maximum paging limit");
+        }
         PageInfo<RoomListDTO> pageInfo = voiceRoomService.getByPage(cursor, limit);
         return new GetRoomListResponse(pageInfo.getTotal(), pageInfo.getCursor(),
                 pageInfo.getList());
@@ -55,9 +61,9 @@ public class VoiceRoomController {
     @PutMapping("/voice/room/{roomId}")
     public UpdateRoomInfoResponse updateVoiceRoomInfo(@PathVariable("roomId") String roomId,
             @RequestBody UpdateRoomInfoRequest request,
-            @RequestAttribute("user") User user) {
+            @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
-            throw new VoiceRoomSecurityException("not the owner can't operate");
+            throw new UserNotFoundException("user must not be null");
         }
         voiceRoomService.updateByRoomId(roomId, request, user.getUid());
         return new UpdateRoomInfoResponse(Boolean.TRUE);
@@ -65,9 +71,9 @@ public class VoiceRoomController {
 
     @DeleteMapping("/voice/room/{roomId}")
     public DeleteRoomResponse deleteVoiceRoom(@PathVariable("roomId") String roomId,
-            @RequestAttribute("user") User user) {
+            @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
-            throw new VoiceRoomSecurityException("not the owner can't operate");
+            throw new UserNotFoundException("user must not be null");
         }
         voiceRoomService.deleteByRoomId(roomId, user.getUid());
         return new DeleteRoomResponse(Boolean.TRUE);

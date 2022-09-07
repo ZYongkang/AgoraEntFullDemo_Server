@@ -7,7 +7,7 @@ import com.md.mic.pojos.*;
 
 public interface VoiceRoomService extends IService<VoiceRoom> {
 
-    VoiceRoomDTO create(User user, CreateRoomRequest request);
+    VoiceRoomDTO create(UserDTO owner, CreateRoomRequest request);
 
     PageInfo<RoomListDTO> getByPage(String cursor, int limit);
 

@@ -2,8 +2,9 @@ package com.md.mic.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.md.mic.exception.VoiceRoomSecurityException;
-import com.md.mic.model.User;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.model.VoiceRoomUser;
 import com.md.mic.pojos.PageInfo;
@@ -14,10 +15,13 @@ import com.md.mic.service.VoiceRoomService;
 import com.md.mic.service.VoiceRoomUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +38,15 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     @Resource
     private VoiceRoomService voiceRoomService;
 
+    @Resource(name = "voiceRedisTemplate")
+    private StringRedisTemplate redisTemplate;
+
+    @Value("${voice.room.redis.cache.ttl:PT1H}")
+    private Duration ttl;
+
+    @Resource
+    private ObjectMapper objectMapper;
+
     @Override public void deleteByRoomId(String roomId) {
         LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
                 new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId);
@@ -44,16 +57,21 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         List<Integer> idList =
                 voiceRoomUserList.stream().map(VoiceRoomUser::getId).collect(Collectors.toList());
         baseMapper.deleteBatchIds(idList);
+        cleanMemberCount(roomId);
+        cleanClickCount(roomId);
     }
 
     @Override
     public PageInfo<UserDTO> findPageByRoomId(String roomId, String cursor, Integer limit) {
-        Long total = baseMapper.selectCount(new LambdaQueryWrapper<>());
+        Long total = baseMapper.selectCount(
+                new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId));
         int limitSize = limit + 1;
         List<VoiceRoomUser> voiceRoomUserList;
         if (StringUtils.isBlank(cursor)) {
             LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
-                    new LambdaQueryWrapper<VoiceRoomUser>().orderByDesc(VoiceRoomUser::getId)
+                    new LambdaQueryWrapper<VoiceRoomUser>()
+                            .eq(VoiceRoomUser::getRoomId,roomId)
+                            .orderByDesc(VoiceRoomUser::getId)
                             .last(" limit " + limitSize);
             voiceRoomUserList = baseMapper.selectList(queryWrapper);
         } else {
@@ -62,7 +80,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
                     StandardCharsets.UTF_8);
             int id = Integer.parseInt(s);
             LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
-                    new LambdaQueryWrapper<VoiceRoomUser>().le(VoiceRoomUser::getId, id)
+                    new LambdaQueryWrapper<VoiceRoomUser>()
+                            .eq(VoiceRoomUser::getRoomId, roomId)
+                            .le(VoiceRoomUser::getId, id)
                             .orderByDesc(VoiceRoomUser::getId)
                             .last(" limit " + limitSize);
             voiceRoomUserList = baseMapper.selectList(queryWrapper);
@@ -95,33 +115,70 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     }
 
     @Override public VoiceRoomUser findByRoomIdAndUid(String roomId, String uid) {
-        LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
-                new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
-                        .eq(VoiceRoomUser::getUid, uid);
-        return baseMapper.selectOne(queryWrapper);
+        Boolean hasKey = redisTemplate.hasKey(key(roomId, uid));
+        VoiceRoomUser voiceRoomUser = null;
+        if (Boolean.TRUE.equals(hasKey)) {
+            String json = redisTemplate.opsForValue().get(key(roomId, uid));
+            try {
+                voiceRoomUser = objectMapper.readValue(json, VoiceRoomUser.class);
+            } catch (JsonProcessingException e) {
+                log.error("parse voice room user json cache failed | roomId={}, uid={},"
+                        + " json={}, e=", uid, json, e);
+            }
+        }
+        if (voiceRoomUser == null) {
+            LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
+                    new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
+                            .eq(VoiceRoomUser::getUid, uid);
+            voiceRoomUser = baseMapper.selectOne(queryWrapper);
+            if (voiceRoomUser != null) {
+                String json = null;
+                try {
+                    json = objectMapper.writeValueAsString(voiceRoomUser);
+                } catch (JsonProcessingException e) {
+                    log.error("write voice room user json cache failed | roomId={}, uid={},"
+                            + " voiceRoomUser={}, e=", uid, voiceRoomUser, e);
+                }
+                redisTemplate.opsForValue().set(key(roomId, uid), json, ttl);
+            }
+        }
+        return voiceRoomUser;
     }
 
-    @Override public VoiceRoomUser addVoiceRoomUser(String roomId, User user, String password) {
+    @Override public VoiceRoomUser addVoiceRoomUser(String roomId, String uid, String password) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (Boolean.TRUE.equals(voiceRoom.getIsPrivate()) && !voiceRoom.getPassword().equals(password)) {
             throw new VoiceRoomSecurityException("wrong password");
         }
         LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
                 new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
-                        .eq(VoiceRoomUser::getUid, user.getUid());
+                        .eq(VoiceRoomUser::getUid, uid);
         VoiceRoomUser voiceRoomUser = baseMapper.selectOne(queryWrapper);
         if (voiceRoomUser == null) {
-            voiceRoomUser = VoiceRoomUser.create(roomId, user.getUid());
+            voiceRoomUser = VoiceRoomUser.create(roomId, uid);
             save(voiceRoomUser);
+            incrClickCount(roomId);
+            incrMemberCount(roomId);
         }
         return voiceRoomUser;
     }
 
     @Override public void deleteVoiceRoomUser(String roomId, String uid) {
-        LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
-                new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
-                        .eq(VoiceRoomUser::getUid, uid);
-        baseMapper.delete(queryWrapper);
+        VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
+        if (voiceRoom == null) {
+            return;
+        }
+        VoiceRoomUser voiceRoomUser = findByRoomIdAndUid(roomId, uid);
+        if (voiceRoomUser == null) {
+            return;
+        }
+        if (voiceRoomUser.getUid().equals(voiceRoom.getOwner())) {
+            voiceRoomService.deleteByRoomId(roomId, uid);
+        } else {
+            baseMapper.deleteById(voiceRoomUser);
+            decrMemberCount(roomId);
+            redisTemplate.delete(key(roomId, uid));
+        }
     }
 
     @Override public void kickVoiceRoomUser(String roomId, String ownerUid, String kickUid) {
@@ -129,10 +186,43 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         if (!ownerUid.equals(voiceRoom.getOwner())) {
             throw new VoiceRoomSecurityException("not the owner can't operate");
         }
-        LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
-                new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
-                        .eq(VoiceRoomUser::getUid, kickUid);
-        baseMapper.delete(queryWrapper);
+        if (ownerUid.equals(kickUid)) {
+            throw new VoiceRoomSecurityException("the owner cannot be kicked out of the room");
+        }
+        VoiceRoomUser voiceRoomUser = findByRoomIdAndUid(roomId, kickUid);
+        if (voiceRoomUser != null) {
+            baseMapper.deleteById(voiceRoomUser);
+            decrMemberCount(roomId);
+            redisTemplate.delete(key(roomId, kickUid));
+        }
     }
 
+    private Long incrClickCount(String roomId) {
+        String key = String.format("room:voice:%s:memberCount", roomId);
+        return redisTemplate.opsForValue().increment(key);
+    }
+
+    private Long incrMemberCount(String roomId) {
+        String key = String.format("room:voice:%s:clickCount", roomId);
+        return redisTemplate.opsForValue().increment(key);
+    }
+
+    private Long decrMemberCount(String roomId) {
+        String key = String.format("room:voice:%s:clickCount", roomId);
+        return redisTemplate.opsForValue().increment(key, -1L);
+    }
+
+    private void cleanMemberCount(String roomId) {
+        String key = String.format("room:voice:%s:clickCount", roomId);
+        redisTemplate.delete(key);
+    }
+
+    private void cleanClickCount(String roomId) {
+        String key = String.format("room:voice:%s:memberCount", roomId);
+        redisTemplate.delete(key);
+    }
+
+    private String key(String roomId, String uid) {
+        return String.format("voiceRoomUser:room:%s:user:uid:%s", roomId, uid);
+    }
 }

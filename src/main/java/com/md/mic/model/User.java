@@ -1,11 +1,18 @@
 package com.md.mic.model;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.md.service.utils.MdStringUtils;
 import lombok.Builder;
 import lombok.Value;
 import org.apache.commons.codec.digest.Md5Crypt;
 
+import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -16,7 +23,8 @@ import static org.apache.commons.codec.Charsets.UTF_8;
 @Value
 @TableName("user")
 @Builder(toBuilder = true)
-public class User {
+public class User implements Serializable {
+
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
@@ -37,6 +45,23 @@ public class User {
 
     private String phone;
 
+    @JsonCreator
+    public User(Integer id,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt,
+            String uid,
+            String name,
+            String portrait, String deviceId, String phone) {
+        this.id = id;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.uid = uid;
+        this.name = name;
+        this.portrait = portrait;
+        this.deviceId = deviceId;
+        this.phone = phone;
+    }
+
     public static User create(String name, String deviceId, String portrait) {
         return create(name, deviceId, portrait, null);
     }
@@ -50,11 +75,12 @@ public class User {
                 .phone(phone)
                 .build();
     }
+
     private static String buildUid(String name, String deviceId) {
         try {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             String s = name + deviceId + System.currentTimeMillis();
-            String encode = Base64.getEncoder().encodeToString(md5.digest(s.getBytes(UTF_8)));
+            String encode = Base64.getUrlEncoder().encodeToString(md5.digest(s.getBytes(UTF_8)));
             return MdStringUtils.randomDelete(encode, 5);
         } catch (NoSuchAlgorithmException e) {
             String s = name + deviceId + System.currentTimeMillis();
