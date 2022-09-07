@@ -1,5 +1,6 @@
 package com.md.mic.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -61,8 +62,8 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
                 UserDTO applyUser = userService.getByUid(uid);
 
                 Map<String, Object> customExtensions = new HashMap<>();
-                customExtensions.put("user", applyUser);
-                customExtensions.put("mic_index", micIndex);
+                customExtensions.put("user", JSONObject.toJSONString(applyUser));
+                customExtensions.put("mic_index", micIndex.toString());
                 customExtensions.put("room_id", roomInfo.getRoomId());
                 this.imApi.sendUserCustomMessage(applyUser.getChatUid(),
                         roomInfo.getOwner().getChatUid(),
@@ -119,7 +120,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
         Long total = baseMapper.selectCount(new LambdaQueryWrapper<>());
         if (StringUtils.isBlank(cursor)) {
             LambdaQueryWrapper<MicApplyUser> queryWrapper =
-                    new LambdaQueryWrapper<MicApplyUser>().orderByDesc(MicApplyUser::getId)
+                    new LambdaQueryWrapper<MicApplyUser>().eq(MicApplyUser::getRoomId,roomId).orderByDesc(MicApplyUser::getId)
                             .last(" limit " + limitSize);
             micApplyUser = baseMapper.selectList(queryWrapper);
         } else {
@@ -128,7 +129,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
                     StandardCharsets.UTF_8);
             int id = Integer.parseInt(s);
             LambdaQueryWrapper<MicApplyUser> queryWrapper =
-                    new LambdaQueryWrapper<MicApplyUser>().le(MicApplyUser::getId, id)
+                    new LambdaQueryWrapper<MicApplyUser>().eq(MicApplyUser::getRoomId,roomId).le(MicApplyUser::getId, id)
                             .orderByDesc(MicApplyUser::getId)
                             .last(" limit " + limitSize);
             micApplyUser = baseMapper.selectList(queryWrapper);
