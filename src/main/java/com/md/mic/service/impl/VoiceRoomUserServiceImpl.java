@@ -152,6 +152,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     @Transactional
     public VoiceRoomUser addVoiceRoomUser(String roomId, String uid, String password) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
+        if (uid.equals(voiceRoom.getOwner())) {
+            return VoiceRoomUser.builder().roomId(roomId).uid(uid).build();
+        }
         if (Boolean.TRUE.equals(voiceRoom.getIsPrivate()) && !voiceRoom.getPassword().equals(password)) {
             throw new VoiceRoomSecurityException("wrong password");
         }
