@@ -175,16 +175,15 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         if (voiceRoom == null) {
             return;
         }
-        VoiceRoomUser voiceRoomUser = findByRoomIdAndUid(roomId, uid);
-        if (voiceRoomUser == null) {
-            return;
-        }
-        if (voiceRoomUser.getUid().equals(voiceRoom.getOwner())) {
+        if (uid.equals(voiceRoom.getOwner())) {
             voiceRoomService.deleteByRoomId(roomId, uid);
-        } else {
-            baseMapper.deleteById(voiceRoomUser);
-            decrMemberCount(roomId);
-            redisTemplate.delete(key(roomId, uid));
+        }else {
+            VoiceRoomUser voiceRoomUser = findByRoomIdAndUid(roomId, uid);
+            if (voiceRoomUser != null) {
+                baseMapper.deleteById(voiceRoomUser);
+                decrMemberCount(roomId);
+                redisTemplate.delete(key(roomId, uid));
+            }
         }
     }
 
