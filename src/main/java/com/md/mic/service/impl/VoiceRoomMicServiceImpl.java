@@ -385,8 +385,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         UserDTO applyUser = userService.getByUid(uid);
 
         Map<String, Object> customExtensions = new HashMap<>();
-        customExtensions.put("user", applyUser);
-        customExtensions.put("mic_index", index);
+        customExtensions.put("user", JSONObject.toJSONString(applyUser));
+        customExtensions.put("mic_index", index.toString());
         customExtensions.put("room_id", roomInfo.getRoomId());
         this.imApi.sendUserCustomMessage(roomInfo.getOwner().getChatUid(), applyUser.getChatUid(),
                 CustomEventType.INVITE_SITE.getValue(), customExtensions, new HashMap<>());
