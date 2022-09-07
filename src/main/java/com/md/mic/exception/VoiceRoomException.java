@@ -1,38 +1,31 @@
 package com.md.mic.exception;
 
+import org.springframework.http.HttpStatus;
+
 public class VoiceRoomException extends RuntimeException {
 
     private String code;
 
     private String message;
 
-    public VoiceRoomException(String code, String message) {
-        this.code = code;
-        this.message = message;
-    }
+    private HttpStatus httpStatus;
 
-    public VoiceRoomException(String message, String code, String message1) {
+    public VoiceRoomException(String code, String message, HttpStatus httpStatus) {
         super(message);
         this.code = code;
-        this.message = message1;
-    }
-
-    public VoiceRoomException(String message, Throwable cause, String code, String message1) {
-        super(message, cause);
-        this.code = code;
-        this.message = message1;
-    }
-
-    public VoiceRoomException(Throwable cause, String code, String message) {
-        super(cause);
-        this.code = code;
         this.message = message;
+        this.httpStatus = httpStatus;
     }
 
-    public VoiceRoomException(String message, Throwable cause, boolean enableSuppression,
-            boolean writableStackTrace, String code, String message1) {
-        super(message, cause, enableSuppression, writableStackTrace);
-        this.code = code;
-        this.message = message1;
+    public String getCode() {
+        return this.code;
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
+
+    public HttpStatus getHttpStatus() {
+        return this.httpStatus;
     }
 }

@@ -202,7 +202,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         }
         if (StringUtils.isNotBlank(request.getAnnouncement())) {
             voiceRoom = voiceRoom.updateAnnouncement(request.getAnnouncement());
-            // todo imApi.setAnnouncement(voiceRoom.getChatroomId(), request.getAnnouncement());
+            imApi.setAnnouncement(voiceRoom.getChatroomId(), request.getAnnouncement());
         }
         updateById(voiceRoom);
     }

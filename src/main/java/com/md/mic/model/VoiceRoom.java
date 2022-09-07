@@ -1,6 +1,7 @@
 package com.md.mic.model;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.md.mic.exception.VoiceRoomTypeMismatchException;
 import com.md.service.utils.MdStringUtils;
 import lombok.*;
 import org.apache.commons.codec.digest.Md5Crypt;
@@ -55,6 +56,7 @@ public class VoiceRoom {
             String soundEffect) {
         String roomId = buildRoomId(name);
         String channelId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
+        checkType(type);
         return VoiceRoom.builder().name(name).roomId(roomId).chatroomId(chatroomId)
                 .channelId(channelId).isPrivate(isPrivate).password(password)
                 .allowedFreeJoinMic(allowedFreeJoinMic).type(type)
@@ -108,6 +110,7 @@ public class VoiceRoom {
     }
 
     public VoiceRoom updateType(Integer type) {
+        checkType(type);
         return VoiceRoom.builder().id(id).name(name).roomId(roomId)
                 .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
                 .password(password).allowedFreeJoinMic(allowedFreeJoinMic)
@@ -123,5 +126,14 @@ public class VoiceRoom {
                 .build();
     }
 
+    private static void checkType(Integer type) {
+        switch (type) {
+            case 0:
+            case 1:
+                return;
+            default:
+                throw new VoiceRoomTypeMismatchException("room type mismatch");
+        }
+    }
 
 }

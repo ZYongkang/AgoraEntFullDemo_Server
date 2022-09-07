@@ -8,6 +8,8 @@ public interface ErrorCodeConstant {
 
     String roomUnSupportedOperation = "200401";
 
+    String voiceRoomTypeMismatch = "200400";
+
     String giftNotFound = "300404";
 
     String micApplyError = "400600";

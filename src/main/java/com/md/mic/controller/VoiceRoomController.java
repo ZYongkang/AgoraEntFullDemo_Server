@@ -2,6 +2,7 @@ package com.md.mic.controller;
 
 import com.md.common.util.ValidationUtil;
 import com.md.mic.exception.UserNotFoundException;
+import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
 import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
@@ -36,6 +37,8 @@ public class VoiceRoomController {
         if (isPrivate && StringUtils.isEmpty(request.getPassword())) {
             throw new IllegalArgumentException("private room password must not be null!");
         }
+        Integer type = request.getType();
+
         VoiceRoomDTO roomDTO = voiceRoomService.create(user, request);
         return new CreateRoomResponse(roomDTO);
     }

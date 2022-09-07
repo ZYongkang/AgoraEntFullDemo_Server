@@ -18,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +48,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     @Resource
     private ObjectMapper objectMapper;
 
-    @Override public void deleteByRoomId(String roomId) {
+    @Override
+    @Transactional
+    public void deleteByRoomId(String roomId) {
         LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
                 new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId);
         List<VoiceRoomUser> voiceRoomUserList = baseMapper.selectList(queryWrapper);
@@ -145,7 +148,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         return voiceRoomUser;
     }
 
-    @Override public VoiceRoomUser addVoiceRoomUser(String roomId, String uid, String password) {
+    @Override
+    @Transactional
+    public VoiceRoomUser addVoiceRoomUser(String roomId, String uid, String password) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (Boolean.TRUE.equals(voiceRoom.getIsPrivate()) && !voiceRoom.getPassword().equals(password)) {
             throw new VoiceRoomSecurityException("wrong password");
@@ -163,7 +168,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         return voiceRoomUser;
     }
 
-    @Override public void deleteVoiceRoomUser(String roomId, String uid) {
+    @Override
+    @Transactional
+    public void deleteVoiceRoomUser(String roomId, String uid) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (voiceRoom == null) {
             return;
@@ -181,7 +188,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         }
     }
 
-    @Override public void kickVoiceRoomUser(String roomId, String ownerUid, String kickUid) {
+    @Override
+    @Transactional
+    public void kickVoiceRoomUser(String roomId, String ownerUid, String kickUid) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (!ownerUid.equals(voiceRoom.getOwner())) {
             throw new VoiceRoomSecurityException("not the owner can't operate");
