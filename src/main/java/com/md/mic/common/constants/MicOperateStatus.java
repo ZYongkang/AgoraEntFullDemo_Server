@@ -1,4 +1,4 @@
-package com.md.mic.pojos;
+package com.md.mic.common.constants;
 
 /**
  * Created by liyongxin on 2022/8/31

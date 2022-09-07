@@ -50,7 +50,7 @@ public class VoiceRoomUserController {
             throw new UserNotFoundException("join room user must not be null");
         }
         voiceRoomUserService.addVoiceRoomUser(roomId, user.getUid(), request.getPassword());
-        VoiceRoomDTO voiceRoomDTO = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO voiceRoomDTO = voiceRoomService.getDTOByRoomId(roomId);
         List<MicInfo> micInfo = voiceRoomMicService.getByRoomId(roomId);
         return new JoinRoomResponse(voiceRoomDTO, micInfo);
     }
@@ -61,6 +61,7 @@ public class VoiceRoomUserController {
         if (user == null) {
             throw new UserNotFoundException("leave room user must not be null");
         }
+        // todo 退出房间 增加 是否退出成功的参数，如果没有退出成功，服务端再退出一遍聊天室
         voiceRoomUserService.deleteVoiceRoomUser(roomId, user.getUid());
         return new LeaveRoomResponse(Boolean.TRUE);
     }

@@ -1,7 +1,6 @@
 package com.md.mic.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.md.mic.model.User;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
 
@@ -11,7 +10,7 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     PageInfo<RoomListDTO> getByPage(String cursor, int limit);
 
-    VoiceRoomDTO getByRoomId(String roomId);
+    VoiceRoomDTO getDTOByRoomId(String roomId);
 
     VoiceRoom findByRoomId(String roomId);
 

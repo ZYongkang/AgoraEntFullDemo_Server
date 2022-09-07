@@ -203,6 +203,7 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
             baseMapper.deleteById(voiceRoomUser);
             decrMemberCount(roomId);
             redisTemplate.delete(key(roomId, kickUid));
+            //todo 需要调用 im 踢出聊天室
         }
     }
 

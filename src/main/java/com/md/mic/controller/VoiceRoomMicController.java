@@ -40,7 +40,7 @@ public class VoiceRoomMicController {
         if (user == null) {
             throw new UserNotFoundException("user must not be null");
         }
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -54,7 +54,7 @@ public class VoiceRoomMicController {
         if (user == null) {
             throw new UserNotFoundException("user must not be null");
         }
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -64,7 +64,7 @@ public class VoiceRoomMicController {
 
     @GetMapping("/voice/room/{roomId}/mic")
     public List<MicInfo> getRoomMicInfo(@PathVariable("roomId") String roomId) {
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -79,7 +79,7 @@ public class VoiceRoomMicController {
         if (user == null) {
             throw new UserNotFoundException("user must not be null");
         }
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -96,7 +96,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         OpenMicResponse response = new OpenMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -114,7 +114,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         LeaveMicResponse response = new LeaveMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -132,7 +132,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         MuteMicResponse response = new MuteMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -153,7 +153,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         UnMuteMicResponse response = new UnMuteMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -174,7 +174,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         ExchangeMicResponse response = new ExchangeMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -193,7 +193,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         KickUserMicResponse response = new KickUserMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -214,7 +214,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         LockMicResponse response = new LockMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -234,7 +234,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         UnLockMicResponse response = new UnLockMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -254,7 +254,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         InviteUserOnMicResponse response = new InviteUserOnMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -275,7 +275,8 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         ApplyAgreeOnMicResponse response = new ApplyAgreeOnMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        //todo voiceRoomService.findByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }
@@ -297,7 +298,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException("user must not be null");
         }
         InviteAgreeOnMicResponse response = new InviteAgreeOnMicResponse(Boolean.TRUE);
-        VoiceRoomDTO roomInfo = voiceRoomService.getByRoomId(roomId);
+        VoiceRoomDTO roomInfo = voiceRoomService.getDTOByRoomId(roomId);
         if (roomInfo == null) {
             throw new IllegalArgumentException("room is not be found!");
         }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.md.common.im.ImApi;
+import com.md.mic.common.constants.CustomEventType;
 import com.md.mic.exception.MicApplyException;
 import com.md.mic.exception.MicApplyRecordIsNullException;
 import com.md.mic.exception.MicIndexNullException;
@@ -14,8 +15,6 @@ import com.md.mic.repository.MicApplyUserMapper;
 import com.md.mic.service.MicApplyUserService;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
-import com.md.service.common.ErrorCodeEnum;
-import com.md.service.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +84,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
 
     @Override
     public void deleteMicApply(String uid, String roomId) {
-
+        //todo 使用new LambdaQueryWrapper<>()
         QueryWrapper<MicApplyUser> wrapper = new QueryWrapper<>();
         wrapper.eq("uid", uid);
         wrapper.eq("room_id", roomId);

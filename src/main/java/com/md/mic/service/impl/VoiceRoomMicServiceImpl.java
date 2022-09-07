@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.easemob.im.server.api.metadata.chatroom.AutoDelete;
 import com.easemob.im.server.api.metadata.chatroom.get.ChatRoomMetadataGetResponse;
 import com.md.common.im.ImApi;
+import com.md.mic.common.constants.CustomEventType;
+import com.md.mic.common.constants.MicOperateStatus;
+import com.md.mic.common.constants.MicStatus;
 import com.md.mic.exception.*;
 import com.md.mic.pojos.*;
 import com.md.mic.service.UserService;
@@ -64,7 +67,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Override
     public List<MicInfo> getByRoomId(String roomId) {
-        return getRoomMicInfo(voiceRoomService.getByRoomId(roomId).getChatroomId());
+        return getRoomMicInfo(voiceRoomService.getDTOByRoomId(roomId).getChatroomId());
     }
 
     @Override

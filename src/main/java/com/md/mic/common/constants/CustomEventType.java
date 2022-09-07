@@ -1,4 +1,4 @@
-package com.md.mic.pojos;
+package com.md.mic.common.constants;
 
 import org.apache.commons.lang.StringUtils;
 

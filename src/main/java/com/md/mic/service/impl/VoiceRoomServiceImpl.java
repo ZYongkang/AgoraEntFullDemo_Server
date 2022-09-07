@@ -79,7 +79,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
                 save(voiceRoom);
             } catch (Exception e) {
                 log.error("save voice room failed | room={}, err=", voiceRoom, e);
-                // todo voiceRoomMicService.clear(voiceRoom.getChatroomId());
                 imApi.deleteChatRoom(voiceRoom.getChatroomId());
                 throw e;
             }
@@ -151,7 +150,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         return pageInfo;
     }
 
-    @Override public VoiceRoomDTO getByRoomId(String roomId) {
+    @Override public VoiceRoomDTO getDTOByRoomId(String roomId) {
         VoiceRoom voiceRoom = findByRoomId(roomId);
         if (voiceRoom == null) {
             throw new RoomNotFoundException(String.format("room %s not found", roomId));
@@ -216,7 +215,9 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         }
         imApi.deleteChatRoom(voiceRoom.getChatroomId());
         voiceRoomUserService.deleteByRoomId(roomId);
-        baseMapper.deleteById(voiceRoom.getId());
+        LambdaQueryWrapper<VoiceRoom> queryWrapper =
+                new LambdaQueryWrapper<VoiceRoom>().eq(VoiceRoom::getRoomId, roomId);
+        baseMapper.delete(queryWrapper);
     }
 
     private Long getClickCount(String roomId) {
