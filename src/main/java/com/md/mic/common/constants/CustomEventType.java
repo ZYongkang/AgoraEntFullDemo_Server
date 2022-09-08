@@ -9,7 +9,9 @@ import org.apache.commons.lang.StringUtils;
 public enum CustomEventType {
 
     APPLY_SITE("chatroom_applySiteNotify"),
-    INVITE_SITE("chatroom_inviteSiteNotify");
+    APPLY_REFUSED("chatroom_applyRefusedNotify"),
+    INVITE_SITE("chatroom_inviteSiteNotify"),
+    INVITE_REFUSED("chatroom_inviteRefusedNotify");
 
     private String eventType;
 

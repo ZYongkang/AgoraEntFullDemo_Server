@@ -6,6 +6,6 @@ import org.springframework.http.HttpStatus;
 public class MicApplyException extends VoiceRoomException {
 
     public MicApplyException() {
-        super(ErrorCodeConstant.micApplyError, "addMicApply error", HttpStatus.BAD_REQUEST);
+        super(ErrorCodeConstant.micApplyError, "addMicApply error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

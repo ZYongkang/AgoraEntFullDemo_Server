@@ -8,6 +8,7 @@ import com.md.mic.common.constants.CustomEventType;
 import com.md.mic.common.constants.MicOperateStatus;
 import com.md.mic.common.constants.MicStatus;
 import com.md.mic.exception.*;
+import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
@@ -380,7 +381,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void invite(VoiceRoomDTO roomInfo, Integer index, String uid) {
+    public void invite(VoiceRoom roomInfo, Integer index, String uid) {
         UserDTO userDTO = this.userService.getByUid(uid);
         if (userDTO == null) {
             throw new BaseException(ErrorCodeEnum.user_not_exist);
@@ -391,7 +392,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         customExtensions.put("user", JSONObject.toJSONString(applyUser));
         customExtensions.put("mic_index", index.toString());
         customExtensions.put("room_id", roomInfo.getRoomId());
-        this.imApi.sendUserCustomMessage(roomInfo.getOwner().getChatUid(), applyUser.getChatUid(),
+        this.imApi.sendUserCustomMessage(roomInfo.getOwner(), applyUser.getChatUid(),
                 CustomEventType.INVITE_SITE.getValue(), customExtensions, new HashMap<>());
     }
 
@@ -406,7 +407,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public Boolean refuseInvite(VoiceRoomDTO roomInfo, String uid) {
+    public Boolean refuseInvite(VoiceRoom roomInfo, String uid) {
 
         UserDTO userDTO = this.userService.getByUid(uid);
 
@@ -418,8 +419,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         Map<String, Object> customExtensions = new HashMap<>();
         customExtensions.put("user", applyUser);
         customExtensions.put("room_id", roomInfo.getRoomId());
-        this.imApi.sendUserCustomMessage(userDTO.getChatUid(), roomInfo.getOwner().getChatUid(),
-                CustomEventType.INVITE_SITE.getValue(), customExtensions, new HashMap<>());
+        this.imApi.sendUserCustomMessage(userDTO.getChatUid(), roomInfo.getOwner(),
+                CustomEventType.INVITE_REFUSED.getValue(), customExtensions, new HashMap<>());
 
         return Boolean.TRUE;
 
@@ -427,6 +428,11 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Override
     public void exchangeMic(String chatroomId, Integer from, Integer to, String uid) {
+
+        if(from==0){
+            throw new MicStatusCannotBeModifiedException();
+        }
+
         String fromMicKey = buildMicKey(from);
         String toMicKey = buildMicKey(to);
 
@@ -582,14 +588,19 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                             }
                             break;
                         case LEAVE_MIC:
+                            if(micIndex==0){
+                                throw new MicStatusCannotBeModifiedException();
+                            }
                             updateStatus = MicStatus.FREE.getStatus();
                             updateUid = null;
                             break;
                         case MUTE_MIC:
+                            if(micIndex==0){
+                                throw new MicStatusCannotBeModifiedException();
+                            }
                             if (isAdminOperate && !StringUtils.isEmpty(micMetadataValue.getUid())
                                     && micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()) {
                                 updateStatus = MicStatus.MUTE.getStatus();
-                                updateUid = uid;
                             } else {
                                 throw new MicStatusCannotBeModifiedException();
                             }
@@ -598,7 +609,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                             if (isAdminOperate && micMetadataValue.getStatus() == MicStatus.MUTE
                                     .getStatus()) {
                                 updateStatus = MicStatus.NORMAL.getStatus();
-                                updateUid = uid;
                             } else {
                                 throw new MicStatusCannotBeModifiedException();
                             }

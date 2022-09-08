@@ -7,6 +7,6 @@ public class MicNotBelongYouException extends VoiceRoomException {
 
     public MicNotBelongYouException() {
         super(ErrorCodeConstant.micNotBelongYouError, "mic index not belong you",
-                HttpStatus.BAD_REQUEST);
+                HttpStatus.UNAUTHORIZED);
     }
 }
