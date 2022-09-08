@@ -1,5 +1,6 @@
 package com.md.mic.service;
 
+import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.MicInfo;
 import com.md.mic.pojos.VoiceRoomDTO;
 
@@ -31,11 +32,11 @@ public interface VoiceRoomMicService {
 
     void unLockMic(String chatroomId, Integer index);
 
-    void invite(VoiceRoomDTO roomInfo, Integer index, String uid);
+    void invite(VoiceRoom roomInfo, Integer index, String uid);
 
     Boolean agreeInvite(String chatroomId, String uid, Integer micIndex);
 
-    Boolean refuseInvite(VoiceRoomDTO roomInfo, String uid);
+    Boolean refuseInvite(VoiceRoom roomInfo, String uid);
 
     void exchangeMic(String chatroomId, Integer from, Integer to, String uid);
 }

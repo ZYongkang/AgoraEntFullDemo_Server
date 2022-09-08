@@ -7,6 +7,6 @@ public class MicStatusCannotBeModifiedException extends VoiceRoomException {
 
     public MicStatusCannotBeModifiedException() {
         super(ErrorCodeConstant.micStatusCannotBeModified, "mic current status cannot be modified",
-                HttpStatus.BAD_REQUEST);
+                HttpStatus.FORBIDDEN);
     }
 }

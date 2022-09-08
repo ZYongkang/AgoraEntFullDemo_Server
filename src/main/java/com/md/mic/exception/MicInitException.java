@@ -6,6 +6,6 @@ import org.springframework.http.HttpStatus;
 public class MicInitException extends VoiceRoomException {
 
     public MicInitException() {
-        super(ErrorCodeConstant.micInitError, "mic init error", HttpStatus.BAD_REQUEST);
+        super(ErrorCodeConstant.micInitError, "mic init error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

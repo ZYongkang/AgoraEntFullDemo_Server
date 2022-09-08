@@ -8,22 +8,26 @@ public interface ErrorCodeConstant {
 
     String roomUnSupportedOperation = "200401";
 
+    String userNotInRoomError = "201403";
+
     String voiceRoomTypeMismatch = "200400";
 
     String giftNotFound = "300404";
 
-    String micApplyError = "400600";
+    String micRepeatApplyError = "400400";
 
-    String micInitError = "400601";
+    String micApplyError = "400500";
 
-    String micIndexNullError = "400602";
+    String micInitError = "401500";
 
-    String micApplyRecordIsNullError = "400603";
+    String micIndexNullError = "402400";
 
-    String micNotBelongYouError = "400604";
+    String micApplyRecordNotFoundError = "400404";
 
-    String micStatusCannotBeModified = "400604";
+    String micNotBelongYouError = "400401";
 
-    String micNotCurrentUser = "400605";
+    String micStatusCannotBeModified = "400403";
+
+    String micNotCurrentUser = "401401";
 
 }
