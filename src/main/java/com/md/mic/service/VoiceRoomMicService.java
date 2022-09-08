@@ -12,7 +12,7 @@ public interface VoiceRoomMicService {
 
     List<MicInfo> getRoomMicInfo(String chatroomId);
 
-    Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex, Boolean inOrder);
+    Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex, boolean inOrder);
 
     List<MicInfo> initMic(String chatroomId, String ownerUid);
 

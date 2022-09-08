@@ -58,7 +58,7 @@ public class VoiceRoomGiftController {
             @RequestBody AddGiftRequest request,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
-            throw new UserNotFoundException("user must not be null");
+            throw new UserNotFoundException();
         }
         GiftId giftId = GiftId.of(request.getGiftId());
         giftRecordService.addGiftRecord(roomId, user.getUid(), giftId, request.getNum(),

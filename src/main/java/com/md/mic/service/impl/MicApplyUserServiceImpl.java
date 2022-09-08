@@ -2,7 +2,6 @@ package com.md.mic.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.md.common.im.ImApi;
 import com.md.mic.common.constants.CustomEventType;
@@ -12,7 +11,9 @@ import com.md.mic.exception.MicApplyRepeatException;
 import com.md.mic.exception.MicIndexNullException;
 import com.md.mic.model.MicApplyUser;
 import com.md.mic.model.VoiceRoom;
-import com.md.mic.pojos.*;
+import com.md.mic.pojos.MicApplyDTO;
+import com.md.mic.pojos.PageInfo;
+import com.md.mic.pojos.UserDTO;
 import com.md.mic.repository.MicApplyUserMapper;
 import com.md.mic.service.MicApplyUserService;
 import com.md.mic.service.UserService;
@@ -22,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -48,33 +50,30 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     private VoiceRoomMicService voiceRoomMicService;
 
     @Override
-    public Boolean addMicApply(String uid, VoiceRoom roomInfo, AddMicApplyRequest request) {
-        Integer micIndex = request == null ? null : request.getMicIndex();
+    @Transactional
+    public Boolean addMicApply(String uid, VoiceRoom roomInfo, Integer micIndex) {
         String roomId = roomInfo.getRoomId();
-        if (!roomInfo.getAllowedFreeJoinMic()) {
+        if (!Boolean.TRUE.equals(roomInfo.getAllowedFreeJoinMic())) {
             try {
-                MicApplyUser micApplyUser = new MicApplyUser();
-                if (micIndex != null) {
-                    micApplyUser.setMicIndex(micIndex);
-                }
-                micApplyUser.setRoomId(roomInfo.getRoomId());
-                micApplyUser.setUid(uid);
+                MicApplyUser micApplyUser = MicApplyUser.builder()
+                        .micIndex(micIndex)
+                        .roomId(roomId)
+                        .uid(uid)
+                        .build();
                 this.save(micApplyUser);
 
                 UserDTO applyUser = userService.getByUid(uid);
 
                 Map<String, Object> customExtensions = new HashMap<>();
                 customExtensions.put("user", JSONObject.toJSONString(applyUser));
-                customExtensions.put("mic_index", micIndex.toString());
+                customExtensions.put("mic_index", String.valueOf(micIndex));
                 customExtensions.put("room_id", roomInfo.getRoomId());
-                this.imApi.sendUserCustomMessage(applyUser.getChatUid(),
-                        roomInfo.getOwner(),
+                this.imApi.sendUserCustomMessage(applyUser.getChatUid(), roomInfo.getOwner(),
                         CustomEventType.APPLY_SITE.getValue(), customExtensions, new HashMap<>());
-
                 return Boolean.TRUE;
             } catch (Exception e) {
                 log.error("addMicApply error,userNo:{},roomId:{}", uid, roomId, e);
-                if(e instanceof SQLIntegrityConstraintViolationException){
+                if (e instanceof SQLIntegrityConstraintViolationException) {
                     throw new MicApplyRepeatException();
                 }
                 throw new MicApplyException();
@@ -83,38 +82,36 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
             if (micIndex == null) {
                 throw new MicIndexNullException();
             }
-            return this.voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex, Boolean.FALSE);
+            return this.voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex,
+                    Boolean.FALSE);
         }
 
     }
 
     @Override
     public void deleteMicApply(String uid, String roomId) {
-        LambdaQueryWrapper<MicApplyUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MicApplyUser::getUid,uid);
-        wrapper.eq(MicApplyUser::getRoomId,uid);
+        LambdaQueryWrapper<MicApplyUser> wrapper = new LambdaQueryWrapper<MicApplyUser>()
+                .eq(MicApplyUser::getUid, uid)
+                .eq(MicApplyUser::getRoomId, uid);
         int count = this.baseMapper.delete(wrapper);
         if (count == 0) {
             throw new MicApplyRecordNotFoundException();
         }
-
     }
 
     @Override
     public Boolean agreeApply(VoiceRoom roomInfo, String uid) {
-
         String roomId = roomInfo.getRoomId();
-        LambdaQueryWrapper<MicApplyUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MicApplyUser::getUid,uid);
-        wrapper.eq(MicApplyUser::getRoomId,uid);
+        LambdaQueryWrapper<MicApplyUser> wrapper = new LambdaQueryWrapper<MicApplyUser>()
+                .eq(MicApplyUser::getUid, uid)
+                .eq(MicApplyUser::getRoomId, roomId);
         MicApplyUser micApplyUser = this.getOne(wrapper);
         if (micApplyUser == null) {
             throw new MicApplyRecordNotFoundException();
         }
-
         Integer micIndex = micApplyUser.getMicIndex();
-
-        return voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex, Boolean.TRUE);
+        return voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex,
+                Boolean.TRUE);
 
     }
 
@@ -123,21 +120,18 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
 
         deleteMicApply(uid,roomInfo.getRoomId());
 
-        UserDTO applyUser=this.userService.getByUid(uid);
-        UserDTO ownerUser=this.userService.getByUid(roomInfo.getOwner());
+        UserDTO applyUser = this.userService.getByUid(uid);
+        UserDTO ownerUser = this.userService.getByUid(roomInfo.getOwner());
 
         Map<String, Object> customExtensions = new HashMap<>();
         customExtensions.put("user", JSONObject.toJSONString(applyUser));
-        if(micIndex!=null){
+        if (micIndex != null) {
             customExtensions.put("mic_index", micIndex.toString());
         }
         customExtensions.put("room_id", roomInfo.getRoomId());
-        this.imApi.sendUserCustomMessage(ownerUser.getChatUid(),
-                applyUser.getChatUid(),
+        this.imApi.sendUserCustomMessage(ownerUser.getChatUid(), applyUser.getChatUid(),
                 CustomEventType.APPLY_REFUSED.getValue(), customExtensions, new HashMap<>());
-
         return Boolean.TRUE;
-
     }
 
 
@@ -147,7 +141,9 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
         Long total = baseMapper.selectCount(new LambdaQueryWrapper<>());
         if (StringUtils.isBlank(cursor)) {
             LambdaQueryWrapper<MicApplyUser> queryWrapper =
-                    new LambdaQueryWrapper<MicApplyUser>().eq(MicApplyUser::getRoomId,roomId).orderByDesc(MicApplyUser::getId)
+                    new LambdaQueryWrapper<MicApplyUser>()
+                            .eq(MicApplyUser::getRoomId, roomId)
+                            .orderByDesc(MicApplyUser::getId)
                             .last(" limit " + limitSize);
             micApplyUser = baseMapper.selectList(queryWrapper);
         } else {
@@ -156,7 +152,9 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
                     StandardCharsets.UTF_8);
             int id = Integer.parseInt(s);
             LambdaQueryWrapper<MicApplyUser> queryWrapper =
-                    new LambdaQueryWrapper<MicApplyUser>().eq(MicApplyUser::getRoomId,roomId).le(MicApplyUser::getId, id)
+                    new LambdaQueryWrapper<MicApplyUser>()
+                            .eq(MicApplyUser::getRoomId, roomId)
+                            .le(MicApplyUser::getId, id)
                             .orderByDesc(MicApplyUser::getId)
                             .last(" limit " + limitSize);
             micApplyUser = baseMapper.selectList(queryWrapper);

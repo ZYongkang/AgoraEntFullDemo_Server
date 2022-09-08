@@ -33,7 +33,7 @@ public class VoiceRoomController {
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         ValidationUtil.validate(result);
         if (user == null) {
-            throw new UserNotFoundException("user must not be null");
+            throw new UserNotFoundException();
         }
         boolean isPrivate = Boolean.TRUE.equals(request.getIsPrivate());
         if (isPrivate && StringUtils.isEmpty(request.getPassword())) {
@@ -58,7 +58,7 @@ public class VoiceRoomController {
     @GetMapping("/voice/room/{roomId}")
     public GetVoiceRoomResponse getVoiceRoomInfo(@PathVariable("roomId") String roomId) {
         VoiceRoomDTO voiceRoomDTO = voiceRoomService.getDTOByRoomId(roomId);
-        List<MicInfo> micInfo = voiceRoomMicService.getByRoomId(roomId);
+        List<MicInfo> micInfo = voiceRoomMicService.getRoomMicInfo(voiceRoomDTO.getChatroomId());
         return new GetVoiceRoomResponse(voiceRoomDTO, micInfo);
     }
 
@@ -67,7 +67,7 @@ public class VoiceRoomController {
             @RequestBody UpdateRoomInfoRequest request,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
-            throw new UserNotFoundException("user must not be null");
+            throw new UserNotFoundException();
         }
         voiceRoomService.updateByRoomId(roomId, request, user.getUid());
         return new UpdateRoomInfoResponse(Boolean.TRUE);
@@ -77,7 +77,7 @@ public class VoiceRoomController {
     public DeleteRoomResponse deleteVoiceRoom(@PathVariable("roomId") String roomId,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
-            throw new UserNotFoundException("user must not be null");
+            throw new UserNotFoundException();
         }
         voiceRoomService.deleteByRoomId(roomId, user.getUid());
         return new DeleteRoomResponse(Boolean.TRUE);

@@ -152,9 +152,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
 
     @Override public VoiceRoomDTO getDTOByRoomId(String roomId) {
         VoiceRoom voiceRoom = findByRoomId(roomId);
-        if (voiceRoom == null) {
-            throw new RoomNotFoundException(String.format("room %s not found", roomId));
-        }
         UserDTO userDTO = userService.getByUid(voiceRoom.getOwner());
         Long memberCount = getMemberCount(voiceRoom.getRoomId());
         Long clickCount = getClickCount(voiceRoom.getRoomId());
@@ -267,7 +264,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             }
         }
         if (voiceRoom == null) {
-            throw new RoomNotFoundException("room not found");
+            throw new RoomNotFoundException(String.format("room %s not found", roomId));
         }
         return voiceRoom;
     }

@@ -1,9 +1,8 @@
 package com.md.mic.pojos;
 
-import lombok.Data;
 import lombok.Value;
 
-@Data
+@Value
 public class MicMetadataValue {
 
     private String uid;

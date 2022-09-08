@@ -1,11 +1,14 @@
 package com.md.mic.model;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Value;
 
 import java.time.LocalDateTime;
 
-@Data
+@Value
+@Builder(toBuilder = true)
 @TableName("mic_apply_user")
 public class MicApplyUser {
 

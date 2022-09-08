@@ -1,5 +1,6 @@
 package com.md.mic.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.easemob.im.server.api.metadata.chatroom.AutoDelete;
 import com.easemob.im.server.api.metadata.chatroom.get.ChatRoomMetadataGetResponse;
@@ -9,7 +10,9 @@ import com.md.mic.common.constants.MicOperateStatus;
 import com.md.mic.common.constants.MicStatus;
 import com.md.mic.exception.*;
 import com.md.mic.model.VoiceRoom;
-import com.md.mic.pojos.*;
+import com.md.mic.pojos.MicInfo;
+import com.md.mic.pojos.MicMetadataValue;
+import com.md.mic.pojos.UserDTO;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
@@ -21,6 +24,7 @@ import org.redisson.api.RLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -44,8 +48,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     @Autowired
     private VoiceRoomService voiceRoomService;
 
-    @Resource
-    private RedisTemplate redisTemplate;
+    @Resource(name = "voiceRedisTemplate")
+    private StringRedisTemplate redisTemplate;
 
     @Resource
     private Redisson redisson;
@@ -68,7 +72,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Override
     public List<MicInfo> getByRoomId(String roomId) {
-        return getRoomMicInfo(voiceRoomService.getDTOByRoomId(roomId).getChatroomId());
+        return getRoomMicInfo(voiceRoomService.findByRoomId(roomId).getChatroomId());
     }
 
     @Override
@@ -88,9 +92,9 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Override
     public Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex,
-            Boolean inOrder) {
+            boolean inOrder) {
 
-        Boolean hasMic = false;
+        boolean hasMic = false;
 
         if (micIndex == null && !inOrder) {
             throw new MicIndexNullException();
@@ -152,14 +156,13 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             Map<String, String> metadataMap = new HashMap<>();
             for (int micIndex = 0; micIndex < micCount; micIndex++) {
                 String micKey = buildMicKey(micIndex);
-                MicMetadataValue micMetadataValue = new MicMetadataValue();
-                micMetadataValue.setUid(null);
-                micMetadataValue.setStatus(MicStatus.FREE.getStatus());
+                MicMetadataValue micMetadataValue;
                 if (micIndex == 0) {
-                    micMetadataValue.setUid(ownerUid);
-                    micMetadataValue.setStatus(MicStatus.NORMAL.getStatus());
+                    micMetadataValue = new MicMetadataValue(ownerUid, MicStatus.NORMAL.getStatus());
+                } else {
+                    micMetadataValue = new MicMetadataValue(ownerUid, MicStatus.FREE.getStatus());
                 }
-                metadataMap.put(micKey, JSONObject.toJSONString(micMetadataValue));
+                metadataMap.put(micKey, JSON.toJSONString(micMetadataValue));
             }
             //
             List<String> successKeys =
@@ -468,7 +471,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         String fromMicKey = buildMicKey(from);
 
         String toMicKey = buildMicKey(to);
-
+        //todo 使用 redisson
         Boolean lockFromkey = redisTemplate.opsForValue()
                 .setIfAbsent(buildMicLockKey(from), fromMicKey, Duration.ofMillis(5000));
 
@@ -483,7 +486,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 .getMetadata();
 
                 if (metadata.containsKey(fromMicKey) && metadata.containsKey(toMicKey)) {
-
+                    //TODO 不要使用fastjson
                     MicMetadataValue fromMicMetadataValue =
                             JSONObject
                                     .parseObject(metadata.get(fromMicKey), MicMetadataValue.class);
@@ -502,10 +505,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
                     int currentStatus = fromMicMetadataValue.getStatus();
 
-                    fromMicMetadataValue.setUid(null);
-                    fromMicMetadataValue.setStatus(MicStatus.FREE.getStatus());
-                    toMicMetadataValue.setUid(uid);
-                    toMicMetadataValue.setStatus(currentStatus);
+                    fromMicMetadataValue = new MicMetadataValue(null, MicStatus.FREE.getStatus());
+                    toMicMetadataValue = new MicMetadataValue(uid, currentStatus);
 
                     metadata = new HashMap<>();
                     metadata.put(fromMicKey, JSONObject.toJSONString(fromMicMetadataValue));
@@ -519,25 +520,25 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new BaseException(ErrorCodeEnum.mic_is_concurrent_operation);
             }
         } catch (Exception e) {
-            log.error("exchangeMicInfo error,roomId:{},from:{},to:{},uid:{}", chatroomId, from, to,
-                    uid,
-                    e);
+            log.error("exchangeMicInfo error,roomId:{},from:{},to:{},uid:{}", chatroomId,
+                    from, to, uid, e);
             throw e;
         } finally {
             if (lockFromkey) {
-                redisTemplate.delete(lockFromkey);
+                redisTemplate.delete(buildMicLockKey(from));
             }
             if (lockTokey) {
-                redisTemplate.delete(lockTokey);
+                redisTemplate.delete(buildMicLockKey(to));
             }
         }
 
     }
 
     private void updateVoiceRoomMicInfo(String chatroomId, String uid, Integer micIndex,
-            Integer micOperateStatus, Boolean isAdminOperate) {
+            Integer micOperateStatus, boolean isAdminOperate) { //todo isAdminOperate 这个换成 boolean类型有没有问题
         String metadataKey = buildMicKey(micIndex);
         String redisLockKey = buildMicLockKey(micIndex);
+        //todo 统一使用方式
         Boolean isContinue = redisTemplate.opsForValue()
                 .setIfAbsent(redisLockKey, metadataKey, Duration.ofMillis(5000));
         try {
@@ -554,7 +555,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     Integer updateStatus = null;
                     String updateUid = micMetadataValue.getUid();
 
-                    //麦有人的情况下、只允许对该人进行操作
+                    //麦有人的情况下、只允许对该人进行操作 todo 去掉这种注释
                     if (!isAdminOperate && !StringUtils.isEmpty(micMetadataValue.getUid())
                             && !micMetadataValue.getUid()
                             .equals(uid)) {
@@ -643,8 +644,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     }
 
                     //更新麦位信息
-                    micMetadataValue.setStatus(updateStatus);
-                    micMetadataValue.setUid(updateUid);
+                    micMetadataValue = new MicMetadataValue(updateUid, updateStatus);
                     metadata = new HashMap<>();
                     metadata.put(metadataKey, JSONObject.toJSONString(micMetadataValue));
                     imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadata, AutoDelete.DELETE);
@@ -656,6 +656,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             }
 
         } catch (Exception e) {
+            // todo 没有任何意义的catch 不要有
             throw e;
         } finally {
             if (isContinue) {
@@ -678,8 +679,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 //查询用户信息
                 user = this.userService.getByUid(micMetadataValue.getUid());
             }
-
-            int index = Integer.valueOf(key.split("_")[1]);
+            //todo 会不会有空指针或者数组越界的问题
+            int index = Integer.parseInt(key.split("_")[1]);
 
             MicInfo micInfo =
                     MicInfo.builder().status(micMetadataValue.getStatus()).index(index).user(user)

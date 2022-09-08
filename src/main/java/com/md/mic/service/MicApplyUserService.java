@@ -10,7 +10,7 @@ import com.md.mic.pojos.VoiceRoomDTO;
 
 public interface MicApplyUserService extends IService<MicApplyUser> {
 
-    Boolean addMicApply(String uid, VoiceRoom roomInfo, AddMicApplyRequest request);
+    Boolean addMicApply(String uid, VoiceRoom roomInfo, Integer micIndex);
 
     void deleteMicApply(String uid, String roomId);
 
