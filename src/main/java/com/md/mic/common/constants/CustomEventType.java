@@ -8,10 +8,28 @@ import org.apache.commons.lang.StringUtils;
 
 public enum CustomEventType {
 
+    /**
+     * 申请上麦
+     */
     APPLY_SITE("chatroom_applySiteNotify"),
+    /**
+     * 拒绝申请
+     */
     APPLY_REFUSED("chatroom_applyRefusedNotify"),
+    /**
+     * 邀请上麦
+     */
     INVITE_SITE("chatroom_inviteSiteNotify"),
-    INVITE_REFUSED("chatroom_inviteRefusedNotify");
+    /**
+     * 拒绝邀请
+     */
+    INVITE_REFUSED("chatroom_inviteRefusedNotify"),
+
+    /**
+     * 送礼物
+     */
+    SEND_GIFT("chatroom_gift"),
+    ;
 
     private String eventType;
 

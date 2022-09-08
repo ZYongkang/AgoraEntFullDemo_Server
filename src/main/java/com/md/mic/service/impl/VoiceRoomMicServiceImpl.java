@@ -127,56 +127,55 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void initMic(String chatroomId, String ownerUid) {
+    public List<MicInfo> initMic(String chatroomId, String ownerUid) {
 
         String redisLockKey = buildMicLockKey(chatroomId);
 
         RLock micLock = redisson.getLock(redisLockKey);
-        Boolean lockkey = false;
+        boolean lockKey = false;
         try {
-            lockkey = micLock.tryLock(5000, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
+            lockKey = micLock.tryLock(5000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
             log.error("get redis lock error", e);
         }
-
+        if (!lockKey) {
+            throw new MicAlreadyExistsException("mic init already exists");
+        }
         try {
-            if (lockkey) {
-
-                Map<String, String> metadata =
-                        imApi.listChatRoomMetadata(chatroomId, Arrays.asList(buildMicKey(0)))
-                                .getMetadata();
-                if (metadata.size() > 0) {
-                    throw new BaseException(ErrorCodeEnum.mic_init_already);
-                }
-
-                Map<String, String> metadataMap = new HashMap<>();
-                for (int micIndex = 0; micIndex < micCount; micIndex++) {
-                    String micKey = buildMicKey(micIndex);
-                    MicMetadataValue micMetadataValue = new MicMetadataValue();
-                    micMetadataValue.setUid(null);
-                    micMetadataValue.setStatus(MicStatus.FREE.getStatus());
-                    if (micIndex == 0) {
-                        micMetadataValue.setUid(ownerUid);
-                        micMetadataValue.setStatus(MicStatus.NORMAL.getStatus());
-                    }
-                    metadataMap.put(micKey, JSONObject.toJSONString(micMetadataValue));
-                }
-                //
-                List<String> successKeys =
-                        imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadataMap,
-                                AutoDelete.DELETE)
-                                .getSuccessKeys();
-                if (successKeys.size() != micCount) {
-                    imApi.deleteChatRoomMetadata(OPERATOR, chatroomId, successKeys);
-                    throw new MicInitException();
-                }
+            Map<String, String> metadata =
+                    imApi.listChatRoomMetadata(chatroomId, Arrays.asList(buildMicKey(0)))
+                            .getMetadata();
+            if (metadata.size() > 0) {
+                throw new MicAlreadyExistsException("mic init already exists");
             }
+
+            Map<String, String> metadataMap = new HashMap<>();
+            for (int micIndex = 0; micIndex < micCount; micIndex++) {
+                String micKey = buildMicKey(micIndex);
+                MicMetadataValue micMetadataValue = new MicMetadataValue();
+                micMetadataValue.setUid(null);
+                micMetadataValue.setStatus(MicStatus.FREE.getStatus());
+                if (micIndex == 0) {
+                    micMetadataValue.setUid(ownerUid);
+                    micMetadataValue.setStatus(MicStatus.NORMAL.getStatus());
+                }
+                metadataMap.put(micKey, JSONObject.toJSONString(micMetadataValue));
+            }
+            //
+            List<String> successKeys =
+                    imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadataMap,
+                                    AutoDelete.DELETE)
+                            .getSuccessKeys();
+            if (successKeys.size() != micCount) {
+                imApi.deleteChatRoomMetadata(OPERATOR, chatroomId, successKeys);
+                throw new MicInitException();
+            }
+            return buildMicInfo(metadataMap);
         } catch (Exception e) {
+            log.error("init mic to easemob failed | roomId={}, err=", chatroomId, e);
             throw e;
         } finally {
-            if (lockkey) {
-                micLock.unlock();
-            }
+            micLock.unlock();
         }
     }
 
@@ -688,7 +687,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             micInfos.add(micInfo);
 
         }
-        micInfos = micInfos.stream().sorted(Comparator.comparing(mic -> mic.getIndex())).collect(
+        micInfos = micInfos.stream().sorted(Comparator.comparing(MicInfo::getIndex)).collect(
                 Collectors.toList());
         return micInfos;
     }

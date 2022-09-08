@@ -138,11 +138,11 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
                 String json = null;
                 try {
                     json = objectMapper.writeValueAsString(voiceRoomUser);
+                    redisTemplate.opsForValue().set(key(roomId, uid), json, ttl);
                 } catch (JsonProcessingException e) {
                     log.error("write voice room user json cache failed | roomId={}, uid={},"
                             + " voiceRoomUser={}, e=", uid, voiceRoomUser, e);
                 }
-                redisTemplate.opsForValue().set(key(roomId, uid), json, ttl);
             }
         }
         return voiceRoomUser;

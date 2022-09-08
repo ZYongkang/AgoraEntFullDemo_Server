@@ -1,6 +1,7 @@
 package com.md.mic.controller;
 
 import com.md.common.util.ValidationUtil;
+import com.md.mic.common.constants.MicStatus;
 import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.pojos.*;
 import com.md.mic.service.VoiceRoomMicService;
@@ -11,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.util.function.Tuple2;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -36,8 +39,9 @@ public class VoiceRoomController {
         if (isPrivate && StringUtils.isEmpty(request.getPassword())) {
             throw new IllegalArgumentException("private room password must not be null!");
         }
-        VoiceRoomDTO roomDTO = voiceRoomService.create(user, request);
-        return new CreateRoomResponse(roomDTO);
+        Tuple2<VoiceRoomDTO, List<MicInfo>> tuples = voiceRoomService.create(user, request);
+
+        return new CreateRoomResponse(tuples.getT1(), tuples.getT2());
     }
 
     @GetMapping("/voice/room/list")

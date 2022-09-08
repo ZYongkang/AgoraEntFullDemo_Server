@@ -3,10 +3,13 @@ package com.md.mic.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
+import reactor.util.function.Tuple2;
+
+import java.util.List;
 
 public interface VoiceRoomService extends IService<VoiceRoom> {
 
-    VoiceRoomDTO create(UserDTO owner, CreateRoomRequest request);
+    Tuple2<VoiceRoomDTO, List<MicInfo>> create(UserDTO owner, CreateRoomRequest request);
 
     PageInfo<RoomListDTO> getByPage(String cursor, int limit);
 

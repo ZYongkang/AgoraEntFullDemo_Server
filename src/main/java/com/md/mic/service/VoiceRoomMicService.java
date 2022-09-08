@@ -14,7 +14,7 @@ public interface VoiceRoomMicService {
 
     Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex, Boolean inOrder);
 
-    void initMic(String chatroomId, String ownerUid);
+    List<MicInfo> initMic(String chatroomId, String ownerUid);
 
     void closeMic(String uid, String chatroomId, Integer micIndex);
 

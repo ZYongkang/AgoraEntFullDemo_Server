@@ -14,10 +14,13 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VoiceRoomDTO {
 
+    @JsonProperty("room_id")
     private String roomId;
 
+    @JsonProperty("channel_id")
     private String channelId;
 
+    @JsonProperty("chatroom_id")
     private String chatroomId;
 
     private String name;

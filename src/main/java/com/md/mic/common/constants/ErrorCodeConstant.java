@@ -30,4 +30,6 @@ public interface ErrorCodeConstant {
 
     String micNotCurrentUser = "401401";
 
+    String micInitAlreadyExists = "400208";
+
 }

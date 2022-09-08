@@ -2,6 +2,7 @@ package com.md.mic.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.md.common.im.ImApi;
@@ -18,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +28,7 @@ import java.time.Duration;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
+
 
 @Slf4j
 @Service
@@ -63,32 +67,28 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
 
     @Override
     @Transactional
-    public VoiceRoomDTO create(UserDTO owner, CreateRoomRequest request) {
+    public Tuple2<VoiceRoomDTO, List<MicInfo>> create(UserDTO owner, CreateRoomRequest request) {
         String uid = owner.getUid();
-        String userChatId;
         VoiceRoom voiceRoom;
+        String userChatId = owner.getChatUid();
+        String chatRoomId = imApi.createChatRoom(request.getName(), userChatId,
+                Collections.singletonList(userChatId), request.getName());
+        voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
+                request.getPassword(), request.getAllowFreeJoinMic(),
+                request.getType(), uid, request.getSoundEffect());
+        List<MicInfo> micInfos =
+                voiceRoomMicService.initMic(voiceRoom.getChatroomId(), voiceRoom.getOwner());
         try {
-            userChatId = owner.getChatUid();
-            String chatRoomId = imApi.createChatRoom(request.getName(), userChatId,
-                    Collections.singletonList(userChatId), request.getName());
-            voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
-                    request.getPassword(), request.getAllowFreeJoinMic(),
-                    request.getType(), uid, request.getSoundEffect());
-            voiceRoomMicService.initMic(voiceRoom.getChatroomId(), voiceRoom.getOwner());
-            try {
-                save(voiceRoom);
-            } catch (Exception e) {
-                log.error("save voice room failed | room={}, err=", voiceRoom, e);
-                imApi.deleteChatRoom(voiceRoom.getChatroomId());
-                throw e;
-            }
-            Long clickCount = 0L;
-            Long memberCount = 0L;
-            return VoiceRoomDTO.from(voiceRoom, owner, memberCount, clickCount);
+            save(voiceRoom);
         } catch (Exception e) {
-            log.error("create room failed | err=", e);
+            log.error("save voice room failed | room={}, err=", voiceRoom, e);
+            imApi.deleteChatRoom(voiceRoom.getChatroomId());
             throw e;
         }
+        Long clickCount = 0L;
+        Long memberCount = 0L;
+        VoiceRoomDTO roomDTO = VoiceRoomDTO.from(voiceRoom, owner, memberCount, clickCount);
+        return Tuples.of(roomDTO, micInfos);
     }
 
     @Override
@@ -241,8 +241,38 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     }
 
     public VoiceRoom findByRoomId(String roomId) {
-        LambdaQueryWrapper<VoiceRoom> queryWrapper =
-                new LambdaQueryWrapper<VoiceRoom>().eq(VoiceRoom::getRoomId, roomId);
-        return baseMapper.selectOne(queryWrapper);
+        VoiceRoom voiceRoom = null;
+        Boolean hasKey = redisTemplate.hasKey(key(roomId));
+        if (Boolean.TRUE.equals(hasKey)) {
+            String json = redisTemplate.opsForValue().get(key(roomId));
+            try {
+                voiceRoom = objectMapper.readValue(json, VoiceRoom.class);
+            } catch (JsonProcessingException e) {
+                log.error("parse voice room json cache failed | roomId={},"
+                        + " json={}, e=", json, e);
+            }
+        }
+        if (voiceRoom == null) {
+            LambdaQueryWrapper<VoiceRoom> queryWrapper =
+                    new LambdaQueryWrapper<VoiceRoom>().eq(VoiceRoom::getRoomId, roomId);
+            voiceRoom = baseMapper.selectOne(queryWrapper);
+            if (voiceRoom != null) {
+                try {
+                    String json = objectMapper.writeValueAsString(voiceRoom);
+                    redisTemplate.opsForValue().set(key(roomId), json, ttl);
+                } catch (JsonProcessingException e) {
+                    log.error("write voice room json cache failed | roomId={},"
+                            + " voiceRoom={}, e=", voiceRoom, e);
+                }
+            }
+        }
+        if (voiceRoom == null) {
+            throw new RoomNotFoundException("room not found");
+        }
+        return voiceRoom;
+    }
+
+    private String key(String roomId) {
+        return String.format("voiceRoom:roomId:%s", roomId);
     }
 }
