@@ -1,5 +1,6 @@
 package com.md.mic.controller;
 
+import com.md.common.util.ValidationUtil;
 import com.md.mic.exception.RoomNotFoundException;
 import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.exception.UserNotInRoomException;
@@ -13,6 +14,7 @@ import com.md.mic.service.VoiceRoomService;
 import com.md.mic.service.VoiceRoomUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -84,8 +86,9 @@ public class VoiceRoomMicController {
         if (user == null) {
             throw new UserNotFoundException();
         }
-        VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
-        this.voiceRoomMicService.closeMic(user.getUid(), roomInfo.getChatroomId(), request.getIndex());
+        VoiceRoom voiceRoom = validateMicPermissions(roomId, user.getUid());
+        this.voiceRoomMicService.closeMic(user.getUid(), voiceRoom.getChatroomId(),
+                request.getMicIndex());
         return new CloseMicResponse(Boolean.TRUE);
     }
 
@@ -100,7 +103,7 @@ public class VoiceRoomMicController {
         OpenMicResponse response = new OpenMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.openMic(user.getUid(), roomInfo.getChatroomId(),
-                request.getIndex());
+                request.getMicIndex());
         return response;
     }
 
@@ -115,7 +118,7 @@ public class VoiceRoomMicController {
         LeaveMicResponse response = new LeaveMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.leaveMic(user.getUid(), roomInfo.getChatroomId(),
-                request.getIndex());
+                request.getMicIndex());
         return response;
     }
 
@@ -132,7 +135,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new VoiceRoomSecurityException("only the owner can operate");
         }
-        this.voiceRoomMicService.muteMic(roomInfo.getChatroomId(), request.getIndex());
+        this.voiceRoomMicService.muteMic(roomInfo.getChatroomId(), request.getMicIndex());
 
         return response;
     }
@@ -150,7 +153,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
            throw new VoiceRoomSecurityException("only the owner can operate");
         }
-        this.voiceRoomMicService.unMuteMic(roomInfo.getChatroomId(), request.getIndex());
+        this.voiceRoomMicService.unMuteMic(roomInfo.getChatroomId(), request.getMicIndex());
 
         return response;
     }
@@ -183,7 +186,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can kick mic");
         }
-        this.voiceRoomMicService.kickUserMic(roomInfo.getChatroomId(), request.getIndex(),
+        this.voiceRoomMicService.kickUserMic(roomInfo.getChatroomId(), request.getMicIndex(),
                 request.getUid());
 
         return response;
@@ -201,8 +204,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can lock mic");
         }
-        this.voiceRoomMicService.lockMic(roomInfo.getChatroomId(), request.getIndex());
-
+        this.voiceRoomMicService.lockMic(roomInfo.getChatroomId(), request.getMicIndex());
         return response;
     }
 
@@ -221,7 +223,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can unlock mic");
         }
-        this.voiceRoomMicService.unLockMic(roomInfo.getChatroomId(), request.getIndex());
+        this.voiceRoomMicService.unLockMic(roomInfo.getChatroomId(), request.getMicIndex());
         return response;
     }
 
@@ -241,7 +243,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can invite");
         }
-        this.voiceRoomMicService.invite(roomInfo, request.getIndex(), request.getUid());
+        this.voiceRoomMicService.invite(roomInfo, request.getMicIndex(), request.getUid());
         return response;
     }
 
@@ -249,8 +251,9 @@ public class VoiceRoomMicController {
     @PostMapping("/voice/room/{roomId}/mic/apply/agree")
     public ApplyAgreeOnMicResponse agreeApply(
             @PathVariable("roomId") String roomId,
-            @RequestBody ApplyAgreeOnMicRequest request,
+            @RequestBody ApplyAgreeOnMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -282,7 +285,8 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can invite");
         }
-        Boolean result = micApplyUserService.refuseApply(roomInfo, request.getUid(),request.getIndex());
+        Boolean result =
+                micApplyUserService.refuseApply(roomInfo, request.getUid(), request.getMicIndex());
         return new ApplyAgreeOnMicResponse(Boolean.TRUE.equals(result));
     }
 
@@ -290,7 +294,7 @@ public class VoiceRoomMicController {
 
 
     //用户同意邀请上麦申请
-    @GetMapping("/voice/room/{roomId}/mic/invite/agree")
+    @PostMapping("/voice/room/{roomId}/mic/invite/agree")
     public InviteAgreeOnMicResponse agreeInvite(
             @PathVariable("roomId") String roomId,
             @RequestBody InviteAgreeOnMicRequest request,
@@ -302,9 +306,12 @@ public class VoiceRoomMicController {
         if (roomInfo == null) {
             throw new RoomNotFoundException(String.format("room %s not found", roomId));
         }
+        if (!user.getUid().equals(request.getUid())) {
+            throw new VoiceRoomSecurityException("agree user is not the operator");
+        }
         Boolean result =
-                voiceRoomMicService.agreeInvite(roomInfo.getChatroomId(), request.getUid(),
-                        request.getIndex());
+                voiceRoomMicService.agreeInvite(roomInfo.getChatroomId(), user.getUid(),
+                        request.getMicIndex());
         return new InviteAgreeOnMicResponse(Boolean.TRUE.equals(result));
     }
 
@@ -312,7 +319,6 @@ public class VoiceRoomMicController {
     @GetMapping("/voice/room/{roomId}/mic/invite/refuse")
     public InviteAgreeOnMicResponse refuseInvite(
             @PathVariable("roomId") String roomId,
-            @RequestBody InviteRefusedOnMicResponse request,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new UserNotFoundException();
@@ -329,8 +335,9 @@ public class VoiceRoomMicController {
 
     private VoiceRoom validateMicPermissions(String roomId, String uid) {
         VoiceRoom roomInfo = voiceRoomService.findByRoomId(roomId);
-        VoiceRoomUser voiceRoomUser=voiceRoomUserService.findByRoomIdAndUid(roomInfo.getRoomId(),uid);
-        if(uid.equals(roomInfo.getOwner())&&voiceRoomUser==null){
+        VoiceRoomUser voiceRoomUser =
+                voiceRoomUserService.findByRoomIdAndUid(roomInfo.getRoomId(), uid);
+        if (!uid.equals(roomInfo.getOwner()) && voiceRoomUser == null) {
             throw new UserNotInRoomException();
         }
         return roomInfo;

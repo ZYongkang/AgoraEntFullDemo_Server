@@ -92,7 +92,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     public void deleteMicApply(String uid, String roomId) {
         LambdaQueryWrapper<MicApplyUser> wrapper = new LambdaQueryWrapper<MicApplyUser>()
                 .eq(MicApplyUser::getUid, uid)
-                .eq(MicApplyUser::getRoomId, uid);
+                .eq(MicApplyUser::getRoomId, roomId);
         int count = this.baseMapper.delete(wrapper);
         if (count == 0) {
             throw new MicApplyRecordNotFoundException();
@@ -110,8 +110,11 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
             throw new MicApplyRecordNotFoundException();
         }
         Integer micIndex = micApplyUser.getMicIndex();
-        return voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex,
-                Boolean.TRUE);
+        Boolean result =
+                voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex,
+                        Boolean.TRUE);
+        deleteMicApply(uid, roomId);
+        return result;
 
     }
 
@@ -181,7 +184,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
             long createdAt = applyUser.getCreatedAt().toInstant(ZoneOffset.of(zoneOffset))
                     .toEpochMilli();
             list.add(MicApplyDTO.builder().user(userDTO).index(applyUser.getMicIndex())
-                    .createAt(createdAt).build());
+                    .createdAt(createdAt).build());
         }
         PageInfo<MicApplyDTO> pageInfo = new PageInfo<>();
         pageInfo.setCursor(cursor);

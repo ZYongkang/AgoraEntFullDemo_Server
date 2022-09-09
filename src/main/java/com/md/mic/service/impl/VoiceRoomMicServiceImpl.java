@@ -347,6 +347,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     JSONObject.parseObject(metadata.get(metadataKey), MicMetadataValue.class);
 
             if (micMetadataValue.getStatus() != MicStatus.FREE.getStatus()) {
+                //todo 如果当前麦位上有人，需要先踢下麦，然后锁麦
                 throw new MicStatusCannotBeModifiedException();
             }
 
