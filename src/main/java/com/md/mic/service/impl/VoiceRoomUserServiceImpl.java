@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.md.common.im.ImApi;
 import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.model.VoiceRoomUser;
@@ -47,6 +48,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
 
     @Resource
     private ObjectMapper objectMapper;
+
+    @Resource
+    private ImApi imApi;
 
     @Override
     @Transactional
@@ -205,7 +209,8 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
             baseMapper.deleteById(voiceRoomUser);
             decrMemberCount(roomId);
             redisTemplate.delete(key(roomId, kickUid));
-            //todo 需要调用 im 踢出聊天室
+            UserDTO kickUser = userService.getByUid(kickUid);
+            imApi.kickChatroomMember(voiceRoom.getChatroomId(), kickUser.getChatUid());
         }
     }
 
