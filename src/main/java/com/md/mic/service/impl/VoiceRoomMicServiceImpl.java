@@ -160,7 +160,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 if (micIndex == 0) {
                     micMetadataValue = new MicMetadataValue(ownerUid, MicStatus.NORMAL.getStatus());
                 } else {
-                    micMetadataValue = new MicMetadataValue(ownerUid, MicStatus.FREE.getStatus());
+                    micMetadataValue = new MicMetadataValue(null, MicStatus.FREE.getStatus());
                 }
                 metadataMap.put(micKey, JSON.toJSONString(micMetadataValue));
             }

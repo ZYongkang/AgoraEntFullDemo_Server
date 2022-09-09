@@ -51,7 +51,7 @@ public class VoiceRoomUserController {
         }
         voiceRoomUserService.addVoiceRoomUser(roomId, user.getUid(), request.getPassword());
         VoiceRoomDTO voiceRoomDTO = voiceRoomService.getDTOByRoomId(roomId);
-        List<MicInfo> micInfo = voiceRoomMicService.getByRoomId(voiceRoomDTO.getChatroomId());
+        List<MicInfo> micInfo = voiceRoomMicService.getRoomMicInfo(voiceRoomDTO.getChatroomId());
         return new JoinRoomResponse(voiceRoomDTO, micInfo);
     }
 
