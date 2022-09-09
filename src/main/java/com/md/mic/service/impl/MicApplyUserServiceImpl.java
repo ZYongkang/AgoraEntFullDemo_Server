@@ -3,6 +3,7 @@ package com.md.mic.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.md.common.im.ImApi;
 import com.md.mic.common.constants.CustomEventType;
 import com.md.mic.exception.MicApplyException;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.ZoneOffset;
@@ -46,6 +48,9 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     @Autowired
     private UserService userService;
 
+    @Resource
+    private ObjectMapper objectMapper;
+
     @Autowired
     private VoiceRoomMicService voiceRoomMicService;
 
@@ -65,7 +70,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
                 UserDTO applyUser = userService.getByUid(uid);
 
                 Map<String, Object> customExtensions = new HashMap<>();
-                customExtensions.put("user", JSONObject.toJSONString(applyUser));
+                customExtensions.put("user", objectMapper.writeValueAsString(applyUser));
                 customExtensions.put("mic_index", String.valueOf(micIndex));
                 customExtensions.put("room_id", roomInfo.getRoomId());
                 this.imApi.sendUserCustomMessage(applyUser.getChatUid(), roomInfo.getOwner(),
