@@ -64,12 +64,14 @@ public class VoiceRoomController {
     }
 
     @GetMapping("/voice/room/list")
-    public GetRoomListResponse getRoomList(@RequestParam(name = "cursor", required = false) String cursor,
-            @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
+    public GetRoomListResponse getRoomList(
+            @RequestParam(name = "cursor", required = false) String cursor,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(name = "type", required = false) Integer type) {
         if (limit > 100) {
             throw new IllegalArgumentException("exceeded maximum paging limit");
         }
-        PageInfo<RoomListDTO> pageInfo = voiceRoomService.getByPage(cursor, limit);
+        PageInfo<RoomListDTO> pageInfo = voiceRoomService.getByPage(cursor, limit, type);
         return new GetRoomListResponse(pageInfo.getTotal(), pageInfo.getCursor(),
                 pageInfo.getList());
     }
@@ -91,7 +93,7 @@ public class VoiceRoomController {
         PageInfo<UserDTO> pageInfo =
                 voiceRoomUserService.findPageByRoomId(voiceRoom.getRoomId(), null, 10);
         List<GiftRecord> records =
-                giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(),
+                giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(), user.getUid(),
                         voiceRoom.getOwner(), rankingLength);
         List<GiftRecordVO> list = new ArrayList<>();
         if (records != null && !records.isEmpty()) {

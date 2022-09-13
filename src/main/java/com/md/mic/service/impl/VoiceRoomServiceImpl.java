@@ -93,14 +93,22 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     }
 
     @Override
-    public PageInfo<RoomListDTO> getByPage(String cursor, int limit) {
+    public PageInfo<RoomListDTO> getByPage(String cursor, int limit, Integer type) {
         List<VoiceRoom> voiceRoomList;
         int limitSize = limit + 1;
-        Long total = baseMapper.selectCount(new LambdaQueryWrapper<>());
+        LambdaQueryWrapper<VoiceRoom> totalQueryWrapper = new LambdaQueryWrapper<>();
+        if (type != null) {
+            totalQueryWrapper.eq(VoiceRoom::getType, type);
+        }
+        Long total = baseMapper.selectCount(totalQueryWrapper);
         if (StringUtils.isBlank(cursor)) {
             LambdaQueryWrapper<VoiceRoom> queryWrapper =
-                    new LambdaQueryWrapper<VoiceRoom>().orderByDesc(VoiceRoom::getId)
-                            .last(" limit " + limitSize);
+                    new LambdaQueryWrapper<>();
+            if (type != null) {
+                queryWrapper.eq(VoiceRoom::getType, type);
+            }
+            queryWrapper.orderByDesc(VoiceRoom::getId)
+                    .last(" limit " + limitSize);
             voiceRoomList = baseMapper.selectList(queryWrapper);
         } else {
             String s = new String(
@@ -108,9 +116,13 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
                     StandardCharsets.UTF_8);
             int id = Integer.parseInt(s);
             LambdaQueryWrapper<VoiceRoom> queryWrapper =
-                    new LambdaQueryWrapper<VoiceRoom>().le(VoiceRoom::getId, id)
-                            .orderByDesc(VoiceRoom::getId)
-                            .last(" limit " + limitSize);
+                    new LambdaQueryWrapper<>();
+            if (type != null) {
+                queryWrapper.eq(VoiceRoom::getType, type);
+            }
+            queryWrapper.le(VoiceRoom::getId, id)
+                    .orderByDesc(VoiceRoom::getId)
+                    .last(" limit " + limitSize);
             voiceRoomList = baseMapper.selectList(queryWrapper);
         }
 
@@ -151,7 +163,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         return pageInfo;
     }
 
-    @Override public VoiceRoomDTO getDTOByRoomId(String roomId) {
+    @Override public VoiceRoomDTO getDTOByRoomId(String roomId, String uid) {
         VoiceRoom voiceRoom = findByRoomId(roomId);
         UserDTO userDTO = userService.getByUid(voiceRoom.getOwner());
         Long memberCount = getMemberCount(voiceRoom.getRoomId());
@@ -160,7 +172,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
                 voiceRoomUserService.findPageByRoomId(voiceRoom.getRoomId(), null, 10);
 
         List<GiftRecord> records =
-                giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(),
+                giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(), uid,
                         voiceRoom.getOwner(), rankingLength);
         List<GiftRecordVO> list = new ArrayList<>();
         if (records != null && !records.isEmpty()) {

@@ -11,9 +11,9 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     Tuple2<VoiceRoomDTO, List<MicInfo>> create(UserDTO owner, CreateRoomRequest request);
 
-    PageInfo<RoomListDTO> getByPage(String cursor, int limit);
+    PageInfo<RoomListDTO> getByPage(String cursor, int limit, Integer type);
 
-    VoiceRoomDTO getDTOByRoomId(String roomId);
+    VoiceRoomDTO getDTOByRoomId(String roomId, String uid);
 
     VoiceRoom findByRoomId(String roomId);
 

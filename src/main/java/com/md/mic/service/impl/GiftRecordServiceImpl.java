@@ -5,13 +5,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.md.common.im.ImApi;
 import com.md.mic.common.config.GiftId;
 import com.md.mic.common.constants.CustomEventType;
+import com.md.mic.exception.UserNotInRoomException;
 import com.md.mic.model.EasemobUser;
 import com.md.mic.model.GiftRecord;
 import com.md.mic.model.VoiceRoom;
+import com.md.mic.model.VoiceRoomUser;
 import com.md.mic.repository.GiftRecordMapper;
 import com.md.mic.service.EasemobUserService;
 import com.md.mic.service.GiftRecordService;
 import com.md.mic.service.VoiceRoomService;
+import com.md.mic.service.VoiceRoomUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
@@ -36,8 +39,18 @@ public class GiftRecordServiceImpl extends ServiceImpl<GiftRecordMapper, GiftRec
     @Resource
     private EasemobUserService easemobUserService;
 
+    @Resource
+    private VoiceRoomUserService voiceRoomUserService;
+
     @Override
-    public List<GiftRecord> getRankingListByRoomId(String roomId, String toUid, int limit) {
+    public List<GiftRecord> getRankingListByRoomId(String roomId, String uid, String toUid, int limit) {
+        VoiceRoomUser voiceRoomUser = voiceRoomUserService.findByRoomIdAndUid(roomId, uid);
+        if (voiceRoomUser == null) {
+            VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
+            if (!voiceRoom.getOwner().equals(uid)) {
+                throw new UserNotInRoomException();
+            }
+        }
         LambdaQueryWrapper<GiftRecord> queryWrapper =
                 new LambdaQueryWrapper<GiftRecord>()
                         .eq(GiftRecord::getRoomId, roomId)
@@ -53,6 +66,10 @@ public class GiftRecordServiceImpl extends ServiceImpl<GiftRecordMapper, GiftRec
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (StringUtils.isBlank(toUid)) {
             toUid = voiceRoom.getOwner();
+        }
+        VoiceRoomUser voiceRoomUser = voiceRoomUserService.findByRoomIdAndUid(roomId, uid);
+        if (voiceRoomUser == null && !voiceRoom.getOwner().equals(uid)) {
+            throw new UserNotInRoomException();
         }
         Long amount = giftId.getAmount() * num;
         LambdaQueryWrapper<GiftRecord> queryWrapper =

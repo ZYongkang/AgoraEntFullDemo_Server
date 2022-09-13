@@ -50,7 +50,7 @@ public class VoiceRoomUserController {
             throw new UserNotFoundException("join room user must not be null");
         }
         voiceRoomUserService.addVoiceRoomUser(roomId, user.getUid(), request.getPassword());
-        VoiceRoomDTO voiceRoomDTO = voiceRoomService.getDTOByRoomId(roomId);
+        VoiceRoomDTO voiceRoomDTO = voiceRoomService.getDTOByRoomId(roomId, user.getUid());
         List<MicInfo> micInfo = voiceRoomMicService.getRoomMicInfo(voiceRoomDTO.getChatroomId());
         return new JoinRoomResponse(voiceRoomDTO, micInfo);
     }
