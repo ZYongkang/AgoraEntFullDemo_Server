@@ -8,6 +8,7 @@ import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.model.VoiceRoomUser;
 import com.md.mic.pojos.*;
+import com.md.mic.pojos.vo.MicApplyVO;
 import com.md.mic.service.MicApplyUserService;
 import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
@@ -42,7 +43,7 @@ public class VoiceRoomMicController {
             @RequestParam(name = "cursor", required = false) String cursor,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
         validateMicPermissions(roomId, user.getUid());
-        PageInfo<MicApplyDTO> pageInfo = micApplyUserService.getByPage(roomId, cursor, limit);
+        PageInfo<MicApplyVO> pageInfo = micApplyUserService.getByPage(roomId, cursor, limit);
         return new GetMicApplyListResponse(pageInfo.getTotal(), pageInfo.getCursor(),
                 pageInfo.getList());
     }

@@ -3,7 +3,9 @@ package com.md.mic.model;
 import com.baomidou.mybatisplus.annotation.*;
 import com.md.mic.exception.VoiceRoomTypeMismatchException;
 import com.md.service.utils.MdStringUtils;
-import lombok.*;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 import org.apache.commons.codec.digest.Md5Crypt;
 
 import java.security.MessageDigest;

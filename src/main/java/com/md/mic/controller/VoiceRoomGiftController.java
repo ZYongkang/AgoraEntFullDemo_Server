@@ -5,6 +5,7 @@ import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.model.GiftRecord;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
+import com.md.mic.pojos.vo.GiftRecordVO;
 import com.md.mic.service.GiftRecordService;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomService;
@@ -46,9 +47,9 @@ public class VoiceRoomGiftController {
         List<String> uidList = giftRecordList.stream().map(GiftRecord::getUid)
                 .collect(Collectors.toList());
         Map<String, UserDTO> userDTOMap = userService.findByUidList(uidList);
-        List<GiftRecordDTO> list = giftRecordList.stream().map(giftRecord -> {
+        List<GiftRecordVO> list = giftRecordList.stream().map(giftRecord -> {
             UserDTO userDTO = userDTOMap.get(giftRecord.getUid());
-            return new GiftRecordDTO(userDTO.getName(), userDTO.getPortrait(),
+            return new GiftRecordVO(userDTO.getName(), userDTO.getPortrait(),
                     giftRecord.getAmount());
         }).collect(Collectors.toList());
         return new GetGiftListResponse(list);

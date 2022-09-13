@@ -11,6 +11,7 @@ import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.model.GiftRecord;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
+import com.md.mic.pojos.vo.GiftRecordVO;
 import com.md.mic.repository.VoiceRoomMapper;
 import com.md.mic.service.*;
 import lombok.extern.slf4j.Slf4j;
@@ -161,14 +162,14 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         List<GiftRecord> records =
                 giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(),
                         voiceRoom.getOwner(), rankingLength);
-        List<GiftRecordDTO> list = new ArrayList<>();
+        List<GiftRecordVO> list = new ArrayList<>();
         if (records != null && !records.isEmpty()) {
             ArrayList<String> uidList = records.stream().map(GiftRecord::getUid).distinct()
                     .collect(Collectors.toCollection(Lists::newArrayList));
             Map<String, UserDTO> userDTOMap = userService.findByUidList(uidList);
             list = records.stream().map(giftRecord -> {
                 UserDTO dto = userDTOMap.get(giftRecord.getUid());
-                return new GiftRecordDTO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
+                return new GiftRecordVO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
             }).collect(Collectors.toList());
         }
         VoiceRoomDTO voiceRoomDTO = VoiceRoomDTO.from(voiceRoom, userDTO, memberCount, clickCount);

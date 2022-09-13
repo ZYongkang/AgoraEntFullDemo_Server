@@ -3,6 +3,7 @@ package com.md.mic.pojos;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.md.mic.model.VoiceRoom;
+import com.md.mic.pojos.vo.GiftRecordVO;
 import lombok.Builder;
 import lombok.Value;
 
@@ -44,7 +45,7 @@ public class VoiceRoomDTO {
     private String announcement;
 
     @JsonProperty("ranking_list")
-    private List<GiftRecordDTO> rankingList;
+    private List<GiftRecordVO> rankingList;
 
     @JsonProperty("member_list")
     private List<UserDTO> memberList;

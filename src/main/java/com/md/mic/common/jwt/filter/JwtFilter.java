@@ -1,7 +1,5 @@
 package com.md.mic.common.jwt.filter;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.md.mic.model.User;
 import com.md.mic.pojos.UserDTO;
 import com.md.mic.service.UserService;
 import lombok.extern.slf4j.Slf4j;

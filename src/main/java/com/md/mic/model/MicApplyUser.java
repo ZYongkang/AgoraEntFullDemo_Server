@@ -2,7 +2,6 @@ package com.md.mic.model;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Value;
 
 import java.time.LocalDateTime;

@@ -2,11 +2,9 @@ package com.md.mic.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.common.collect.Maps;
 import com.md.common.im.ImApi;
 import com.md.mic.common.config.GiftId;
 import com.md.mic.common.constants.CustomEventType;
-import com.md.mic.exception.RoomNotFoundException;
 import com.md.mic.model.EasemobUser;
 import com.md.mic.model.GiftRecord;
 import com.md.mic.model.VoiceRoom;

@@ -12,7 +12,7 @@ import com.md.mic.exception.MicApplyRepeatException;
 import com.md.mic.exception.MicIndexNullException;
 import com.md.mic.model.MicApplyUser;
 import com.md.mic.model.VoiceRoom;
-import com.md.mic.pojos.MicApplyDTO;
+import com.md.mic.pojos.vo.MicApplyVO;
 import com.md.mic.pojos.PageInfo;
 import com.md.mic.pojos.UserDTO;
 import com.md.mic.repository.MicApplyUserMapper;
@@ -143,7 +143,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     }
 
 
-    @Override public PageInfo<MicApplyDTO> getByPage(String roomId, String cursor, Integer limit) {
+    @Override public PageInfo<MicApplyVO> getByPage(String roomId, String cursor, Integer limit) {
         List<MicApplyUser> micApplyUser;
         int limitSize = limit + 1;
         Long total = baseMapper.selectCount(new LambdaQueryWrapper<>());
@@ -183,15 +183,15 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
             ownerMap=userService.findByUidList(ownerUidList);
         }
 
-        List<MicApplyDTO> list = new ArrayList<>();
+        List<MicApplyVO> list = new ArrayList<>();
         for(MicApplyUser applyUser:micApplyUser){
             UserDTO userDTO = ownerMap.get(applyUser.getUid());
             long createdAt = applyUser.getCreatedAt().toInstant(ZoneOffset.of(zoneOffset))
                     .toEpochMilli();
-            list.add(MicApplyDTO.builder().user(userDTO).index(applyUser.getMicIndex())
+            list.add(MicApplyVO.builder().user(userDTO).index(applyUser.getMicIndex())
                     .createdAt(createdAt).build());
         }
-        PageInfo<MicApplyDTO> pageInfo = new PageInfo<>();
+        PageInfo<MicApplyVO> pageInfo = new PageInfo<>();
         pageInfo.setCursor(cursor);
         pageInfo.setTotal(total);
         pageInfo.setList(list);

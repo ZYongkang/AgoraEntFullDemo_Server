@@ -1,9 +1,9 @@
-package com.md.mic.pojos;
+package com.md.mic.pojos.vo;
 
 import lombok.Value;
 
 @Value
-public class GiftRecordDTO {
+public class GiftRecordVO {
 
     private String name;
 

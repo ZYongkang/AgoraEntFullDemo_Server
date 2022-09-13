@@ -4,11 +4,11 @@ import com.google.common.collect.Lists;
 import com.md.common.util.ValidationUtil;
 import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.exception.UserNotInRoomException;
-import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.model.GiftRecord;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.model.VoiceRoomUser;
 import com.md.mic.pojos.*;
+import com.md.mic.pojos.vo.GiftRecordVO;
 import com.md.mic.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -93,14 +93,14 @@ public class VoiceRoomController {
         List<GiftRecord> records =
                 giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(),
                         voiceRoom.getOwner(), rankingLength);
-        List<GiftRecordDTO> list = new ArrayList<>();
+        List<GiftRecordVO> list = new ArrayList<>();
         if (records != null && !records.isEmpty()) {
             ArrayList<String> uidList = records.stream().map(GiftRecord::getUid).distinct()
                     .collect(Collectors.toCollection(Lists::newArrayList));
             Map<String, UserDTO> userDTOMap = userService.findByUidList(uidList);
             list = records.stream().map(giftRecord -> {
                 UserDTO dto = userDTOMap.get(giftRecord.getUid());
-                return new GiftRecordDTO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
+                return new GiftRecordVO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
             }).collect(Collectors.toList());
         }
         Long memberCount = voiceRoomService.getMemberCount(voiceRoom.getRoomId());

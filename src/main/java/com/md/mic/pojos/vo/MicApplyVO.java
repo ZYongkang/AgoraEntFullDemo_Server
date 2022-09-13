@@ -1,13 +1,14 @@
-package com.md.mic.pojos;
+package com.md.mic.pojos.vo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.md.mic.pojos.UserDTO;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-public class MicApplyDTO {
+public class MicApplyVO {
 
     private Integer index;
 
@@ -17,7 +18,7 @@ public class MicApplyDTO {
     private Long createdAt;
 
     @JsonCreator
-    public MicApplyDTO(Integer index, UserDTO user,
+    public MicApplyVO(Integer index, UserDTO user,
             @JsonProperty("created_at") Long createdAt) {
         this.index = index;
         this.user = user;
