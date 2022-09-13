@@ -241,8 +241,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
         MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
 
-        if (StringUtils.isEmpty(micMetadataValue.getUid())
-                || micMetadataValue.getStatus() == MicStatus.MUTE.getStatus()) {
+        if (micMetadataValue.getStatus() == MicStatus.MUTE.getStatus()
+                || micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE.getStatus()) {
             throw new MicStatusCannotBeModifiedException();
         }
 
@@ -257,7 +257,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
 
         if (StringUtils.isEmpty(micMetadataValue.getUid())
-                || micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()) {
+                || (micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()
+                && micMetadataValue.getStatus() != MicStatus.LOCK_AND_MUTE.getStatus())) {
             throw new MicStatusCannotBeModifiedException();
         }
 
@@ -289,7 +290,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
         MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
 
-        if (micMetadataValue.getStatus() == MicStatus.LOCK.getStatus()) {
+        if (micMetadataValue.getStatus() == MicStatus.LOCK.getStatus()
+                || micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE.getStatus()) {
             throw new MicStatusCannotBeModifiedException();
         }
 
@@ -303,7 +305,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
         MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
 
-        if (micMetadataValue.getStatus() != MicStatus.LOCK.getStatus()) {
+        if (micMetadataValue.getStatus() != MicStatus.LOCK.getStatus()
+                && micMetadataValue.getStatus() != MicStatus.LOCK_AND_MUTE.getStatus()) {
             throw new MicStatusCannotBeModifiedException();
         }
 
@@ -570,19 +573,29 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                         if (micIndex == 0) {
                             throw new MicStatusCannotBeModifiedException();
                         }
-                        if (Boolean.TRUE.equals(isAdminOperate) && !StringUtils
-                                .isEmpty(micMetadataValue.getUid())
-                                && micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()) {
+                        if (Boolean.TRUE.equals(isAdminOperate)
+                                && micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()
+                                && micMetadataValue.getStatus() != MicStatus.LOCK_AND_MUTE
+                                .getStatus()) {
                             updateStatus = MicStatus.MUTE.getStatus();
+                            if (micMetadataValue.getStatus() == MicStatus.LOCK.getStatus()) {
+                                updateStatus = MicStatus.LOCK_AND_MUTE.getStatus();
+                            }
                         } else {
                             throw new MicStatusCannotBeModifiedException();
                         }
                         break;
                     case UNMUTE_MIC:
                         if (Boolean.TRUE.equals(isAdminOperate)
-                                && micMetadataValue.getStatus() == MicStatus.MUTE
-                                .getStatus()) {
+                                && (micMetadataValue.getStatus() == MicStatus.MUTE
+                                .getStatus()
+                                || micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE
+                                .getStatus())) {
                             updateStatus = MicStatus.NORMAL.getStatus();
+                            if (micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE
+                                    .getStatus()) {
+                                updateStatus = MicStatus.LOCK.getStatus();
+                            }
                         } else {
                             throw new MicStatusCannotBeModifiedException();
                         }
@@ -590,8 +603,13 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     case LOCK_MIC:
                         if (Boolean.TRUE.equals(isAdminOperate)
                                 && micMetadataValue.getStatus() != MicStatus.LOCK
+                                .getStatus()
+                                && micMetadataValue.getStatus() != MicStatus.LOCK_AND_MUTE
                                 .getStatus()) {
                             updateStatus = MicStatus.LOCK.getStatus();
+                            if (micMetadataValue.getStatus() == MicStatus.MUTE.getStatus()) {
+                                updateStatus = MicStatus.LOCK_AND_MUTE.getStatus();
+                            }
                             updateUid = null;
                         } else {
                             throw new MicStatusCannotBeModifiedException();
@@ -599,9 +617,15 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                         break;
                     case UNLOCK_MIC:
                         if (Boolean.TRUE.equals(isAdminOperate)
-                                && micMetadataValue.getStatus() == MicStatus.LOCK
-                                .getStatus()) {
+                                && (micMetadataValue.getStatus() == MicStatus.LOCK
+                                .getStatus()
+                                || micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE
+                                .getStatus())) {
                             updateStatus = MicStatus.FREE.getStatus();
+                            if (micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE
+                                    .getStatus()) {
+                                updateStatus = MicStatus.MUTE.getStatus();
+                            }
                             updateUid = null;
                         } else {
                             throw new MicStatusCannotBeModifiedException();

@@ -244,6 +244,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can invite");
         }
+        validateMicPermissions(roomId,request.getUid());
         this.voiceRoomMicService.invite(roomInfo, request.getMicIndex(), request.getUid());
         return response;
     }

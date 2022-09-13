@@ -10,7 +10,8 @@ public enum MicStatus {
     NORMAL(0, "正常"),
     CLOSE(1, "闭麦"),
     MUTE(2, "禁言"),
-    LOCK(3, "锁麦");
+    LOCK(3, "锁麦"),
+    LOCK_AND_MUTE(4, "锁麦和禁言");
 
     private Integer status;
     private String desc;

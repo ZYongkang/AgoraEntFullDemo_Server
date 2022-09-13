@@ -41,6 +41,9 @@ public class ImApi {
 
     @Autowired
     private PrometheusMeterRegistry registry;
+
+    private static final String METRICS_REGISTRY_NAME = "easemob.im.api.http.request";
+
     /**
      * 不指定密码创建用户
      *
@@ -71,10 +74,23 @@ public class ImApi {
             EMUser emUser = this.emService.user().create(username, password).block();
             return EasemobUser.builder().uid(uid).chatId(emUser.getUsername())
                     .chatUuid(emUser.getUuid()).build();
+        } catch (TimeoutException e) {
+            log.error("createUser request timeout | uid={}, username={}",
+                    uid, username, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
+
         } catch (EMException e) {
-            log.error("server error,createUser error,userName:{},uid:{}", username, uid, e);
-            throw e;
+            log.error("createUser request easemob failed,userName:{},uid:{}", username, uid, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
+                    "InternalServerError", "result", "error");
+        } catch (Exception e) {
+            log.error("createUser failed | uid={}, username={}",
+                    uid, username, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
+        return null;
 
     }
 
@@ -89,9 +105,20 @@ public class ImApi {
 
         try {
             this.emService.user().delete(userName).block();
+        } catch (TimeoutException e) {
+            log.error("deleteUser request timeout | username={}",
+                    userName, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
-            log.error("server error,deleteUser error,userName:{}", userName, e);
-            throw e;
+            log.error("deleteUser request easemob failed,userName:{}", userName, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
+                    "InternalServerError", "result", "error");
+        } catch (Exception e) {
+            log.error("deleteUser failed | username={}",
+                    userName, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
 
     }
@@ -114,12 +141,26 @@ public class ImApi {
         try {
             return emService.room().createRoom(chatRoomName, description, owner, members, 200)
                     .block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "createRoom request timeout,chatRoomName:{},owner:{},members:{},description:{}",
+                    chatRoomName, owner, members, description, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
             log.error(
-                    "server error,createRoom error,chatRoomName:{},owner:{},members:{},description:{}",
+                    "createRoom request easemob failed,chatRoomName:{},owner:{},members:{},description:{}",
                     chatRoomName, owner, members, description, e);
-            throw e;
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
+                    "InternalServerError", "result", "error");
+        } catch (Exception e) {
+            log.error(
+                    "createRoom failed,chatRoomName:{},owner:{},members:{},description:{}",
+                    chatRoomName, owner, members, description, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
+        return null;
 
     }
 
@@ -134,10 +175,21 @@ public class ImApi {
 
         try {
             emService.room().destroyRoom(chatRoomId).block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "deleteChatRoom request timeout,chatRoomId:{}", chatRoomId, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
             log.error(
-                    "server error,deleteChatRoom error,chatRoomId:{}", chatRoomId, e);
-            throw e;
+                    "deleteChatRoom request easemob failed,chatRoomId:{}", chatRoomId, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
+                    "InternalServerError", "result", "error");
+        } catch (Exception e) {
+            log.error(
+                    "deleteChatRoom failed,chatRoomId:{}", chatRoomId, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
 
     }
@@ -154,10 +206,23 @@ public class ImApi {
         try {
             return emService.room().getRoom(chatRoomId)
                     .block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "getChatRoomInfo request timeout,chatRoomId:{}", chatRoomId, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
-            log.error("server error,getChatRoomInfo error,chatRoomId:{}", chatRoomId, e);
-            throw e;
+            log.error(
+                    "getChatRoomInfo request easemob failed,chatRoomId:{}", chatRoomId, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
+                    "InternalServerError", "result", "error");
+        } catch (Exception e) {
+            log.error(
+                    "getChatRoomInfo failed,chatRoomId:{}", chatRoomId, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
+        return null;
     }
 
     /**
@@ -173,12 +238,26 @@ public class ImApi {
 
         try {
             return emService.room().listRooms(limit, cursor).block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "listChatRooms request timeout,listChatRooms error,limit:{},cursor:{},members:{},description:{}",
+                    limit, cursor, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
             log.error(
-                    "server error,listChatRooms error,limit:{},cursor:{},members:{},description:{}",
+                    "listChatRooms request easemob failed,listChatRooms error,limit:{},cursor:{},members:{},description:{}",
                     limit, cursor, e);
-            throw e;
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
+                    "InternalServerError", "result", "error");
+        } catch (Exception e) {
+            log.error(
+                    "listChatRooms failed,limit:{},cursor:{},members:{},description:{}",
+                    limit, cursor, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
+        return null;
 
     }
 
@@ -198,11 +277,24 @@ public class ImApi {
 
         try {
             return emService.room().listRoomMembers(chatRoomId, limit, cursor, sort).block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "listChatRoomMembers request timeout,listChatRoomMembers error,chatRoomId:{},limit:{},cursor:{}",
+                    chatRoomId, limit, cursor, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
-            log.error("server error,listChatRoomMembers error,chatRoomId:{},limit:{},cursor:{}",
+            log.error("listChatRoomMembers request easemob failed,chatRoomId:{},limit:{},cursor:{}",
                     chatRoomId, limit, cursor, e);
             throw e;
+        } catch (Exception e) {
+            log.error(
+                    "listChatRoomMembers failed,listChatRoomMembers error,chatRoomId:{},limit:{},cursor:{}",
+                    chatRoomId, limit, cursor, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
+        return null;
 
     }
 
@@ -218,10 +310,22 @@ public class ImApi {
 
         try {
             emService.room().removeRoomMember(chatRoomId, userName).block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "removeChatRoomMember request timeout,removeChatRoomMember error,chatRoomId:{},userName:{}",
+                    chatRoomId, userName, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
-            log.error("server error,removeChatRoomMember error,chatRoomId:{},userName:{}",
+            log.error("removeChatRoomMember request easemob failed,chatRoomId:{},userName:{}",
                     chatRoomId, userName, e);
             throw e;
+        } catch (Exception e) {
+            log.error(
+                    "removeChatRoomMember failed,removeChatRoomMember error,chatRoomId:{},userName:{}",
+                    chatRoomId, userName, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
     }
 
@@ -237,10 +341,22 @@ public class ImApi {
 
         try {
             emService.room().updateRoomAnnouncement(chatRoomId, announcement).block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "setAnnouncement request timeout,chatRoomId:{},announcement:{}",
+                    chatRoomId, announcement, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
-            log.error("server error,setAnnouncement error,chatRoomId:{},announcement:{}",
+            log.error("setAnnouncement request easemob failed,chatRoomId:{},announcement:{}",
                     chatRoomId, announcement, e);
             throw e;
+        } catch (Exception e) {
+            log.error(
+                    "setAnnouncement failed,chatRoomId:{},announcement:{}",
+                    chatRoomId, announcement, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
     }
 
@@ -268,8 +384,8 @@ public class ImApi {
      * @param fromUserName     发送的成员
      * @param toChatRoomId     接收的聊天室id
      * @param customEvent      自定义消息类型
-     * @param customExtensions    自定义消息内容
-     * @param extension 自定义消息扩展
+     * @param customExtensions 自定义消息内容
+     * @param extension        自定义消息扩展
      * @throws EMException
      */
     public void sendChatRoomCustomMessage(@Nonnull String fromUserName,
@@ -287,24 +403,35 @@ public class ImApi {
                     .extension(msg -> msg.addAll(EMKeyValue.of(extension)))
                     .send()
                     .block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "sendChatRoomCustomMessage request timeout,fromUserName:{},toChatRoomId:{},customEvent:{},customExtensions:{}",
+                    fromUserName, toChatRoomId, customEvent, customExtensions, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
             log.error(
-                    "server error,sendChatRoomCustomMessage error,fromUserName:{},toChatRoomId:{},customEvent:{},customExtensions:{}",
+                    "sendChatRoomCustomMessage request easemob failed,fromUserName:{},toChatRoomId:{},customEvent:{},customExtensions:{}",
                     fromUserName, toChatRoomId, customEvent, customExtensions, e);
             throw e;
+        } catch (Exception e) {
+            log.error(
+                    "sendChatRoomCustomMessage failed,,fromUserName:{},toChatRoomId:{},customEvent:{},customExtensions:{}",
+                    fromUserName, toChatRoomId, customEvent, customExtensions, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
 
     }
-
 
     /**
      * 发送自定义消息 个人
      *
      * @param fromUserName     发送的成员
-     * @param toUserName     接收的成员
+     * @param toUserName       接收的成员
      * @param customEvent      自定义消息类型
-     * @param customExtensions    自定义消息内容
-     * @param extension 自定义消息扩展
+     * @param customExtensions 自定义消息内容
+     * @param extension        自定义消息扩展
      * @throws EMException
      */
     public void sendUserCustomMessage(@Nonnull String fromUserName,
@@ -322,11 +449,23 @@ public class ImApi {
                     .extension(msg -> msg.addAll(EMKeyValue.of(extension)))
                     .send()
                     .block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "sendUserCustomMessage request timeout,fromUserName:{},toUserName:{},customEvent:{},customExtensions:{}",
+                    fromUserName, toUserName, customEvent, customExtensions, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
             log.error(
-                    "server error,sendUserCustomMessage error,fromUserName:{},toUserName:{},customEvent:{},customExtensions:{}",
+                    "sendUserCustomMessage request easemob failed,fromUserName:{},toUserName:{},customEvent:{},customExtensions:{}",
                     fromUserName, toUserName, customEvent, customExtensions, e);
             throw e;
+        } catch (Exception e) {
+            log.error(
+                    "sendUserCustomMessage failed,chatRoomId:{},fromUserName:{},toUserName:{},customEvent:{},customExtensions:{}",
+                    fromUserName, toUserName, customEvent, customExtensions, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
 
     }
@@ -349,12 +488,25 @@ public class ImApi {
             return emService.metadata()
                     .setChatRoomMetadata(operator, chatRoomId, metadata, autoDelete)
                     .block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "setChatRoomMetadata request timeout,fromUserName:{},operator:{},chatRoomId:{},metadata:{},autoDelete:{}",
+                    operator, chatRoomId, metadata, autoDelete, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
             log.error(
-                    "server error,setChatRoomMetadata error,operator:{},chatRoomId:{},metadata:{},autoDelete:{}",
+                    "setChatRoomMetadata request easemob failed,operator:{},chatRoomId:{},metadata:{},autoDelete:{}",
                     operator, chatRoomId, metadata, autoDelete, e);
             throw e;
+        } catch (Exception e) {
+            log.error(
+                    "setChatRoomMetadata failed,chatRoomId:{},operator:{},chatRoomId:{},metadata:{},autoDelete:{}",
+                    operator, chatRoomId, metadata, autoDelete, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
+        return null;
 
     }
 
@@ -374,11 +526,25 @@ public class ImApi {
         try {
             return emService.metadata().deleteChatRoomMetadata(operator, chatRoomId, keys)
                     .block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "deleteChatRoomMetadata request timeout,fromUserName:{},operator:{},chatRoomId:{},keys:{}",
+                    operator, chatRoomId, keys, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
-            log.error("server error,deleteChatRoomMetadata error,operator:{},chatRoomId:{},keys:{}",
+            log.error(
+                    "deleteChatRoomMetadata request easemob failed,operator:{},chatRoomId:{},keys:{}",
                     operator, chatRoomId, keys, e);
             throw e;
+        } catch (Exception e) {
+            log.error(
+                    "deleteChatRoomMetadata failed,chatRoomId:{},operator:{},chatRoomId:{},keys:{}",
+                    operator, chatRoomId, keys, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
+        return null;
 
     }
 
@@ -396,11 +562,25 @@ public class ImApi {
         try {
             return emService.metadata().listChatRoomMetadata(chatRoomId, keys)
                     .block();
+        } catch (TimeoutException e) {
+            log.error(
+                    "listChatRoomMetadata request timeout,chatRoomId:{},keys:{}", chatRoomId,
+                    keys, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
+                    "result", "error");
         } catch (EMException e) {
-            log.error("server error,listChatRoomMetadata error,chatRoomId:{},keys:{}", chatRoomId,
+            log.error("listChatRoomMetadata request easemob failed,chatRoomId:{},keys:{}",
+                    chatRoomId,
                     keys, e);
             throw e;
+        } catch (Exception e) {
+            log.error(
+                    "listChatRoomMetadata failed,chatRoomId:{},keys:{}", chatRoomId,
+                    keys, e);
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
+                    "result", "error");
         }
+        return null;
 
     }
 
