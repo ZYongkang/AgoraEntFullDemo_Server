@@ -3,6 +3,7 @@ package com.md.mic.controller;
 import com.md.mic.common.config.GiftId;
 import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.model.GiftRecord;
+import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
 import com.md.mic.service.GiftRecordService;
 import com.md.mic.service.UserService;
@@ -35,9 +36,9 @@ public class VoiceRoomGiftController {
 
     @GetMapping("/voice/room/{roomId}/gift/list")
     public GetGiftListResponse listGift(@PathVariable("roomId") String roomId) {
-        VoiceRoomDTO voiceRoomDTO = voiceRoomService.getDTOByRoomId(roomId);
+        VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         List<GiftRecord> giftRecordList =
-                giftRecordService.getRankingListByRoomId(roomId, voiceRoomDTO.getOwner().getUid(),
+                giftRecordService.getRankingListByRoomId(roomId, voiceRoom.getOwner(),
                         rankingLength);
         if (giftRecordList == null || giftRecordList.isEmpty()) {
             return new GetGiftListResponse(Collections.emptyList());

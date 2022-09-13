@@ -2,6 +2,7 @@ package com.md.mic.controller;
 
 import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.exception.VoiceRoomSecurityException;
+import com.md.mic.model.VoiceRoomUser;
 import com.md.mic.pojos.*;
 import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;

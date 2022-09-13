@@ -20,4 +20,8 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
     void updateByRoomId(String roomId, UpdateRoomInfoRequest request, String owner);
 
     void deleteByRoomId(String roomId, String owner);
+
+    public Long getClickCount(String roomId);
+
+    public Long getMemberCount(String roomId);
 }

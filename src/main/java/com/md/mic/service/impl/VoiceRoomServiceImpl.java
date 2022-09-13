@@ -217,7 +217,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         baseMapper.delete(queryWrapper);
     }
 
-    private Long getClickCount(String roomId) {
+    public Long getClickCount(String roomId) {
         String key = String.format("room:voice:%s:memberCount", roomId);
         try {
             return redisTemplate.opsForValue().increment(key, 0L);
@@ -227,7 +227,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         }
     }
 
-    private Long getMemberCount(String roomId) {
+    public Long getMemberCount(String roomId) {
         String key = String.format("room:voice:%s:clickCount", roomId);
         try {
             return redisTemplate.opsForValue().increment(key, 0L);
