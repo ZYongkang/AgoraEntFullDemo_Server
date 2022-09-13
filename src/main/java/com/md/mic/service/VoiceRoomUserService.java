@@ -15,7 +15,7 @@ public interface VoiceRoomUserService extends IService<VoiceRoomUser> {
 
     VoiceRoomUser addVoiceRoomUser(String roomId, String uid, String password);
 
-    void deleteVoiceRoomUser(String roomId, String uid);
+    void deleteVoiceRoomUser(String roomId, String uid, Boolean isSuccess);
 
     void kickVoiceRoomUser(String roomId, String ownerUid, String kickUid);
 }

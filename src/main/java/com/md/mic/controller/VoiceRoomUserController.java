@@ -58,12 +58,12 @@ public class VoiceRoomUserController {
 
     @DeleteMapping("/voice/room/{roomId}/members/leave")
     public LeaveRoomResponse leaveRoom(@PathVariable("roomId") String roomId,
-            @RequestAttribute(name = "user", required = false) UserDTO user) {
+            @RequestAttribute(name = "user", required = false) UserDTO user,
+            @RequestParam(name = "is_success", required = false) Boolean isSuccess) {
         if (user == null) {
             throw new UserNotFoundException("leave room user must not be null");
         }
-        // todo 退出房间 增加 是否退出成功的参数，如果没有退出成功，服务端再退出一遍聊天室
-        voiceRoomUserService.deleteVoiceRoomUser(roomId, user.getUid());
+        voiceRoomUserService.deleteVoiceRoomUser(roomId, user.getUid(), isSuccess);
         return new LeaveRoomResponse(Boolean.TRUE);
     }
 

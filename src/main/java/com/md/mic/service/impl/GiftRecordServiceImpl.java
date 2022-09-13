@@ -52,7 +52,6 @@ public class GiftRecordServiceImpl extends ServiceImpl<GiftRecordMapper, GiftRec
     @Override
     @Transactional
     public void addGiftRecord(String roomId, String uid, GiftId giftId, Integer num, String toUid) {
-        //todo 可以使用zset来做排行榜
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (StringUtils.isBlank(toUid)) {
             toUid = voiceRoom.getOwner();

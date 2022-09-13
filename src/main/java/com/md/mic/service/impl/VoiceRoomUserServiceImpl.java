@@ -177,19 +177,23 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
 
     @Override
     @Transactional
-    public void deleteVoiceRoomUser(String roomId, String uid) {
+    public void deleteVoiceRoomUser(String roomId, String uid, Boolean isSuccess) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (voiceRoom == null) {
             return;
         }
         if (uid.equals(voiceRoom.getOwner())) {
             voiceRoomService.deleteByRoomId(roomId, uid);
-        }else {
+        } else {
             VoiceRoomUser voiceRoomUser = findByRoomIdAndUid(roomId, uid);
             if (voiceRoomUser != null) {
                 baseMapper.deleteById(voiceRoomUser);
                 decrMemberCount(roomId);
                 redisTemplate.delete(key(roomId, uid));
+                if (Boolean.FALSE.equals(isSuccess)) {
+                    UserDTO user = userService.getByUid(uid);
+                    imApi.removeChatRoomMember(voiceRoom.getChatroomId(), user.getChatUid());
+                }
             }
         }
     }
