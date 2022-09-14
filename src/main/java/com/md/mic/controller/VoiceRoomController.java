@@ -3,10 +3,8 @@ package com.md.mic.controller;
 import com.google.common.collect.Lists;
 import com.md.common.util.ValidationUtil;
 import com.md.mic.exception.UserNotFoundException;
-import com.md.mic.exception.UserNotInRoomException;
 import com.md.mic.model.GiftRecord;
 import com.md.mic.model.VoiceRoom;
-import com.md.mic.model.VoiceRoomUser;
 import com.md.mic.pojos.*;
 import com.md.mic.pojos.vo.GiftRecordVO;
 import com.md.mic.service.*;
@@ -36,9 +34,6 @@ public class VoiceRoomController {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private VoiceRoomUserService voiceRoomUserService;
 
     @Autowired
     private GiftRecordService giftRecordService;
@@ -83,15 +78,6 @@ public class VoiceRoomController {
             throw new UserNotFoundException();
         }
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
-        if (!voiceRoom.getOwner().equals(user.getUid())) {
-            VoiceRoomUser voiceRoomUser =
-                    voiceRoomUserService.findByRoomIdAndUid(roomId, user.getUid());
-            if (voiceRoomUser == null) {
-                throw new UserNotInRoomException();
-            }
-        }
-        PageInfo<UserDTO> pageInfo =
-                voiceRoomUserService.findPageByRoomId(voiceRoom.getRoomId(), null, 10);
         List<GiftRecord> records =
                 giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(), user.getUid(),
                         voiceRoom.getOwner(), rankingLength);
@@ -108,7 +94,7 @@ public class VoiceRoomController {
         Long memberCount = voiceRoomService.getMemberCount(voiceRoom.getRoomId());
         Long clickCount = voiceRoomService.getClickCount(voiceRoom.getRoomId());
         VoiceRoomDTO voiceRoomDTO = VoiceRoomDTO.from(voiceRoom, user, memberCount, clickCount);
-        voiceRoomDTO = voiceRoomDTO.toBuilder().memberList(pageInfo.getList())
+        voiceRoomDTO = voiceRoomDTO.toBuilder()
                 .rankingList(list)
                 .build();
         List<MicInfo> micInfo = voiceRoomMicService.getRoomMicInfo(voiceRoomDTO.getChatroomId());

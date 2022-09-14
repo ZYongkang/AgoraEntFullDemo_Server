@@ -20,12 +20,6 @@ public class VoiceRoomUserController {
     @Resource
     private VoiceRoomUserService voiceRoomUserService;
 
-    @Resource
-    private VoiceRoomService voiceRoomService;
-
-    @Resource
-    private VoiceRoomMicService voiceRoomMicService;
-
     @GetMapping("/voice/room/{roomId}/members/list")
     public GetRoomUserListResponse getRoomMemberList(@PathVariable("roomId") String roomId,
             @RequestParam(name = "cursor", required = false) String cursor,
@@ -44,15 +38,17 @@ public class VoiceRoomUserController {
 
     @PostMapping("/voice/room/{roomId}/members/join")
     public JoinRoomResponse joinRoom(@PathVariable("roomId") String roomId,
-            @RequestBody JoinRoomRequest request,
+            @RequestBody(required = false) JoinRoomRequest request,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new UserNotFoundException("join room user must not be null");
         }
-        voiceRoomUserService.addVoiceRoomUser(roomId, user.getUid(), request.getPassword());
-        VoiceRoomDTO voiceRoomDTO = voiceRoomService.getDTOByRoomId(roomId, user.getUid());
-        List<MicInfo> micInfo = voiceRoomMicService.getRoomMicInfo(voiceRoomDTO.getChatroomId());
-        return new JoinRoomResponse(voiceRoomDTO, micInfo);
+        String password = null;
+        if (request != null) {
+            password = request.getPassword();
+        }
+        voiceRoomUserService.addVoiceRoomUser(roomId, user.getUid(), password);
+        return new JoinRoomResponse(Boolean.TRUE);
     }
 
     @DeleteMapping("/voice/room/{roomId}/members/leave")

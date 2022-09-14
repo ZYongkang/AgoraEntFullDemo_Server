@@ -168,8 +168,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         UserDTO userDTO = userService.getByUid(voiceRoom.getOwner());
         Long memberCount = getMemberCount(voiceRoom.getRoomId());
         Long clickCount = getClickCount(voiceRoom.getRoomId());
-        PageInfo<UserDTO> pageInfo =
-                voiceRoomUserService.findPageByRoomId(voiceRoom.getRoomId(), null, 10);
 
         List<GiftRecord> records =
                 giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(), uid,
@@ -185,7 +183,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             }).collect(Collectors.toList());
         }
         VoiceRoomDTO voiceRoomDTO = VoiceRoomDTO.from(voiceRoom, userDTO, memberCount, clickCount);
-        return voiceRoomDTO.toBuilder().memberList(pageInfo.getList())
+        return voiceRoomDTO.toBuilder()
                 .rankingList(list)
                 .build();
     }

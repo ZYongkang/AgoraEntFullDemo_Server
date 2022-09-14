@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.md.common.im.ImApi;
+import com.md.mic.exception.RoomNotFoundException;
 import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.model.VoiceRoomUser;
@@ -70,6 +71,10 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
 
     @Override
     public PageInfo<UserDTO> findPageByRoomId(String roomId, String cursor, Integer limit) {
+        VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
+        if (voiceRoom == null) {
+            throw new RoomNotFoundException(String.format("room %s not found", roomId));
+        }
         Long total = baseMapper.selectCount(
                 new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId));
         int limitSize = limit + 1;
