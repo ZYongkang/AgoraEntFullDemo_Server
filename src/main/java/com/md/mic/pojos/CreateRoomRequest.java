@@ -25,7 +25,6 @@ public class CreateRoomRequest {
     @JsonProperty("allow_free_join_mic")
     private Boolean allowFreeJoinMic;
 
-    @NotNull
     @JsonProperty("sound_effect")
     private String soundEffect;
 

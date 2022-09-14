@@ -47,16 +47,13 @@ public class VoiceRoomDTO {
     @JsonProperty("ranking_list")
     private List<GiftRecordVO> rankingList;
 
-    @JsonProperty("member_list")
-    private List<UserDTO> memberList;
-
     public static VoiceRoomDTO from(VoiceRoom voiceRoom, UserDTO owner, Long memberCount,
             Long clickCount) {
         return new VoiceRoomDTO(voiceRoom.getRoomId(), voiceRoom.getChannelId(),
                 voiceRoom.getChatroomId(), voiceRoom.getName(), voiceRoom.getType(),
                 voiceRoom.getIsPrivate(), voiceRoom.getAllowedFreeJoinMic(),
                 owner, memberCount, clickCount, voiceRoom.getAnnouncement(),
-                Collections.emptyList(), Collections.emptyList());
+                Collections.emptyList());
     }
 
 }
