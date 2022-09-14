@@ -1,7 +1,7 @@
 package com.md.mic.controller;
 
 import com.md.common.util.token.TokenProvider;
-import com.md.mic.common.jwt.util.JwtUtil;
+import com.md.mic.common.jwt.util.VoiceRoomJwtUtil;
 import com.md.common.util.ValidationUtil;
 import com.md.mic.model.User;
 import com.md.mic.pojos.*;
@@ -21,8 +21,8 @@ public class UserController {
     @Resource
     private UserService userService;
 
-    @Resource(name = "jwtUtils")
-    private JwtUtil jwtUtil;
+    @Resource
+    private VoiceRoomJwtUtil voiceRoomJwtUtil;
 
     @Resource
     private TokenProvider tokenProvider;
@@ -33,7 +33,7 @@ public class UserController {
         ValidationUtil.validate(result);
         UserDTO userDTO = userService.loginDevice(request.getDeviceId(), request.getName(),
                 request.getPortrait());
-        String jwtToken = jwtUtil.createJWT(userDTO.getUid());
+        String jwtToken = voiceRoomJwtUtil.createJWT(userDTO.getUid());
         String imToken = tokenProvider.buildImToken(userDTO.getChatUuid());
         return new LoginResponse(userDTO.getUid(), userDTO.getName(), userDTO.getPortrait(),
                 userDTO.getChatUid(), jwtToken, imToken);

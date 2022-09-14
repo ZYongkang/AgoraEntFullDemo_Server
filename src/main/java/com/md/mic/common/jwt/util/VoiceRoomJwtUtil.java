@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.crypto.SecretKey;
@@ -16,7 +17,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class JwtUtil {
+public class VoiceRoomJwtUtil {
 
     @Value("${jwt.token.secret}")
     private String secretKey;
