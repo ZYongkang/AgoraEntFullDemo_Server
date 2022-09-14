@@ -228,6 +228,10 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         LambdaQueryWrapper<VoiceRoom> queryWrapper =
                 new LambdaQueryWrapper<VoiceRoom>().eq(VoiceRoom::getRoomId, roomId);
         baseMapper.delete(queryWrapper);
+        Boolean hasKey = redisTemplate.hasKey(key(roomId));
+        if (Boolean.TRUE.equals(hasKey)) {
+            redisTemplate.delete(key(roomId));
+        }
     }
 
     public Long getClickCount(String roomId) {
