@@ -56,7 +56,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException();
         }
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
-        if (user.getUid().equals(user.getUid())) {
+        if (user.getUid().equals(roomInfo.getOwner())) {
             throw new VoiceRoomSecurityException("admin can not apply mic");
         }
         Boolean result =
