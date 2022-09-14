@@ -102,6 +102,13 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         if (micIndex == null && !inOrder) {
             throw new MicIndexNullException();
         }
+        List<MicInfo> micInfos = this.getRoomMicInfo(chatroomId);
+        Optional<MicInfo> micInfo = micInfos.stream().filter((mic) -> {
+            return mic.getUser() == null ? false : mic.getUser().getUid().equals(uid);
+        }).findFirst();
+        if (micInfo.isPresent()) {
+            throw new MicAlreadyExistsException("mic user already exists");
+        }
         if (micIndex != null) {
             try {
                 this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
@@ -352,7 +359,12 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         UserDTO applyUser = userService.getByUid(uid);
 
         Map<String, Object> customExtensions = new HashMap<>();
-        customExtensions.put("user", applyUser);
+        try {
+            customExtensions.put("user", objectMapper.writeValueAsString(applyUser));
+        } catch (JsonProcessingException e) {
+            log.error("write user json failed | uid={}, user={}, e=", uid,
+                    applyUser, e);
+        }
         customExtensions.put("room_id", roomInfo.getRoomId());
         this.imApi.sendUserCustomMessage(userDTO.getChatUid(), roomInfo.getOwner(),
                 CustomEventType.INVITE_REFUSED.getValue(), customExtensions, new HashMap<>());
@@ -539,8 +551,12 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
                 switch (MicOperateStatus.parse(micOperateStatus)) {
                     case UP_MIC:
-                        if (micMetadataValue.getStatus() == MicStatus.FREE.getStatus()) {
-                            updateStatus = MicStatus.NORMAL.getStatus();
+                        if (micMetadataValue.getStatus() == MicStatus.FREE.getStatus() || (
+                                micMetadataValue.getStatus() == MicStatus.MUTE.getStatus()
+                                        && StringUtils.isEmpty(micMetadataValue.getUid()))) {
+                            if (micMetadataValue.getStatus() == MicStatus.FREE.getStatus()) {
+                                updateStatus = MicStatus.NORMAL.getStatus();
+                            }
                             updateUid = uid;
                         } else {
                             throw new MicStatusCannotBeModifiedException();
@@ -601,6 +617,9 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                         }
                         break;
                     case LOCK_MIC:
+                        if (micIndex == 0) {
+                            throw new MicStatusCannotBeModifiedException();
+                        }
                         if (Boolean.TRUE.equals(isAdminOperate)
                                 && micMetadataValue.getStatus() != MicStatus.LOCK
                                 .getStatus()
@@ -632,6 +651,9 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                         }
                         break;
                     case KICK_MIC:
+                        if (micIndex == 0) {
+                            throw new MicStatusCannotBeModifiedException();
+                        }
                         if (Boolean.TRUE.equals(isAdminOperate) && !StringUtils
                                 .isEmpty(micMetadataValue.getUid())) {
                             updateStatus = MicStatus.FREE.getStatus();
