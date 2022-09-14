@@ -38,10 +38,8 @@ public class VoiceRoomGiftController {
     @GetMapping("/voice/room/{roomId}/gift/list")
     public GetGiftListResponse listGift(@PathVariable("roomId") String roomId,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
-        VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         List<GiftRecord> giftRecordList =
-                giftRecordService.getRankingListByRoomId(roomId, user.getUid(),
-                        voiceRoom.getOwner(), rankingLength);
+                giftRecordService.getRankingListByRoomId(roomId, user.getUid(), rankingLength);
         if (giftRecordList == null || giftRecordList.isEmpty()) {
             return new GetGiftListResponse(Collections.emptyList());
         }

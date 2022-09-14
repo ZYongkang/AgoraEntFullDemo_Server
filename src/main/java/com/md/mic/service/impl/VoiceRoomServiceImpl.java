@@ -170,8 +170,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         Long clickCount = getClickCount(voiceRoom.getRoomId());
 
         List<GiftRecord> records =
-                giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(), uid,
-                        voiceRoom.getOwner(), rankingLength);
+                giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(), uid, rankingLength);
         List<GiftRecordVO> list = new ArrayList<>();
         if (records != null && !records.isEmpty()) {
             ArrayList<String> uidList = records.stream().map(GiftRecord::getUid).distinct()

@@ -43,14 +43,7 @@ public class GiftRecordServiceImpl extends ServiceImpl<GiftRecordMapper, GiftRec
     private VoiceRoomUserService voiceRoomUserService;
 
     @Override
-    public List<GiftRecord> getRankingListByRoomId(String roomId, String uid, String toUid, int limit) {
-        VoiceRoomUser voiceRoomUser = voiceRoomUserService.findByRoomIdAndUid(roomId, uid);
-        if (voiceRoomUser == null) {
-            VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
-            if (!voiceRoom.getOwner().equals(uid)) {
-                throw new UserNotInRoomException();
-            }
-        }
+    public List<GiftRecord> getRankingListByRoomId(String roomId, String toUid, int limit) {
         LambdaQueryWrapper<GiftRecord> queryWrapper =
                 new LambdaQueryWrapper<GiftRecord>()
                         .eq(GiftRecord::getRoomId, roomId)

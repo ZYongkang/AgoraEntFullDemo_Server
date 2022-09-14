@@ -79,8 +79,8 @@ public class VoiceRoomController {
         }
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         List<GiftRecord> records =
-                giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(), user.getUid(),
-                        voiceRoom.getOwner(), rankingLength);
+                giftRecordService.getRankingListByRoomId(roomId, user.getUid(),
+                        rankingLength);
         List<GiftRecordVO> list = new ArrayList<>();
         if (records != null && !records.isEmpty()) {
             ArrayList<String> uidList = records.stream().map(GiftRecord::getUid).distinct()
@@ -91,8 +91,8 @@ public class VoiceRoomController {
                 return new GiftRecordVO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
             }).collect(Collectors.toList());
         }
-        Long memberCount = voiceRoomService.getMemberCount(voiceRoom.getRoomId());
-        Long clickCount = voiceRoomService.getClickCount(voiceRoom.getRoomId());
+        Long memberCount = voiceRoomService.getMemberCount(roomId);
+        Long clickCount = voiceRoomService.getClickCount(roomId);
         VoiceRoomDTO voiceRoomDTO = VoiceRoomDTO.from(voiceRoom, user, memberCount, clickCount);
         voiceRoomDTO = voiceRoomDTO.toBuilder()
                 .rankingList(list)
