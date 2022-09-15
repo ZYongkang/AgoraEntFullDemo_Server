@@ -62,9 +62,6 @@ public class VoiceRoom {
         String roomId = buildRoomId(name);
         String channelId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         checkType(type);
-        if (Boolean.TRUE.equals(isPrivate)) {
-            password = EncryptionUtil.getEncryptedPwd(password);
-        }
         return VoiceRoom.builder().name(name).roomId(roomId).chatroomId(chatroomId)
                 .channelId(channelId).isPrivate(isPrivate).password(password)
                 .allowedFreeJoinMic(allowedFreeJoinMic).type(type)

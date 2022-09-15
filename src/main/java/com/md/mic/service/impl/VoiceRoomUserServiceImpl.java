@@ -54,6 +54,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     @Resource
     private ImApi imApi;
 
+    @Resource
+    private EncryptionUtil encryptionUtil;
+
     @Override
     @Transactional
     public void deleteByRoomId(String roomId) {
@@ -166,7 +169,7 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
             return VoiceRoomUser.builder().roomId(roomId).uid(uid).build();
         }
         if (Boolean.TRUE.equals(voiceRoom.getIsPrivate())) {
-            boolean checkResult = EncryptionUtil.validPassword(password, voiceRoom.getPassword());
+            boolean checkResult = encryptionUtil.validPassword(password, voiceRoom.getPassword());
             if (!checkResult) {
                 throw new VoiceRoomSecurityException("wrong password");
             }

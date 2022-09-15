@@ -1,6 +1,8 @@
 package com.md.common.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -9,10 +11,14 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 @Slf4j
+@Component
 public class EncryptionUtil {
 
     private static final String HEX_NUMS_STR = "0123456789ABCDEF";
     private static final Integer SALT_LENGTH = 12;
+
+    @Value("${is.encrypt.password:false}")
+    private Boolean isEncrypt;
 
     /**
      * 密码验证
@@ -20,7 +26,10 @@ public class EncryptionUtil {
      * @param passwordInDb
      * @return
      */
-    public static boolean validPassword(String password, String passwordInDb) {
+    public boolean validPassword(String password, String passwordInDb) {
+        if (!isEncrypt) {
+            return password.equals(passwordInDb);
+        }
         // 将16进制字符串格式口令转换成字节数组
         byte[] pwdInDb = hexStringToByte(passwordInDb);
         // 声明盐变量
@@ -52,7 +61,10 @@ public class EncryptionUtil {
      * @param password
      * @return
      */
-    public static String getEncryptedPwd(String password) {
+    public String getEncryptedPwd(String password) {
+        if (!isEncrypt) {
+            return password;
+        }
         byte[] pwd;
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[SALT_LENGTH];
@@ -75,7 +87,7 @@ public class EncryptionUtil {
         return byteToHexString(pwd);
     }
 
-    private static byte[] hexStringToByte(String hex) {
+    private byte[] hexStringToByte(String hex) {
         int len = (hex.length() / 2);
         byte[] result = new byte[len];
         char[] hexChars = hex.toCharArray();
@@ -87,7 +99,7 @@ public class EncryptionUtil {
         return result;
     }
 
-    private static String byteToHexString(byte[] b) {
+    private String byteToHexString(byte[] b) {
         StringBuffer hexString = new StringBuffer();
         for (int i = 0; i < b.length; i++) {
             String hex = Integer.toHexString(b[i] & 0xFF);

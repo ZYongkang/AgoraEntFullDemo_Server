@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.md.common.im.ImApi;
+import com.md.common.util.EncryptionUtil;
 import com.md.mic.exception.RoomNotFoundException;
 import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.model.GiftRecord;
@@ -54,11 +55,14 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     @Resource(name = "voiceRedisTemplate")
     private StringRedisTemplate redisTemplate;
 
-    @Value("${voice.room.redis.cache.ttl:PT1H}")
-    private Duration ttl;
-
     @Resource
     private ObjectMapper objectMapper;
+
+    @Resource
+    private EncryptionUtil encryptionUtil;
+
+    @Value("${voice.room.redis.cache.ttl:PT1H}")
+    private Duration ttl;
 
     @Value("${local.zone.offset:+8}")
     private String zoneOffset;
@@ -74,8 +78,12 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         String userChatId = owner.getChatUid();
         String chatRoomId = imApi.createChatRoom(request.getName(), userChatId,
                 Collections.singletonList(userChatId), request.getName());
+        String password = request.getPassword();
+        if (Boolean.TRUE.equals(request.getIsPrivate())) {
+            password = encryptionUtil.getEncryptedPwd(password);
+        }
         voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
-                request.getPassword(), request.getAllowFreeJoinMic(),
+                password, request.getAllowFreeJoinMic(),
                 request.getType(), uid, request.getSoundEffect());
         List<MicInfo> micInfos =
                 voiceRoomMicService.initMic(voiceRoom.getChatroomId(), voiceRoom.getOwner());
