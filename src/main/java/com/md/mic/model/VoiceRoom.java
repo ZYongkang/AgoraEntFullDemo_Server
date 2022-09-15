@@ -1,13 +1,16 @@
 package com.md.mic.model;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.md.common.util.EncryptionUtil;
 import com.md.mic.exception.VoiceRoomTypeMismatchException;
 import com.md.service.utils.MdStringUtils;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.apache.commons.codec.digest.Md5Crypt;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -59,6 +62,9 @@ public class VoiceRoom {
         String roomId = buildRoomId(name);
         String channelId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         checkType(type);
+        if (Boolean.TRUE.equals(isPrivate)) {
+            password = EncryptionUtil.getEncryptedPwd(password);
+        }
         return VoiceRoom.builder().name(name).roomId(roomId).chatroomId(chatroomId)
                 .channelId(channelId).isPrivate(isPrivate).password(password)
                 .allowedFreeJoinMic(allowedFreeJoinMic).type(type)

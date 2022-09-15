@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.md.common.im.ImApi;
+import com.md.common.util.EncryptionUtil;
 import com.md.mic.exception.RoomNotFoundException;
 import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.model.VoiceRoom;
@@ -164,8 +165,11 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         if (uid.equals(voiceRoom.getOwner())) {
             return VoiceRoomUser.builder().roomId(roomId).uid(uid).build();
         }
-        if (Boolean.TRUE.equals(voiceRoom.getIsPrivate()) && !voiceRoom.getPassword().equals(password)) {
-            throw new VoiceRoomSecurityException("wrong password");
+        if (Boolean.TRUE.equals(voiceRoom.getIsPrivate())) {
+            boolean checkResult = EncryptionUtil.validPassword(password, voiceRoom.getPassword());
+            if (!checkResult) {
+                throw new VoiceRoomSecurityException("wrong password");
+            }
         }
         LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
                 new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
