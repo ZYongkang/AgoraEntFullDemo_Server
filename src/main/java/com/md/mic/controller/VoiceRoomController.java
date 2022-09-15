@@ -79,7 +79,7 @@ public class VoiceRoomController {
         }
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         List<GiftRecord> records =
-                giftRecordService.getRankingListByRoomId(roomId, user.getUid(),
+                giftRecordService.getRankingListByRoomId(roomId, voiceRoom.getOwner(),
                         rankingLength);
         List<GiftRecordVO> list = new ArrayList<>();
         if (records != null && !records.isEmpty()) {
