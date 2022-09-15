@@ -263,9 +263,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
         MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
 
-        if (StringUtils.isEmpty(micMetadataValue.getUid())
-                || (micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()
-                && micMetadataValue.getStatus() != MicStatus.LOCK_AND_MUTE.getStatus())) {
+        if (micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()
+                && micMetadataValue.getStatus() != MicStatus.LOCK_AND_MUTE.getStatus()) {
             throw new MicStatusCannotBeModifiedException();
         }
 
@@ -556,6 +555,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                         && StringUtils.isEmpty(micMetadataValue.getUid()))) {
                             if (micMetadataValue.getStatus() == MicStatus.FREE.getStatus()) {
                                 updateStatus = MicStatus.NORMAL.getStatus();
+                            }else{
+                                updateStatus = MicStatus.MUTE.getStatus();
                             }
                             updateUid = uid;
                         } else {
