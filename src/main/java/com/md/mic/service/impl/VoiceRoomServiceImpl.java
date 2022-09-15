@@ -224,6 +224,10 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             imApi.setAnnouncement(voiceRoom.getChatroomId(), request.getAnnouncement());
         }
         updateById(voiceRoom);
+        Boolean hasKey = redisTemplate.hasKey(key(roomId));
+        if (Boolean.TRUE.equals(hasKey)) {
+            redisTemplate.delete(key(roomId));
+        }
     }
 
     @Override
