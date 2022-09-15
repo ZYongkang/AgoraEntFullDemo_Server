@@ -12,7 +12,7 @@ import com.easemob.im.server.model.EMRoom;
 import com.easemob.im.server.model.EMUser;
 import com.easemob.im.shaded.io.netty.handler.timeout.TimeoutException;
 import com.md.mic.common.constants.CustomMetricsName;
-import com.md.mic.model.EasemobUser;
+import com.md.mic.model.UserThirdAccount;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -52,7 +52,7 @@ public class ImApi {
      * @return
      * @throws EMException
      */
-    public EasemobUser createUser(@Nonnull String uid, @Nonnull String username)
+    public UserThirdAccount createUser(@Nonnull String uid, @Nonnull String username)
             throws EMException {
         return createUser(uid, username, null);
     }
@@ -65,14 +65,14 @@ public class ImApi {
      * @param password
      * @return
      */
-    public EasemobUser createUser(@Nonnull String uid, @Nonnull String username,
+    public UserThirdAccount createUser(@Nonnull String uid, @Nonnull String username,
             String password) {
         if (StringUtils.isBlank(password)) {
             password = UUID.randomUUID().toString().replace("-", "");
         }
         try {
             EMUser emUser = this.emService.user().create(username, password).block();
-            return EasemobUser.builder().uid(uid).chatId(emUser.getUsername())
+            return UserThirdAccount.builder().uid(uid).chatId(emUser.getUsername())
                     .chatUuid(emUser.getUuid()).build();
         } catch (TimeoutException e) {
             log.error("createUser request timeout | uid={}, username={}",

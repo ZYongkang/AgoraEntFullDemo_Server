@@ -9,8 +9,8 @@ import lombok.Value;
 
 @Value
 @Builder(toBuilder = true)
-@TableName("easemob_user")
-public class EasemobUser {
+@TableName("user_third_account")
+public class UserThirdAccount {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
@@ -21,11 +21,14 @@ public class EasemobUser {
 
     private String chatUuid;
 
+    private Integer rtcUid;
+
     @JsonCreator
-    public EasemobUser(Integer id, String uid, String chatId, String chatUuid) {
+    public UserThirdAccount(Integer id, String uid, String chatId, String chatUuid, Integer rtcUid) {
         this.id = id;
         this.uid = uid;
         this.chatId = chatId;
         this.chatUuid = chatUuid;
+        this.rtcUid = rtcUid;
     }
 }

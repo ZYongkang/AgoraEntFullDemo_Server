@@ -20,4 +20,7 @@ public class LoginResponse {
     @JsonProperty("im_token")
     private String imToken;
 
+    @JsonProperty("rtc_uid")
+    private Integer rtcUid;
+
 }

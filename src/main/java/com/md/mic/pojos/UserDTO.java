@@ -3,7 +3,7 @@ package com.md.mic.pojos;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.md.mic.model.EasemobUser;
+import com.md.mic.model.UserThirdAccount;
 import com.md.mic.model.User;
 import lombok.Builder;
 import lombok.Value;
@@ -25,11 +25,14 @@ public class UserDTO {
 
     private String portrait;
 
-    public static UserDTO from(User user, EasemobUser easemobUser) {
+    private Integer rtcUid;
+
+    public static UserDTO from(User user, UserThirdAccount userThirdAccount) {
         return UserDTO.builder()
                 .uid(user.getUid())
-                .chatUid(easemobUser.getChatId())
-                .chatUuid(easemobUser.getChatUuid())
+                .chatUid(userThirdAccount.getChatId())
+                .chatUuid(userThirdAccount.getChatUuid())
+                .rtcUid(userThirdAccount.getRtcUid())
                 .name(user.getName())
                 .portrait(user.getPortrait())
                 .build();

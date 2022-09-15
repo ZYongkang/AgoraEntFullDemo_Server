@@ -36,7 +36,7 @@ public class UserController {
         String jwtToken = voiceRoomJwtUtil.createJWT(userDTO.getUid());
         String imToken = tokenProvider.buildImToken(userDTO.getChatUuid());
         return new LoginResponse(userDTO.getUid(), userDTO.getName(), userDTO.getPortrait(),
-                userDTO.getChatUid(), jwtToken, imToken);
+                userDTO.getChatUid(), jwtToken, imToken, userDTO.getRtcUid());
     }
 
     @PutMapping("/{uid}")

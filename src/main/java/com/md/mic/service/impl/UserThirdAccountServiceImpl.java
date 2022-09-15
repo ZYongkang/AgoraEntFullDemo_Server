@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.md.mic.model.EasemobUser;
-import com.md.mic.repository.EasemobUserMapper;
-import com.md.mic.service.EasemobUserService;
+import com.md.mic.model.UserThirdAccount;
+import com.md.mic.repository.UserThirdAccountMapper;
+import com.md.mic.service.UserThirdAccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -17,8 +17,8 @@ import java.time.Duration;
 
 @Slf4j
 @Service
-public class EasemobUserServiceImpl extends ServiceImpl<EasemobUserMapper, EasemobUser>
-        implements EasemobUserService {
+public class UserThirdAccountServiceImpl extends ServiceImpl<UserThirdAccountMapper, UserThirdAccount>
+        implements UserThirdAccountService {
 
     @Resource(name = "voiceRedisTemplate")
     private StringRedisTemplate redisTemplate;
@@ -29,34 +29,34 @@ public class EasemobUserServiceImpl extends ServiceImpl<EasemobUserMapper, Easem
     @Resource
     private ObjectMapper objectMapper;
 
-    @Override public EasemobUser getByUid(String uid) {
+    @Override public UserThirdAccount getByUid(String uid) {
         Boolean hasKey = redisTemplate.hasKey(key(uid));
-        EasemobUser easemobUser = null;
+        UserThirdAccount userThirdAccount = null;
         if (Boolean.TRUE.equals(hasKey)) {
             String easemobUserStr = redisTemplate.opsForValue().get(key(uid));
             try {
-                easemobUser = objectMapper.readValue(easemobUserStr, EasemobUser.class);
+                userThirdAccount = objectMapper.readValue(easemobUserStr, UserThirdAccount.class);
             } catch (JsonProcessingException e) {
                 log.error("parse easemob user json cache failed | uid={}, str={}, e=", uid,
                         easemobUserStr, e);
             }
         }
-        if (easemobUser == null) {
-            LambdaQueryWrapper<EasemobUser> queryWrapper =
-                    new LambdaQueryWrapper<EasemobUser>().eq(EasemobUser::getUid, uid);
-            easemobUser = this.baseMapper.selectOne(queryWrapper);
-            if (easemobUser != null) {
+        if (userThirdAccount == null) {
+            LambdaQueryWrapper<UserThirdAccount> queryWrapper =
+                    new LambdaQueryWrapper<UserThirdAccount>().eq(UserThirdAccount::getUid, uid);
+            userThirdAccount = this.baseMapper.selectOne(queryWrapper);
+            if (userThirdAccount != null) {
                 String json;
                 try {
-                    json = objectMapper.writeValueAsString(easemobUser);
+                    json = objectMapper.writeValueAsString(userThirdAccount);
                     redisTemplate.opsForValue().set(key(uid), json, ttl);
                 } catch (JsonProcessingException e) {
                     log.error("write easemob user json cache failed | uid={}, easemobUser={}, e=", uid,
-                            easemobUser, e);
+                            userThirdAccount, e);
                 }
             }
         }
-        return easemobUser;
+        return userThirdAccount;
     }
 
     private String key(String uid) {

@@ -6,11 +6,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.md.common.im.ImApi;
 import com.md.mic.exception.UserNotFoundException;
-import com.md.mic.model.EasemobUser;
+import com.md.mic.model.UserThirdAccount;
 import com.md.mic.model.User;
 import com.md.mic.pojos.UserDTO;
 import com.md.mic.repository.UserMapper;
-import com.md.mic.service.EasemobUserService;
+import com.md.mic.service.UserThirdAccountService;
 import com.md.mic.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -30,11 +30,13 @@ import java.util.UUID;
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
+    private static final String USER_RTC_RECORD_KEY = "voiceRoom:user:rtc:record";
+
     @Resource
     private ImApi imApi;
 
     @Resource
-    private EasemobUserService easemobUserService;
+    private UserThirdAccountService userThirdAccountService;
 
     @Resource(name = "voiceRedisTemplate")
     private StringRedisTemplate redisTemplate;
@@ -51,16 +53,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> queryWrapper =
                 new LambdaQueryWrapper<User>().eq(User::getDeviceId, deviceId);
         User user = getOne(queryWrapper);
-        EasemobUser easemobUser;
+        UserThirdAccount userThirdAccount;
         if (user == null) {
             String chatUid = String.format("u%s",
                     UUID.randomUUID().toString().replace("-", "")
                             .substring(1));
             user = User.create(name, deviceId, portrait);
             save(user);
-            easemobUser = imApi.createUser(user.getUid(), chatUid);
+            userThirdAccount = imApi.createUser(user.getUid(), chatUid);
+            Long rtcUid = redisTemplate.opsForValue().increment(USER_RTC_RECORD_KEY);
+            userThirdAccount = userThirdAccount.toBuilder().rtcUid(Math.toIntExact(rtcUid)).build();
             try {
-                easemobUserService.save(easemobUser);
+                userThirdAccountService.save(userThirdAccount);
             } catch (Exception e) {
                 log.error("save easemob user failed | err=", e);
                 imApi.deleteUser(chatUid);
@@ -68,12 +72,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         } else {
             String uid = user.getUid();
-            easemobUser = easemobUserService.getOne(
-                    new LambdaQueryWrapper<EasemobUser>().eq(EasemobUser::getUid, uid));
+            userThirdAccount = userThirdAccountService.getOne(
+                    new LambdaQueryWrapper<UserThirdAccount>().eq(UserThirdAccount::getUid, uid));
+            if (userThirdAccount.getRtcUid() == null) {
+                Long rtcUid = redisTemplate.opsForValue().increment(USER_RTC_RECORD_KEY);
+                userThirdAccount =
+                        userThirdAccount.toBuilder().rtcUid(Math.toIntExact(rtcUid)).build();
+                userThirdAccountService.updateById(userThirdAccount);
+            }
         }
         return UserDTO.builder().uid(user.getUid())
-                .chatUid(easemobUser.getChatId())
-                .chatUuid(easemobUser.getChatUuid())
+                .chatUid(userThirdAccount.getChatId())
+                .chatUuid(userThirdAccount.getChatUuid())
+                .rtcUid(userThirdAccount.getRtcUid())
                 .name(user.getName())
                 .portrait(user.getPortrait())
                 .build();
@@ -132,8 +143,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw new UserNotFoundException("user " + uid + " not found");
         }
-        EasemobUser easemobUser = easemobUserService.getByUid(uid);
-        return UserDTO.from(user, easemobUser);
+        UserThirdAccount userThirdAccount = userThirdAccountService.getByUid(uid);
+        return UserDTO.from(user, userThirdAccount);
     }
 
     private String key(String uid) {
