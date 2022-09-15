@@ -91,9 +91,11 @@ public class VoiceRoomController {
                 return new GiftRecordVO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
             }).collect(Collectors.toList());
         }
-        Long memberCount = voiceRoomService.getMemberCount(roomId);
         Long clickCount = voiceRoomService.getClickCount(roomId);
-        VoiceRoomDTO voiceRoomDTO = VoiceRoomDTO.from(voiceRoom, user, memberCount, clickCount);
+        Long memberCount = voiceRoomService.getMemberCount(roomId);
+        Long giftAmount = giftRecordService.getRoomGiftAmount(roomId);
+        VoiceRoomDTO voiceRoomDTO =
+                VoiceRoomDTO.from(voiceRoom, user, memberCount, clickCount, giftAmount);
         voiceRoomDTO = voiceRoomDTO.toBuilder()
                 .rankingList(list)
                 .build();

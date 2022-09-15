@@ -96,7 +96,9 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         }
         Long clickCount = 0L;
         Long memberCount = 0L;
-        VoiceRoomDTO roomDTO = VoiceRoomDTO.from(voiceRoom, owner, memberCount, clickCount);
+        Long giftAmount = 0L;
+        VoiceRoomDTO roomDTO =
+                VoiceRoomDTO.from(voiceRoom, owner, memberCount, clickCount, giftAmount);
         return Tuples.of(roomDTO, micInfos);
     }
 
@@ -174,8 +176,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     @Override public VoiceRoomDTO getDTOByRoomId(String roomId, String uid) {
         VoiceRoom voiceRoom = findByRoomId(roomId);
         UserDTO userDTO = userService.getByUid(voiceRoom.getOwner());
-        Long memberCount = getMemberCount(voiceRoom.getRoomId());
-        Long clickCount = getClickCount(voiceRoom.getRoomId());
 
         List<GiftRecord> records =
                 giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(),
@@ -190,7 +190,11 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
                 return new GiftRecordVO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
             }).collect(Collectors.toList());
         }
-        VoiceRoomDTO voiceRoomDTO = VoiceRoomDTO.from(voiceRoom, userDTO, memberCount, clickCount);
+        Long clickCount = getClickCount(voiceRoom.getRoomId());
+        Long memberCount = getMemberCount(voiceRoom.getRoomId());
+        Long giftAmount = giftRecordService.getRoomGiftAmount(voiceRoom.getRoomId());
+        VoiceRoomDTO voiceRoomDTO =
+                VoiceRoomDTO.from(voiceRoom, userDTO, memberCount, clickCount, giftAmount);
         return voiceRoomDTO.toBuilder()
                 .rankingList(list)
                 .build();

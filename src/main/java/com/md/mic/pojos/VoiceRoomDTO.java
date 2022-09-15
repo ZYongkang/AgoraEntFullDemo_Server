@@ -42,17 +42,20 @@ public class VoiceRoomDTO {
     @JsonProperty("click_count")
     private Long clickCount;
 
+    @JsonProperty("gift_amount")
+    private Long giftAmount;
+
     private String announcement;
 
     @JsonProperty("ranking_list")
     private List<GiftRecordVO> rankingList;
 
     public static VoiceRoomDTO from(VoiceRoom voiceRoom, UserDTO owner, Long memberCount,
-            Long clickCount) {
+            Long clickCount, Long giftAmount) {
         return new VoiceRoomDTO(voiceRoom.getRoomId(), voiceRoom.getChannelId(),
                 voiceRoom.getChatroomId(), voiceRoom.getName(), voiceRoom.getType(),
                 voiceRoom.getIsPrivate(), voiceRoom.getAllowedFreeJoinMic(),
-                owner, memberCount, clickCount, voiceRoom.getAnnouncement(),
+                owner, memberCount, clickCount, giftAmount, voiceRoom.getAnnouncement(),
                 Collections.emptyList());
     }
 
