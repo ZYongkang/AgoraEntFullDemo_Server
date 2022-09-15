@@ -169,6 +169,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
             return VoiceRoomUser.builder().roomId(roomId).uid(uid).build();
         }
         if (Boolean.TRUE.equals(voiceRoom.getIsPrivate())) {
+            if (StringUtils.isBlank(password)) {
+                throw new IllegalArgumentException("private room name not allow empty");
+            }
             boolean checkResult = encryptionUtil.validPassword(password, voiceRoom.getPassword());
             if (!checkResult) {
                 throw new VoiceRoomSecurityException("wrong password");
