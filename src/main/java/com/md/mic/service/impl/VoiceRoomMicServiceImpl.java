@@ -609,6 +609,9 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 || micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE
                                 .getStatus())) {
                             updateStatus = MicStatus.NORMAL.getStatus();
+                            if(StringUtils.isEmpty(micMetadataValue.getUid())){
+                                updateStatus = MicStatus.FREE.getStatus();
+                            }
                             if (micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE
                                     .getStatus()) {
                                 updateStatus = MicStatus.LOCK.getStatus();
