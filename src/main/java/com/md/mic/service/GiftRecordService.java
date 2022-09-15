@@ -10,6 +10,5 @@ public interface GiftRecordService extends IService<GiftRecord> {
 
     List<GiftRecord> getRankingListByRoomId(String roomId, String toUid, int limit);
 
-    void addGiftRecord(String roomId, String uid, GiftId giftId, Integer num, String toUid,
-            String giftName, Long amount);
+    void addGiftRecord(String roomId, String uid, GiftId giftId, Integer num, String toUid);
 }

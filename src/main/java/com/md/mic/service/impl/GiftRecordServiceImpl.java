@@ -55,8 +55,7 @@ public class GiftRecordServiceImpl extends ServiceImpl<GiftRecordMapper, GiftRec
 
     @Override
     @Transactional
-    public void addGiftRecord(String roomId, String uid, GiftId giftId, Integer num, String toUid,
-            String giftName, Long amount) {
+    public void addGiftRecord(String roomId, String uid, GiftId giftId, Integer num, String toUid) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (StringUtils.isBlank(toUid)) {
             toUid = voiceRoom.getOwner();
@@ -65,9 +64,7 @@ public class GiftRecordServiceImpl extends ServiceImpl<GiftRecordMapper, GiftRec
         if (voiceRoomUser == null && !voiceRoom.getOwner().equals(uid)) {
             throw new UserNotInRoomException();
         }
-        if (amount == null) {
-            amount = giftId.getAmount() * num;
-        }
+        Long amount = giftId.getAmount() * num;
         LambdaQueryWrapper<GiftRecord> queryWrapper =
                 new LambdaQueryWrapper<GiftRecord>()
                         .eq(GiftRecord::getRoomId, roomId)
@@ -81,14 +78,6 @@ public class GiftRecordServiceImpl extends ServiceImpl<GiftRecordMapper, GiftRec
             giftRecord = giftRecord.addAmount(amount);
             updateById(giftRecord);
         }
-        EasemobUser user = easemobUserService.getByUid(uid);
-        Map<String, Object> customExt = new HashMap<>();
-        customExt.put("gift_id", giftId.toString());
-        customExt.put("gift_name", giftName);
-        customExt.put("num", String.valueOf(num));
-        customExt.put("amount", amount);
-        imApi.sendChatRoomCustomMessage(user.getChatId(), voiceRoom.getChatroomId(),
-                CustomEventType.SEND_GIFT.getValue(), customExt, new HashMap<>());
     }
 
 }

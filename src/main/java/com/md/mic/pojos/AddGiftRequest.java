@@ -13,13 +13,8 @@ public class AddGiftRequest {
     @JsonProperty("gift_id")
     private String giftId;
 
-    @JsonProperty("gift_name")
-    private String giftName;
-
     @NotNull(message = "gift num must not be null")
     private Integer num;
-
-    private Long amount;
 
     @JsonProperty("to_uid")
     private String toUid;

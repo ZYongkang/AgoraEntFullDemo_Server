@@ -65,7 +65,7 @@ public class VoiceRoomGiftController {
         }
         GiftId giftId = GiftId.of(request.getGiftId());
         giftRecordService.addGiftRecord(roomId, user.getUid(), giftId, request.getNum(),
-                request.getToUid(), request.getGiftName(), request.getAmount());
+                request.getToUid());
         return new AddGiftResponse(Boolean.TRUE);
     }
 }
