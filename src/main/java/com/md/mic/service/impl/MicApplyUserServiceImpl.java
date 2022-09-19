@@ -77,7 +77,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
                         CustomEventType.APPLY_SITE.getValue(), customExtensions, new HashMap<>());
                 return Boolean.TRUE;
             } catch (Exception e) {
-                log.error("addMicApply error,userNo:{},roomId:{}", uid, roomId, e);
+                log.error("addMicApply error,uid:{},roomId:{}", uid, roomId, e);
                 if (e instanceof SQLIntegrityConstraintViolationException) {
                     throw new MicApplyRepeatException();
                 }

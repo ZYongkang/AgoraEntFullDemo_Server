@@ -61,12 +61,12 @@ public class VoiceRoomUserController {
 
     @DeleteMapping("/voice/room/{roomId}/members/kick")
     public KickRoomResponse kickRoom(@PathVariable("roomId") String roomId,
-            @RequestBody KickRoomRequest request,
+            @RequestParam("uid") String uid,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new VoiceRoomSecurityException("not the owner can't operate");
         }
-        voiceRoomUserService.kickVoiceRoomUser(roomId, user.getUid(), request.getUid());
+        voiceRoomUserService.kickVoiceRoomUser(roomId, user.getUid(), uid);
         return new KickRoomResponse(Boolean.TRUE);
     }
 
