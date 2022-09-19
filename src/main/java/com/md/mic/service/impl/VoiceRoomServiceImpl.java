@@ -4,15 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
 import com.md.common.im.ImApi;
 import com.md.common.util.EncryptionUtil;
 import com.md.mic.exception.RoomNotFoundException;
 import com.md.mic.exception.VoiceRoomSecurityException;
-import com.md.mic.model.GiftRecord;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
-import com.md.mic.pojos.vo.GiftRecordVO;
 import com.md.mic.repository.VoiceRoomMapper;
 import com.md.mic.service.*;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +25,10 @@ import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -42,9 +42,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
 
     @Resource
     private VoiceRoomUserService voiceRoomUserService;
-
-    @Resource
-    private GiftRecordService giftRecordService;
 
     @Resource
     private VoiceRoomMicService voiceRoomMicService;
@@ -67,8 +64,12 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     @Value("${local.zone.offset:+8}")
     private String zoneOffset;
 
-    @Value("${ranking.length:100}")
-    private Integer rankingLength;
+    @Value("${voice.room.mic.count.default:6}")
+    private Integer micCount;
+
+    @Value("${voice.room.robot.count.default:2}")
+    private Integer robotCount;
+
 
     @Override
     @Transactional
@@ -84,7 +85,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         }
         voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
                 password, request.getAllowFreeJoinMic(),
-                request.getType(), uid, request.getSoundEffect(), false);
+                request.getType(), uid, request.getSoundEffect(), false, micCount, robotCount);
         List<MicInfo> micInfos = //todo  需要修改一下， 这个地方需要明确是几个麦位几个机器人，机器人的激活状态
                 voiceRoomMicService.initMic(voiceRoom.getChatroomId(), voiceRoom.getOwner());
         try {
@@ -171,33 +172,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         pageInfo.setTotal(total);
         pageInfo.setList(list);
         return pageInfo;
-    }
-
-    @Override public VoiceRoomDTO getDTOByRoomId(String roomId, String uid) {
-        VoiceRoom voiceRoom = findByRoomId(roomId);
-        UserDTO userDTO = userService.getByUid(voiceRoom.getOwner());
-
-        List<GiftRecord> records =
-                giftRecordService.getRankingListByRoomId(voiceRoom.getRoomId(),
-                        voiceRoom.getOwner(), rankingLength);
-        List<GiftRecordVO> list = new ArrayList<>();
-        if (records != null && !records.isEmpty()) {
-            ArrayList<String> uidList = records.stream().map(GiftRecord::getUid).distinct()
-                    .collect(Collectors.toCollection(Lists::newArrayList));
-            Map<String, UserDTO> userDTOMap = userService.findByUidList(uidList);
-            list = records.stream().map(giftRecord -> {
-                UserDTO dto = userDTOMap.get(giftRecord.getUid());
-                return new GiftRecordVO(dto.getName(), dto.getPortrait(), giftRecord.getAmount());
-            }).collect(Collectors.toList());
-        }
-        Long clickCount = getClickCount(voiceRoom.getRoomId());
-        Long memberCount = getMemberCount(voiceRoom.getRoomId());
-        Long giftAmount = giftRecordService.getRoomGiftAmount(voiceRoom.getRoomId());
-        VoiceRoomDTO voiceRoomDTO =
-                VoiceRoomDTO.from(voiceRoom, userDTO, memberCount, clickCount, giftAmount);
-        return voiceRoomDTO.toBuilder()
-                .rankingList(list)
-                .build();
     }
 
     @Override

@@ -1,16 +1,13 @@
 package com.md.mic.model;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.md.common.util.EncryptionUtil;
 import com.md.mic.exception.VoiceRoomTypeMismatchException;
 import com.md.service.utils.MdStringUtils;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.apache.commons.codec.digest.Md5Crypt;
-import org.apache.commons.lang3.StringUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -58,9 +55,13 @@ public class VoiceRoom {
 
     private Boolean useRobot;
 
+    private Integer micCount;
+
+    private Integer robotCount;
+
     public static VoiceRoom create(String name, String chatroomId, Boolean isPrivate,
             String password, Boolean allowedFreeJoinMic, Integer type, String owner,
-            String soundEffect, Boolean useRobot) {
+            String soundEffect, Boolean useRobot, Integer micCount, Integer robotCount) {
         String roomId = buildRoomId(name);
         String channelId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         checkType(type);
@@ -68,6 +69,7 @@ public class VoiceRoom {
                 .channelId(channelId).isPrivate(isPrivate).password(password)
                 .allowedFreeJoinMic(allowedFreeJoinMic).type(type)
                 .owner(owner).soundEffect(soundEffect).useRobot(useRobot)
+                .micCount(micCount).robotCount(robotCount)
                 .build();
     }
 
@@ -85,61 +87,41 @@ public class VoiceRoom {
     }
 
     public VoiceRoom updateName(String name) {
-        return VoiceRoom.builder().id(id).name(name).roomId(roomId).chatroomId(chatroomId)
-                .channelId(channelId).isPrivate(isPrivate).password(password)
-                .allowedFreeJoinMic(allowedFreeJoinMic).type(type).owner(owner)
-                .soundEffect(soundEffect).announcement(announcement).useRobot(useRobot)
-                .build();
+        return this.toBuilder().name(name).build();
     }
 
     public VoiceRoom updateIsPrivate(Boolean isPrivate) {
-        return VoiceRoom.builder().id(id).name(name).roomId(roomId).chatroomId(chatroomId)
-                .channelId(channelId).isPrivate(isPrivate).password(password)
-                .allowedFreeJoinMic(allowedFreeJoinMic).type(type).owner(owner)
-                .soundEffect(soundEffect).announcement(announcement).useRobot(useRobot)
-                .build();
+        return this.toBuilder().isPrivate(isPrivate).build();
     }
 
     public VoiceRoom updatePassword(String password) {
-        return VoiceRoom.builder().id(id).name(name).roomId(roomId)
-                .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
-                .password(password).allowedFreeJoinMic(allowedFreeJoinMic).useRobot(useRobot)
-                .type(type).owner(owner).soundEffect(soundEffect).announcement(announcement)
-                .build();
+        return this.toBuilder().password(password).build();
     }
 
     public VoiceRoom updateAllowedFreeJoinMic(Boolean allowedFreeJoinMic) {
-        return VoiceRoom.builder().id(id).name(name).roomId(roomId)
-                .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
-                .password(password).allowedFreeJoinMic(allowedFreeJoinMic).useRobot(useRobot)
-                .type(type).owner(owner).soundEffect(soundEffect).announcement(announcement)
-                .build();
+        return this.toBuilder().allowedFreeJoinMic(allowedFreeJoinMic).build();
     }
 
     public VoiceRoom updateType(Integer type) {
         checkType(type);
-        return VoiceRoom.builder().id(id).name(name).roomId(roomId)
-                .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
-                .password(password).allowedFreeJoinMic(allowedFreeJoinMic).useRobot(useRobot)
-                .type(type).owner(owner).soundEffect(soundEffect).announcement(announcement)
-                .build();
+        return this.toBuilder().type(type).build();
 
     }
 
     public VoiceRoom updateAnnouncement(String announcement) {
-        return VoiceRoom.builder().id(id).name(name).roomId(roomId)
-                .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
-                .password(password).allowedFreeJoinMic(allowedFreeJoinMic).useRobot(useRobot)
-                .type(type).owner(owner).soundEffect(soundEffect).announcement(announcement)
-                .build();
+        return this.toBuilder().announcement(announcement).build();
     }
 
     public VoiceRoom updateUseRobot(Boolean useRobot) {
-        return VoiceRoom.builder().id(id).name(name).roomId(roomId)
-                .chatroomId(chatroomId).channelId(channelId).isPrivate(isPrivate)
-                .password(password).allowedFreeJoinMic(allowedFreeJoinMic).useRobot(useRobot)
-                .type(type).owner(owner).soundEffect(soundEffect).announcement(announcement)
-                .build();
+        return this.toBuilder().useRobot(useRobot).build();
+    }
+
+    public VoiceRoom updateMicCount(Integer micCount) {
+        return this.toBuilder().micCount(micCount).build();
+    }
+
+    public VoiceRoom updateRobotCount(Integer robotCount) {
+        return this.toBuilder().robotCount(robotCount).build();
     }
 
     private static void checkType(Integer type) {
