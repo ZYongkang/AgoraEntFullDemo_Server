@@ -12,11 +12,9 @@ public interface VoiceRoomMicService {
 
     List<MicInfo> getByRoomId(String roomId);
 
-    List<MicInfo> getRoomMicInfo(String chatroomId);
+    List<MicInfo> getRoomMicInfo(VoiceRoom voiceRoom);
 
-    Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex, boolean inOrder);
-
-    List<MicInfo> initMic(String chatroomId, String ownerUid);
+    Boolean setRoomMicInfo(VoiceRoom roomInfo, String uid, Integer micIndex, boolean inOrder);
 
     List<MicInfo> initMic(VoiceRoom voiceRoom, Boolean isActive);
 
@@ -40,7 +38,7 @@ public interface VoiceRoomMicService {
 
     void invite(VoiceRoom roomInfo, Integer index, String uid);
 
-    Boolean agreeInvite(String chatroomId, String uid, Integer micIndex);
+    Boolean agreeInvite(VoiceRoom roomInfo, String uid, Integer micIndex);
 
     Boolean refuseInvite(VoiceRoom roomInfo, String uid);
 

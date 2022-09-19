@@ -87,7 +87,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
             if (micIndex == null) {
                 throw new MicIndexNullException();
             }
-            return this.voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex,
+            return this.voiceRoomMicService.setRoomMicInfo(roomInfo, uid, micIndex,
                     Boolean.FALSE);
         }
 
@@ -116,7 +116,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
         }
         Integer micIndex = micApplyUser.getMicIndex();
         Boolean result =
-                voiceRoomMicService.setRoomMicInfo(roomInfo.getChatroomId(), uid, micIndex,
+                voiceRoomMicService.setRoomMicInfo(roomInfo, uid, micIndex,
                         Boolean.TRUE);
         deleteMicApply(uid, roomId);
         return result;

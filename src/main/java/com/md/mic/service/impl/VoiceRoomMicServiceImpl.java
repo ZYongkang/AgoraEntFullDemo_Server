@@ -1,6 +1,5 @@
 package com.md.mic.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.easemob.im.server.api.metadata.chatroom.AutoDelete;
 import com.easemob.im.server.api.metadata.chatroom.get.ChatRoomMetadataGetResponse;
@@ -24,12 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -61,25 +58,20 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     private static final String METADATA_PREFIX_KEY = "mic";
 
-    @Value("${voice.room.mic.count:8}")
-    private int micCount;
+    @Override
+    public List<MicInfo> getByRoomId(String roomId) {
+        return getRoomMicInfo(voiceRoomService.findByRoomId(roomId));
+    }
 
-    private List<String> allMics = new ArrayList<>();
+    @Override
+    public List<MicInfo> getRoomMicInfo(VoiceRoom voiceRoom) {
 
-    @PostConstruct
-    public void init() {
+        String chatroomId = voiceRoom.getChatroomId();
+        int micCount = voiceRoom.getMicCount() + voiceRoom.getRobotCount();
+        List<String> allMics = new ArrayList<>();
         for (int index = 0; index < micCount; index++) {
             allMics.add(buildMicKey(index));
         }
-    }
-
-    @Override
-    public List<MicInfo> getByRoomId(String roomId) {
-        return getRoomMicInfo(voiceRoomService.findByRoomId(roomId).getChatroomId());
-    }
-
-    @Override
-    public List<MicInfo> getRoomMicInfo(String chatroomId) {
         try {
             ChatRoomMetadataGetResponse chatRoomMetadataGetResponse =
                     imApi.listChatRoomMetadata(chatroomId, allMics);
@@ -94,7 +86,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex,
+    public Boolean setRoomMicInfo(VoiceRoom roomInfo, String uid, Integer micIndex,
             boolean inOrder) {
 
         boolean hasMic = false;
@@ -102,14 +94,24 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         if (micIndex == null && !inOrder) {
             throw new MicIndexNullException();
         }
-        List<MicInfo> micInfos = this.getRoomMicInfo(chatroomId);
+        List<MicInfo> micInfos = this.getRoomMicInfo(roomInfo);
         Optional<MicInfo> micInfo = micInfos.stream().filter((mic) -> {
             return mic.getUser() == null ? false : mic.getUser().getUid().equals(uid);
         }).findFirst();
+        String chatroomId = roomInfo.getChatroomId();
         if (micInfo.isPresent()) {
             throw new MicAlreadyExistsException("mic user already exists");
         }
+
+        Integer micCount = roomInfo.getMicCount();
+
         if (micIndex != null) {
+            if (micIndex >= micCount) {
+                throw new MicIndexExceedLimitException("mic index exceed the maximum");
+            }
+            if (0 > micIndex) {
+                throw new MicIndexExceedLimitException("mic index exceed the minimum");
+            }
             try {
                 this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                         MicOperateStatus.UP_MIC.getStatus(), Boolean.FALSE);
@@ -141,7 +143,13 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public List<MicInfo> initMic(String chatroomId, String ownerUid) {
+    public List<MicInfo> initMic(VoiceRoom voiceRoom, Boolean isActive) {
+
+        int micCount = voiceRoom.getMicCount() + voiceRoom.getRobotCount();
+
+        String chatroomId = voiceRoom.getChatroomId();
+
+        String ownerUid = voiceRoom.getOwner();
 
         String redisLockKey = buildMicLockKey(chatroomId);
 
@@ -172,7 +180,23 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 } else {
                     micMetadataValue = new MicMetadataValue(null, MicStatus.FREE.getStatus());
                 }
-                metadataMap.put(micKey, JSON.toJSONString(micMetadataValue));
+                if ((micIndex + voiceRoom.getRobotCount()) >= micCount) {
+                    if (isActive) {
+                        micMetadataValue = new MicMetadataValue(null, MicStatus.ACTIVE.getStatus());
+                    } else {
+                        micMetadataValue =
+                                new MicMetadataValue(null, MicStatus.INACTIVE.getStatus());
+                    }
+                }
+
+                String jsonValue = "";
+                try {
+                    jsonValue = objectMapper.writeValueAsString(micMetadataValue);
+                } catch (Exception e) {
+                    log.error("write MicMetadataValue json failed | MicMetadataValue={}, err=",
+                            micMetadataValue, e);
+                }
+                metadataMap.put(micKey, jsonValue);
             }
             //
             List<String> successKeys =
@@ -193,14 +217,25 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public List<MicInfo> initMic(VoiceRoom voiceRoom, Boolean isActive) {
-        //todo 初始化机器人麦位
-      return Collections.emptyList();
-    }
-
-    @Override
     public void updateRobotMicStatus(VoiceRoom voiceRoom, Boolean isActive) {
-        //todo 更新机器人麦位状态
+        Integer robotCount = voiceRoom.getRobotCount();
+        Map<String, String> metadata = new HashMap<>();
+        for (int index = 0; index < robotCount; index++) {
+            String robotMetaDataKey = buildMicKey(voiceRoom.getMicCount() + index);
+            MicMetadataValue micMetadataValue = new MicMetadataValue(null,
+                    isActive ? MicStatus.ACTIVE.getStatus() : MicStatus.INACTIVE.getStatus());
+            String jsonValue = "";
+            try {
+                jsonValue = objectMapper.writeValueAsString(micMetadataValue);
+            } catch (Exception e) {
+                log.error("write MicMetadataValue json failed | MicMetadataValue={}, err=",
+                        micMetadataValue, e);
+            }
+            metadata.put(robotMetaDataKey, jsonValue);
+        }
+        imApi.setChatRoomMetadata(OPERATOR, voiceRoom.getChatroomId(), metadata,
+                AutoDelete.DELETE)
+                .getSuccessKeys();
     }
 
     @Override
@@ -349,11 +384,11 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public Boolean agreeInvite(String chatroomId, String uid, Integer micIndex) {
+    public Boolean agreeInvite(VoiceRoom roomInfo, String uid, Integer micIndex) {
         if (micIndex == null) {
-            return setRoomMicInfo(chatroomId, uid, null, Boolean.TRUE);
+            return setRoomMicInfo(roomInfo, uid, null, Boolean.TRUE);
         } else {
-            return setRoomMicInfo(chatroomId, uid, micIndex, Boolean.FALSE);
+            return setRoomMicInfo(roomInfo, uid, micIndex, Boolean.FALSE);
         }
 
     }
@@ -566,7 +601,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                         && StringUtils.isEmpty(micMetadataValue.getUid()))) {
                             if (micMetadataValue.getStatus() == MicStatus.FREE.getStatus()) {
                                 updateStatus = MicStatus.NORMAL.getStatus();
-                            }else{
+                            } else {
                                 updateStatus = MicStatus.MUTE.getStatus();
                             }
                             updateUid = uid;
@@ -620,7 +655,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                                 || micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE
                                 .getStatus())) {
                             updateStatus = MicStatus.NORMAL.getStatus();
-                            if(StringUtils.isEmpty(micMetadataValue.getUid())){
+                            if (StringUtils.isEmpty(micMetadataValue.getUid())) {
                                 updateStatus = MicStatus.FREE.getStatus();
                             }
                             if (micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE

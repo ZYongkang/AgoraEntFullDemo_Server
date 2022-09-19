@@ -99,7 +99,7 @@ public class VoiceRoomController {
         voiceRoomDTO = voiceRoomDTO.toBuilder()
                 .rankingList(list)
                 .build();
-        List<MicInfo> micInfo = voiceRoomMicService.getRoomMicInfo(voiceRoomDTO.getChatroomId());
+        List<MicInfo> micInfo = voiceRoomMicService.getRoomMicInfo(voiceRoom);
         return new GetVoiceRoomResponse(voiceRoomDTO, micInfo);
     }
 

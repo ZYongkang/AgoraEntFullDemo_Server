@@ -79,7 +79,7 @@ public class VoiceRoomMicController {
     @GetMapping("/voice/room/{roomId}/mic")
     public List<MicInfo> getRoomMicInfo(@RequestAttribute(name = "user", required = false) UserDTO user,@PathVariable("roomId") String roomId) {
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
-        return voiceRoomMicService.getRoomMicInfo(roomInfo.getChatroomId());
+        return voiceRoomMicService.getRoomMicInfo(roomInfo);
     }
 
     //闭麦
@@ -315,7 +315,7 @@ public class VoiceRoomMicController {
             throw new VoiceRoomSecurityException("agree user is not the operator");
         }
         Boolean result =
-                voiceRoomMicService.agreeInvite(roomInfo.getChatroomId(), user.getUid(),
+                voiceRoomMicService.agreeInvite(roomInfo, user.getUid(),
                         request.getMicIndex());
         return new InviteAgreeOnMicResponse(Boolean.TRUE.equals(result));
     }

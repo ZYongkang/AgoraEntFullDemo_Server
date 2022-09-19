@@ -22,6 +22,8 @@ public interface ErrorCodeConstant {
 
     String micIndexNullError = "402400";
 
+    String micIndexExceedLimitError = "403400";
+
     String micApplyRecordNotFoundError = "400404";
 
     String micNotBelongYouError = "400401";
