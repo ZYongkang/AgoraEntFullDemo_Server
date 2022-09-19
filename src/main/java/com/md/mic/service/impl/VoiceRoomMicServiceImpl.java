@@ -61,7 +61,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     private static final String METADATA_PREFIX_KEY = "mic";
 
-    @Value("${voice.room.mic.count:9}")
+    @Value("${voice.room.mic.count:8}")
     private int micCount;
 
     private List<String> allMics = new ArrayList<>();

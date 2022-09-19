@@ -13,6 +13,6 @@ public class GetRoomUserListResponse {
 
     private String cursor;
 
-    private List<UserDTO> users;
+    private List<UserDTO> members;
 
 }

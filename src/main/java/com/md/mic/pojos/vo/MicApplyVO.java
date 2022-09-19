@@ -12,16 +12,16 @@ public class MicApplyVO {
 
     private Integer index;
 
-    private UserDTO user;
+    private UserDTO member;
 
     @JsonProperty("created_at")
     private Long createdAt;
 
     @JsonCreator
-    public MicApplyVO(Integer index, UserDTO user,
+    public MicApplyVO(Integer index, UserDTO member,
             @JsonProperty("created_at") Long createdAt) {
         this.index = index;
-        this.user = user;
+        this.member = member;
         this.createdAt = createdAt;
     }
 }

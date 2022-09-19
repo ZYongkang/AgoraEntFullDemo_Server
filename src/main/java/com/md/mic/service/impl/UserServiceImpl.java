@@ -72,6 +72,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         } else {
             String uid = user.getUid();
+            boolean isUpdate = false;
+            if (StringUtils.isNotBlank(name)) {
+                user = user.toBuilder().name(name).build();
+                isUpdate = true;
+            }
+            if (StringUtils.isNotBlank(portrait)) {
+                isUpdate = true;
+                user = user.toBuilder().portrait(portrait).build();
+            }
+            if (isUpdate) {
+                updateById(user);
+            }
             userThirdAccount = userThirdAccountService.getOne(
                     new LambdaQueryWrapper<UserThirdAccount>().eq(UserThirdAccount::getUid, uid));
             if (userThirdAccount.getRtcUid() == null) {
