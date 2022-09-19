@@ -86,8 +86,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
                 password, request.getAllowFreeJoinMic(),
                 request.getType(), uid, request.getSoundEffect(), false, micCount, robotCount);
-        List<MicInfo> micInfos = //todo  需要修改一下， 这个地方需要明确是几个麦位几个机器人，机器人的激活状态
-                voiceRoomMicService.initMic(voiceRoom.getChatroomId(), voiceRoom.getOwner());
+        List<MicInfo> micInfos = voiceRoomMicService.initMic(voiceRoom, voiceRoom.getUseRobot());
         try {
             save(voiceRoom);
         } catch (Exception e) {
@@ -199,7 +198,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         }
         if (request.getUseRobot() != null) {
             voiceRoom = voiceRoom.updateUseRobot(request.getUseRobot());
-            //todo mic service 需要提供一个激活、关闭机器人麦位的方法
+            voiceRoomMicService.updateRobotMicStatus(voiceRoom, request.getUseRobot());
         }
         updateById(voiceRoom);
         Boolean hasKey = redisTemplate.hasKey(key(roomId));

@@ -18,9 +18,9 @@ public interface VoiceRoomMicService {
 
     List<MicInfo> initMic(String chatroomId, String ownerUid);
 
-    List<MicInfo> initMic(VoiceRoom voiceRoom, Boolean flag);
+    List<MicInfo> initMic(VoiceRoom voiceRoom, Boolean isActive);
 
-    void updateRobotMicStatus(VoiceRoom voiceRoom, Boolean flag);
+    void updateRobotMicStatus(VoiceRoom voiceRoom, Boolean isActive);
 
     void closeMic(String uid, String chatroomId, Integer micIndex);
 
