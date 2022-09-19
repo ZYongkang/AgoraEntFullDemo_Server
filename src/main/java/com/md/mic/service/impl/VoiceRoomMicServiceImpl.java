@@ -193,6 +193,17 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
+    public List<MicInfo> initMic(VoiceRoom voiceRoom, Boolean flag) {
+        //todo 初始化机器人麦位
+      return Collections.emptyList();
+    }
+
+    @Override
+    public void updateRobotMicStatus(VoiceRoom voiceRoom, Boolean flag) {
+        //todo 更新机器人麦位状态
+    }
+
+    @Override
     public void closeMic(String uid, String chatroomId, Integer micIndex) {
 
         MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);

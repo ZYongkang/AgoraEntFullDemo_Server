@@ -99,7 +99,7 @@ public class VoiceRoomMicController {
     //取消关麦、开麦
     @DeleteMapping("/voice/room/{roomId}/mic/close")
     public OpenMicResponse openMic(@PathVariable("roomId") String roomId,
-            @RequestBody OpenMicRequest request,
+            @RequestParam("mic_index") Integer micIndex,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new UserNotFoundException();
@@ -107,14 +107,14 @@ public class VoiceRoomMicController {
         OpenMicResponse response = new OpenMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.openMic(user.getUid(), roomInfo.getChatroomId(),
-                request.getMicIndex());
+                micIndex);
         return response;
     }
 
     //下麦
     @DeleteMapping("/voice/room/{roomId}/mic/leave")
     public LeaveMicResponse leaveMic(@PathVariable("roomId") String roomId,
-            @RequestBody LeaveMicRequest request,
+            @RequestParam("mic_index") Integer micIndex,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new UserNotFoundException();
@@ -122,7 +122,7 @@ public class VoiceRoomMicController {
         LeaveMicResponse response = new LeaveMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.leaveMic(user.getUid(), roomInfo.getChatroomId(),
-                request.getMicIndex());
+                micIndex);
         return response;
     }
 
@@ -147,7 +147,7 @@ public class VoiceRoomMicController {
     //取消禁言
     @DeleteMapping("/voice/room/{roomId}/mic/mute")
     public UnMuteMicResponse unMuteMic(@PathVariable("roomId") String roomId,
-            @RequestBody UnMuteMicRequest request,
+            @RequestParam("mic_index") Integer micIndex,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new UserNotFoundException();
@@ -157,7 +157,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
            throw new VoiceRoomSecurityException("only the owner can operate");
         }
-        this.voiceRoomMicService.unMuteMic(roomInfo.getChatroomId(), request.getMicIndex());
+        this.voiceRoomMicService.unMuteMic(roomInfo.getChatroomId(), micIndex);
 
         return response;
     }
@@ -214,7 +214,7 @@ public class VoiceRoomMicController {
 
     @DeleteMapping("/voice/room/{roomId}/mic/lock")
     public UnLockMicResponse unLockMic(@PathVariable("roomId") String roomId,
-            @RequestBody UnLockMicRequest request,
+            @RequestParam("mic_index") Integer micIndex,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new UserNotFoundException();
@@ -227,7 +227,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can unlock mic");
         }
-        this.voiceRoomMicService.unLockMic(roomInfo.getChatroomId(), request.getMicIndex());
+        this.voiceRoomMicService.unLockMic(roomInfo.getChatroomId(),micIndex);
         return response;
     }
 
