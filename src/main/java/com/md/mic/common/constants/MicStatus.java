@@ -6,12 +6,14 @@ package com.md.mic.common.constants;
 
 public enum MicStatus {
 
+    INACTIVE(-2,"未激活"),
     FREE(-1, "空闲"),
     NORMAL(0, "正常"),
     CLOSE(1, "闭麦"),
     MUTE(2, "禁言"),
     LOCK(3, "锁麦"),
-    LOCK_AND_MUTE(4, "锁麦和禁言");
+    LOCK_AND_MUTE(4, "锁麦和禁言"),
+    ACTIVE(5, "激活");
 
     private Integer status;
     private String desc;

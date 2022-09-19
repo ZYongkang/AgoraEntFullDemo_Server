@@ -1,9 +1,11 @@
 package com.md.mic.service;
 
+import com.md.mic.common.constants.MicStatus;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.MicInfo;
 import com.md.mic.pojos.VoiceRoomDTO;
 
+import java.util.Collections;
 import java.util.List;
 
 public interface VoiceRoomMicService {
@@ -15,6 +17,10 @@ public interface VoiceRoomMicService {
     Boolean setRoomMicInfo(String chatroomId, String uid, Integer micIndex, boolean inOrder);
 
     List<MicInfo> initMic(String chatroomId, String ownerUid);
+
+    List<MicInfo> initMic(VoiceRoom voiceRoom, Boolean flag);
+
+    void updateRobotMicStatus(VoiceRoom voiceRoom, Boolean flag);
 
     void closeMic(String uid, String chatroomId, Integer micIndex);
 
