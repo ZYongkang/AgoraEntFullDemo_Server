@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.util.function.Tuple2;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,16 +27,16 @@ import java.util.stream.Collectors;
 @RestController
 public class VoiceRoomController {
 
-    @Autowired
+    @Resource
     private VoiceRoomService voiceRoomService;
 
-    @Autowired
+    @Resource
     private VoiceRoomMicService voiceRoomMicService;
 
-    @Autowired
+    @Resource
     private UserService userService;
 
-    @Autowired
+    @Resource
     private GiftRecordService giftRecordService;
 
     @Value("${ranking.length:100}")

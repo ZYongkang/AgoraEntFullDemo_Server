@@ -20,10 +20,8 @@ import com.md.mic.service.VoiceRoomService;
 import com.md.service.common.ErrorCodeEnum;
 import com.md.service.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.Redisson;
 import org.redisson.api.RLock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -36,27 +34,24 @@ import java.util.stream.Collectors;
 @Service
 public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
-    @Autowired
+    private static final String OPERATOR = "admin";
+
+    private static final String METADATA_PREFIX_KEY = "mic";
+
+    @Resource
     private ImApi imApi;
 
-    @Autowired
+    @Resource
     private UserService userService;
 
-    @Autowired
+    @Resource
     private VoiceRoomService voiceRoomService;
-
-    @Resource(name = "voiceRedisTemplate")
-    private StringRedisTemplate redisTemplate;
 
     @Resource
     private ObjectMapper objectMapper;
 
-    @Resource
-    private Redisson redisson;
-
-    private static final String OPERATOR = "admin";
-
-    private static final String METADATA_PREFIX_KEY = "mic";
+    @Resource(name = "voiceRoomRedisson")
+    private RedissonClient redisson;
 
     @Override
     public List<MicInfo> getByRoomId(String roomId) {

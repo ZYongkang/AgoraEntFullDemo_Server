@@ -42,16 +42,16 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     @Value("${local.zone.offset:+8}")
     private String zoneOffset;
 
-    @Autowired
+    @Resource
     private ImApi imApi;
 
-    @Autowired
+    @Resource
     private UserService userService;
 
     @Resource
     private ObjectMapper objectMapper;
 
-    @Autowired
+    @Resource
     private VoiceRoomMicService voiceRoomMicService;
 
     @Override

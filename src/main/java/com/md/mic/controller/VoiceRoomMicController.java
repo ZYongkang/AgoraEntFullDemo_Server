@@ -18,22 +18,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 @Slf4j
 @RestController
 public class VoiceRoomMicController {
 
-    @Autowired
+    @Resource
     private MicApplyUserService micApplyUserService;
 
-    @Autowired
+    @Resource
     private VoiceRoomMicService voiceRoomMicService;
 
-    @Autowired
+    @Resource
     private VoiceRoomService voiceRoomService;
 
-    @Autowired
+    @Resource
     private VoiceRoomUserService voiceRoomUserService;
 
     @GetMapping("/voice/room/{roomId}/mic/apply")

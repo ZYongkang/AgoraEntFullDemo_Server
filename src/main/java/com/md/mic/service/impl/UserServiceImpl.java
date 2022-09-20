@@ -41,11 +41,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource(name = "voiceRedisTemplate")
     private StringRedisTemplate redisTemplate;
 
-    @Value("${voice.room.redis.cache.ttl:PT1H}")
-    private Duration ttl;
-
     @Resource
     private ObjectMapper objectMapper;
+
+    @Value("${voice.room.redis.cache.ttl:PT1H}")
+    private Duration ttl;
 
     @Override
     @Transactional

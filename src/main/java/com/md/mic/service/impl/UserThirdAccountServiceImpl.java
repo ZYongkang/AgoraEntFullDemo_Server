@@ -23,11 +23,11 @@ public class UserThirdAccountServiceImpl extends ServiceImpl<UserThirdAccountMap
     @Resource(name = "voiceRedisTemplate")
     private StringRedisTemplate redisTemplate;
 
-    @Value("${voice.room.redis.cache.ttl:PT1H}")
-    private Duration ttl;
-
     @Resource
     private ObjectMapper objectMapper;
+
+    @Value("${voice.room.redis.cache.ttl:PT1H}")
+    private Duration ttl;
 
     @Override public UserThirdAccount getByUid(String uid) {
         Boolean hasKey = redisTemplate.hasKey(key(uid));

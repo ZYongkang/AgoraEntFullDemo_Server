@@ -45,9 +45,6 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     @Resource(name = "voiceRedisTemplate")
     private StringRedisTemplate redisTemplate;
 
-    @Value("${voice.room.redis.cache.ttl:PT1H}")
-    private Duration ttl;
-
     @Resource
     private ObjectMapper objectMapper;
 
@@ -56,6 +53,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
 
     @Resource
     private EncryptionUtil encryptionUtil;
+
+    @Value("${voice.room.redis.cache.ttl:PT1H}")
+    private Duration ttl;
 
     @Override
     @Transactional
