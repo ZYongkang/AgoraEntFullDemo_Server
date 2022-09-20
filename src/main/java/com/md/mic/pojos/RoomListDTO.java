@@ -30,4 +30,6 @@ public class RoomListDTO {
     @JsonProperty("member_count")
     private Long memberCount;
 
+    @JsonProperty("use_robot")
+    private Boolean useRobot;
 }

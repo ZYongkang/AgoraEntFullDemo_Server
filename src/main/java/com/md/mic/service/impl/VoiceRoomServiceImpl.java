@@ -164,7 +164,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             return new RoomListDTO(voiceRoom.getRoomId(), voiceRoom.getChannelId(),
                     voiceRoom.getChatroomId(),
                     voiceRoom.getName(), userDTO, voiceRoom.getIsPrivate(),
-                    voiceRoom.getType(), createdAt, memberCount);
+                    voiceRoom.getType(), createdAt, memberCount, voiceRoom.getUseRobot());
         }).collect(Collectors.toList());
         PageInfo<RoomListDTO> pageInfo = new PageInfo<>();
         pageInfo.setCursor(cursor);
