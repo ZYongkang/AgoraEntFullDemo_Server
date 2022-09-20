@@ -95,8 +95,9 @@ public class VoiceRoomController {
         Long clickCount = voiceRoomService.getClickCount(roomId);
         Long memberCount = voiceRoomService.getMemberCount(roomId);
         Long giftAmount = giftRecordService.getRoomGiftAmount(roomId);
+        UserDTO owner = userService.getByUid(voiceRoom.getOwner());
         VoiceRoomDTO voiceRoomDTO =
-                VoiceRoomDTO.from(voiceRoom, user, memberCount, clickCount, giftAmount);
+                VoiceRoomDTO.from(voiceRoom, owner, memberCount, clickCount, giftAmount);
         voiceRoomDTO = voiceRoomDTO.toBuilder()
                 .rankingList(list)
                 .build();
