@@ -13,10 +13,10 @@ import com.easemob.im.server.model.EMUser;
 import com.easemob.im.shaded.io.netty.handler.timeout.TimeoutException;
 import com.md.mic.common.constants.CustomMetricsName;
 import com.md.mic.model.UserThirdAccount;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +24,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -70,25 +71,25 @@ public class ImApi {
         if (StringUtils.isBlank(password)) {
             password = UUID.randomUUID().toString().replace("-", "");
         }
+        Instant startTimeStamp = Instant.now();
         try {
             EMUser emUser = this.emService.user().create(username, password).block();
+            addMetricsTimerRecord("createUser", Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("createUser");
             return UserThirdAccount.builder().uid(uid).chatId(emUser.getUsername())
                     .chatUuid(emUser.getUuid()).build();
         } catch (TimeoutException e) {
             log.error("createUser request timeout | uid={}, username={}",
                     uid, username, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("createUser", "timeout");
 
         } catch (EMException e) {
             log.error("createUser request easemob failed,userName:{},uid:{}", username, uid, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
-                    "InternalServerError", "result", "error");
+            addErrorMetricsRecord("createUser", "InternalServerError");
         } catch (Exception e) {
             log.error("createUser failed | uid={}, username={}",
                     uid, username, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("createUser", "unknown");
         }
         return null;
 
@@ -102,23 +103,22 @@ public class ImApi {
      */
     public void deleteUser(@Nonnull String userName)
             throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
             this.emService.user().delete(userName).block();
+            addMetricsTimerRecord("deleteUser", Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("deleteUser");
         } catch (TimeoutException e) {
             log.error("deleteUser request timeout | username={}",
                     userName, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("deleteUser", "timeout");
         } catch (EMException e) {
             log.error("deleteUser request easemob failed,userName:{}", userName, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
-                    "InternalServerError", "result", "error");
+            addErrorMetricsRecord("deleteUser", "InternalServerError");
         } catch (Exception e) {
             log.error("deleteUser failed | username={}",
                     userName, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("deleteUser", "unknown");
         }
 
     }
@@ -137,28 +137,30 @@ public class ImApi {
             @Nonnull List<String> members,
             @Nonnull String description)
             throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
-            return emService.room().createRoom(chatRoomName, description, owner, members, 200)
-                    .block();
+            String chatroomId =
+                    emService.room().createRoom(chatRoomName, description, owner, members, 200)
+                            .block();
+            addMetricsTimerRecord("createChatRoom",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("createChatRoom");
+            return chatroomId;
         } catch (TimeoutException e) {
             log.error(
                     "createRoom request timeout,chatRoomName:{},owner:{},members:{},description:{}",
                     chatRoomName, owner, members, description, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("createChatRoom", "timeout");
         } catch (EMException e) {
             log.error(
                     "createRoom request easemob failed,chatRoomName:{},owner:{},members:{},description:{}",
                     chatRoomName, owner, members, description, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
-                    "InternalServerError", "result", "error");
+            addErrorMetricsRecord("createChatRoom", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "createRoom failed,chatRoomName:{},owner:{},members:{},description:{}",
                     chatRoomName, owner, members, description, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("createChatRoom", "unknown");
         }
         return null;
 
@@ -172,24 +174,24 @@ public class ImApi {
      */
     public void deleteChatRoom(@Nonnull String chatRoomId)
             throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
             emService.room().destroyRoom(chatRoomId).block();
+            addMetricsTimerRecord("deleteChatRoom",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("deleteChatRoom");
         } catch (TimeoutException e) {
             log.error(
                     "deleteChatRoom request timeout,chatRoomId:{}", chatRoomId, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("deleteChatRoom", "timeout");
         } catch (EMException e) {
             log.error(
                     "deleteChatRoom request easemob failed,chatRoomId:{}", chatRoomId, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
-                    "InternalServerError", "result", "error");
+            addErrorMetricsRecord("deleteChatRoom", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "deleteChatRoom failed,chatRoomId:{}", chatRoomId, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("deleteChatRoom", "unknown");
         }
 
     }
@@ -202,25 +204,26 @@ public class ImApi {
      * @throws EMException
      */
     public EMRoom getChatRoomInfo(@Nonnull String chatRoomId) throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
-            return emService.room().getRoom(chatRoomId)
+            EMRoom emRoom = emService.room().getRoom(chatRoomId)
                     .block();
+            addMetricsTimerRecord("getChatRoomInfo",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("getChatRoomInfo");
+            return emRoom;
         } catch (TimeoutException e) {
             log.error(
                     "getChatRoomInfo request timeout,chatRoomId:{}", chatRoomId, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("getChatRoomInfo", "timeout");
         } catch (EMException e) {
             log.error(
                     "getChatRoomInfo request easemob failed,chatRoomId:{}", chatRoomId, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
-                    "InternalServerError", "result", "error");
+            addErrorMetricsRecord("getChatRoomInfo", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "getChatRoomInfo failed,chatRoomId:{}", chatRoomId, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("getChatRoomInfo", "unknown");
         }
         return null;
     }
@@ -236,26 +239,27 @@ public class ImApi {
     public EMPage<String> listChatRooms(int limit, String cursor)
             throws EMException {
 
+        Instant startTimeStamp = Instant.now();
         try {
-            return emService.room().listRooms(limit, cursor).block();
+            EMPage<String> pageInfo = emService.room().listRooms(limit, cursor).block();
+            addMetricsTimerRecord("listChatRooms", Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("listChatRooms");
+            return pageInfo;
         } catch (TimeoutException e) {
             log.error(
                     "listChatRooms request timeout,listChatRooms error,limit:{},cursor:{},members:{},description:{}",
                     limit, cursor, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("listChatRooms", "timeout");
         } catch (EMException e) {
             log.error(
                     "listChatRooms request easemob failed,listChatRooms error,limit:{},cursor:{},members:{},description:{}",
                     limit, cursor, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
-                    "InternalServerError", "result", "error");
+            addErrorMetricsRecord("listChatRooms", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "listChatRooms failed,limit:{},cursor:{},members:{},description:{}",
                     limit, cursor, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("listChatRooms", "unknown");
         }
         return null;
 
@@ -274,25 +278,28 @@ public class ImApi {
     public EMPage<String> listChatRoomMembers(@Nonnull String chatRoomId, int limit, String cursor,
             String sort)
             throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
-            return emService.room().listRoomMembers(chatRoomId, limit, cursor, sort).block();
+            EMPage<String> pageInfo =
+                    emService.room().listRoomMembers(chatRoomId, limit, cursor, sort).block();
+            addMetricsTimerRecord("listChatRoomMembers",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("listChatRoomMembers");
+            return pageInfo;
         } catch (TimeoutException e) {
             log.error(
                     "listChatRoomMembers request timeout,listChatRoomMembers error,chatRoomId:{},limit:{},cursor:{}",
                     chatRoomId, limit, cursor, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("listChatRooms", "timeout");
         } catch (EMException e) {
             log.error("listChatRoomMembers request easemob failed,chatRoomId:{},limit:{},cursor:{}",
                     chatRoomId, limit, cursor, e);
-            throw e;
+            addErrorMetricsRecord("listChatRoomMembers", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "listChatRoomMembers failed,listChatRoomMembers error,chatRoomId:{},limit:{},cursor:{}",
                     chatRoomId, limit, cursor, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("listChatRoomMembers", "unknown");
         }
         return null;
 
@@ -307,25 +314,26 @@ public class ImApi {
      */
     public void removeChatRoomMember(@Nonnull String chatRoomId, @Nonnull String userName)
             throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
             emService.room().removeRoomMember(chatRoomId, userName).block();
+            addMetricsTimerRecord("removeChatRoomMember",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("removeChatRoomMember");
         } catch (TimeoutException e) {
             log.error(
                     "removeChatRoomMember request timeout,removeChatRoomMember error,chatRoomId:{},userName:{}",
                     chatRoomId, userName, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("removeChatRoomMember", "timeout");
         } catch (EMException e) {
             log.error("removeChatRoomMember request easemob failed,chatRoomId:{},userName:{}",
                     chatRoomId, userName, e);
-            throw e;
+            addErrorMetricsRecord("removeChatRoomMember", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "removeChatRoomMember failed,removeChatRoomMember error,chatRoomId:{},userName:{}",
                     chatRoomId, userName, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("removeChatRoomMember", "unknown");
         }
     }
 
@@ -338,25 +346,26 @@ public class ImApi {
      */
     public void setAnnouncement(@Nonnull String chatRoomId, @Nonnull String announcement)
             throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
             emService.room().updateRoomAnnouncement(chatRoomId, announcement).block();
+            addMetricsTimerRecord("setAnnouncement",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("setAnnouncement");
         } catch (TimeoutException e) {
             log.error(
                     "setAnnouncement request timeout,chatRoomId:{},announcement:{}",
                     chatRoomId, announcement, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("setAnnouncement", "timeout");
         } catch (EMException e) {
             log.error("setAnnouncement request easemob failed,chatRoomId:{},announcement:{}",
                     chatRoomId, announcement, e);
-            throw e;
+            addErrorMetricsRecord("setAnnouncement", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "setAnnouncement failed,chatRoomId:{},announcement:{}",
                     chatRoomId, announcement, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("removeChatRoomMember", "unknown");
         }
     }
 
@@ -368,14 +377,19 @@ public class ImApi {
      */
     public String getAnnouncement(@Nonnull String chatRoomId)
             throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
-            return emService.room().getRoomAnnouncement((chatRoomId)).block();
+            String announcement = emService.room().getRoomAnnouncement((chatRoomId)).block();
+            addMetricsTimerRecord("getAnnouncement",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("getAnnouncement");
+            return announcement;
         } catch (EMException e) {
             log.error("server error,getAnnouncement error,chatRoomId:{}",
                     chatRoomId, e);
-            throw e;
+            addErrorMetricsRecord("getAnnouncement", "InternalServerError");
         }
+        return null;
     }
 
     /**
@@ -393,7 +407,7 @@ public class ImApi {
             @Nonnull String customEvent, @Nonnull Map<String, Object> customExtensions,
             Map<String, Object> extension)
             throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
             emService.message().send()
                     .fromUser(fromUserName)
@@ -403,23 +417,24 @@ public class ImApi {
                     .extension(msg -> msg.addAll(EMKeyValue.of(extension)))
                     .send()
                     .block();
+            addMetricsTimerRecord("sendChatRoomCustomMessage",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("sendChatRoomCustomMessage");
         } catch (TimeoutException e) {
             log.error(
                     "sendChatRoomCustomMessage request timeout,fromUserName:{},toChatRoomId:{},customEvent:{},customExtensions:{}",
                     fromUserName, toChatRoomId, customEvent, customExtensions, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("sendChatRoomCustomMessage", "timeout");
         } catch (EMException e) {
             log.error(
                     "sendChatRoomCustomMessage request easemob failed,fromUserName:{},toChatRoomId:{},customEvent:{},customExtensions:{}",
                     fromUserName, toChatRoomId, customEvent, customExtensions, e);
-            throw e;
+            addErrorMetricsRecord("sendChatRoomCustomMessage", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "sendChatRoomCustomMessage failed,,fromUserName:{},toChatRoomId:{},customEvent:{},customExtensions:{}",
                     fromUserName, toChatRoomId, customEvent, customExtensions, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("sendChatRoomCustomMessage", "unknown");
         }
 
     }
@@ -440,6 +455,7 @@ public class ImApi {
             Map<String, Object> extension)
             throws EMException {
 
+        Instant startTimeStamp = Instant.now();
         try {
             emService.message().send()
                     .fromUser(fromUserName)
@@ -449,23 +465,24 @@ public class ImApi {
                     .extension(msg -> msg.addAll(EMKeyValue.of(extension)))
                     .send()
                     .block();
+            addMetricsTimerRecord("sendUserCustomMessage",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("sendUserCustomMessage");
         } catch (TimeoutException e) {
             log.error(
                     "sendUserCustomMessage request timeout,fromUserName:{},toUserName:{},customEvent:{},customExtensions:{}",
                     fromUserName, toUserName, customEvent, customExtensions, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("sendUserCustomMessage", "timeout");
         } catch (EMException e) {
             log.error(
                     "sendUserCustomMessage request easemob failed,fromUserName:{},toUserName:{},customEvent:{},customExtensions:{}",
                     fromUserName, toUserName, customEvent, customExtensions, e);
-            throw e;
+            addErrorMetricsRecord("sendUserCustomMessage", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "sendUserCustomMessage failed,chatRoomId:{},fromUserName:{},toUserName:{},customEvent:{},customExtensions:{}",
                     fromUserName, toUserName, customEvent, customExtensions, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("sendUserCustomMessage", "unknown");
         }
 
     }
@@ -483,28 +500,30 @@ public class ImApi {
             @Nonnull Map<String, String> metadata,
             AutoDelete autoDelete)
             throws EMException {
-
+        Instant startTimeStamp = Instant.now();
         try {
-            return emService.metadata()
+            ChatRoomMetadataSetResponse response = emService.metadata()
                     .setChatRoomMetadata(operator, chatRoomId, metadata, autoDelete)
                     .block();
+            addMetricsTimerRecord("setChatRoomMetadata",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("setChatRoomMetadata");
+            return response;
         } catch (TimeoutException e) {
             log.error(
                     "setChatRoomMetadata request timeout,fromUserName:{},operator:{},chatRoomId:{},metadata:{},autoDelete:{}",
                     operator, chatRoomId, metadata, autoDelete, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("setChatRoomMetadata", "timeout");
         } catch (EMException e) {
             log.error(
                     "setChatRoomMetadata request easemob failed,operator:{},chatRoomId:{},metadata:{},autoDelete:{}",
                     operator, chatRoomId, metadata, autoDelete, e);
-            throw e;
+            addErrorMetricsRecord("setChatRoomMetadata", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "setChatRoomMetadata failed,chatRoomId:{},operator:{},chatRoomId:{},metadata:{},autoDelete:{}",
                     operator, chatRoomId, metadata, autoDelete, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("setChatRoomMetadata", "unknown");
         }
         return null;
 
@@ -523,26 +542,30 @@ public class ImApi {
             @Nonnull List<String> keys)
             throws EMException {
 
+        Instant startTimeStamp = Instant.now();
         try {
-            return emService.metadata().deleteChatRoomMetadata(operator, chatRoomId, keys)
-                    .block();
+            ChatRoomMetadataDeleteResponse response =
+                    emService.metadata().deleteChatRoomMetadata(operator, chatRoomId, keys)
+                            .block();
+            addMetricsTimerRecord("deleteChatRoomMetadata",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("deleteChatRoomMetadata");
+            return response;
         } catch (TimeoutException e) {
             log.error(
                     "deleteChatRoomMetadata request timeout,fromUserName:{},operator:{},chatRoomId:{},keys:{}",
                     operator, chatRoomId, keys, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+            addErrorMetricsRecord("deleteChatRoomMetadata", "timeout");
         } catch (EMException e) {
             log.error(
                     "deleteChatRoomMetadata request easemob failed,operator:{},chatRoomId:{},keys:{}",
                     operator, chatRoomId, keys, e);
-            throw e;
+            addErrorMetricsRecord("deleteChatRoomMetadata", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "deleteChatRoomMetadata failed,chatRoomId:{},operator:{},chatRoomId:{},keys:{}",
                     operator, chatRoomId, keys, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+            addErrorMetricsRecord("deleteChatRoomMetadata", "unknown");
         }
         return null;
 
@@ -558,66 +581,96 @@ public class ImApi {
     public ChatRoomMetadataGetResponse listChatRoomMetadata(@Nonnull String chatRoomId,
             List<String> keys)
             throws EMException {
-        Instant start = Instant.now();
+        Instant startTimeStamp = Instant.now();
         try {
             ChatRoomMetadataGetResponse response =
                     emService.metadata().listChatRoomMetadata(chatRoomId, keys)
                             .block();
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "success",
-                    "result", "success", "method", "listChatRoomMetadata").increment();
-            registry.timer(CustomMetricsName.ImHttpRequestTimer, "result", "success",
-                            "method", "listChatRoomMetadata")
-                    .record(Duration.between(Instant.now(), start));
+            addMetricsTimerRecord("listChatRoomMetadata",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("listChatRoomMetadata");
             return response;
         } catch (TimeoutException e) {
             log.error(
                     "listChatRoomMetadata request timeout,chatRoomId:{},keys:{}", chatRoomId,
                     keys, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error", "method", "listChatRoomMetadata").increment();
+            addErrorMetricsRecord("listChatRoomMetadata", "timeout");
         } catch (EMException e) {
             log.error("listChatRoomMetadata request easemob failed,chatRoomId:{},keys:{}",
                     chatRoomId,
                     keys, e);
-            throw e;
+            addErrorMetricsRecord("listChatRoomMetadata", "InternalServerError");
         } catch (Exception e) {
             log.error(
                     "listChatRoomMetadata failed,chatRoomId:{},keys:{}", chatRoomId,
                     keys, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error", "method", "listChatRoomMetadata").increment();
+            addErrorMetricsRecord("listChatRoomMetadata", "unknown");
         }
         return null;
 
     }
 
     public void kickChatroomMember(String chatroomId, String username) {
-        Instant start = Instant.now();
+        Instant startTimeStamp = Instant.now();
         try {
             emService.room().removeRoomMember(chatroomId, username)
                     .timeout(timeout)
                     .block();
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "success",
-                    "result", "success", "method", "kickChatroomMember").increment();
-            registry.timer(CustomMetricsName.ImHttpRequestTimer, "method",
-                            "kickChatroomMember")
-                    .record(Duration.between(Instant.now(), start));
+            addMetricsTimerRecord("kickChatroomMember",
+                    Duration.between(startTimeStamp, Instant.now()));
+            addMetricsRecord("kickChatroomMember");
         } catch (TimeoutException e) {
             log.error("kickChatroomMember request timeout | chatroomId={}, username={}",
                     chatroomId, username, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error").increment();
+            addErrorMetricsRecord("kickChatroomMember", "timeout");
         } catch (EMException e) {
             log.error("kickChatroomMember request easemob failed | chatroomId={}, username={}",
                     chatroomId, username, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
-                    "InternalServerError", "result", "error").increment();
+            addErrorMetricsRecord("kickChatroomMember", "InternalServerError");
         } catch (Exception e) {
             log.error("kickChatroomMember failed | chatroomId={}, username={}",
                     chatroomId, username, e);
-            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error").increment();
+            addErrorMetricsRecord("kickChatroomMember", "unknown");
         }
 
+    }
+
+    private void addMetricsTimerRecord(String method, Duration duration) {
+        List<Tag> tags = new ArrayList<>();
+        Tag uriTag = Tag.of("method", method);
+        tags.add(uriTag);
+        registry.timer(CustomMetricsName.ImHttpRequestTimer, tags).record(duration);
+    }
+
+    private void addErrorMetricsRecord(String method, String errorMessage) {
+        List<Tag> tags = getErrorTags(method, errorMessage);
+        registry.counter(CustomMetricsName.ImHttpRequestCounter, tags).increment();
+    }
+
+    private void addMetricsRecord(String method) {
+        List<Tag> tags = getSuccessTags(method);
+        registry.counter(CustomMetricsName.ImHttpRequestCounter, tags).increment();
+    }
+
+    private List<Tag> getSuccessTags(String method) {
+        List<Tag> tags = new ArrayList<>();
+        Tag uriTag = Tag.of("method", method);
+        Tag errorTag = Tag.of("reason", "success");
+        Tag failedTag = Tag.of("result", "success");
+        tags.add(errorTag);
+        tags.add(failedTag);
+        tags.add(uriTag);
+        return tags;
+    }
+
+    private List<Tag> getErrorTags(String method, String reason) {
+        List<Tag> tags = new ArrayList<>();
+        Tag uriTag = Tag.of("method", method);
+        Tag errorTag = Tag.of("reason", reason);
+        Tag failedTag = Tag.of("result", "error");
+        tags.add(errorTag);
+        tags.add(failedTag);
+        tags.add(uriTag);
+        return tags;
     }
 }
