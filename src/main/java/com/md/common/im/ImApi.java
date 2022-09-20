@@ -21,7 +21,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Resource;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,16 +35,14 @@ import java.util.UUID;
 @Service
 public class ImApi {
 
-    @Autowired
+    @Resource
     private EMService emService;
+
+    @Resource
+    private PrometheusMeterRegistry registry;
 
     @Value("${http.request.timeout:PT10s}")
     private Duration timeout;
-
-    @Autowired
-    private PrometheusMeterRegistry registry;
-
-    private static final String METRICS_REGISTRY_NAME = "easemob.im.api.http.request";
 
     /**
      * 不指定密码创建用户
@@ -558,16 +558,23 @@ public class ImApi {
     public ChatRoomMetadataGetResponse listChatRoomMetadata(@Nonnull String chatRoomId,
             List<String> keys)
             throws EMException {
-
+        Instant start = Instant.now();
         try {
-            return emService.metadata().listChatRoomMetadata(chatRoomId, keys)
-                    .block();
+            ChatRoomMetadataGetResponse response =
+                    emService.metadata().listChatRoomMetadata(chatRoomId, keys)
+                            .block();
+            registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "success",
+                    "result", "success", "method", "listChatRoomMetadata").increment();
+            registry.timer(CustomMetricsName.ImHttpRequestTimer, "result", "success",
+                            "method", "listChatRoomMetadata")
+                    .record(Duration.between(Instant.now(), start));
+            return response;
         } catch (TimeoutException e) {
             log.error(
                     "listChatRoomMetadata request timeout,chatRoomId:{},keys:{}", chatRoomId,
                     keys, e);
             registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+                    "result", "error", "method", "listChatRoomMetadata").increment();
         } catch (EMException e) {
             log.error("listChatRoomMetadata request easemob failed,chatRoomId:{},keys:{}",
                     chatRoomId,
@@ -578,34 +585,38 @@ public class ImApi {
                     "listChatRoomMetadata failed,chatRoomId:{},keys:{}", chatRoomId,
                     keys, e);
             registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+                    "result", "error", "method", "listChatRoomMetadata").increment();
         }
         return null;
 
     }
 
     public void kickChatroomMember(String chatroomId, String username) {
+        Instant start = Instant.now();
         try {
             emService.room().removeRoomMember(chatroomId, username)
                     .timeout(timeout)
                     .block();
             registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "success",
-                    "result", "success");
+                    "result", "success", "method", "kickChatroomMember").increment();
+            registry.timer(CustomMetricsName.ImHttpRequestTimer, "method",
+                            "kickChatroomMember")
+                    .record(Duration.between(Instant.now(), start));
         } catch (TimeoutException e) {
             log.error("kickChatroomMember request timeout | chatroomId={}, username={}",
                     chatroomId, username, e);
             registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "timeout",
-                    "result", "error");
+                    "result", "error").increment();
         } catch (EMException e) {
             log.error("kickChatroomMember request easemob failed | chatroomId={}, username={}",
                     chatroomId, username, e);
             registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason",
-                    "InternalServerError", "result", "error");
+                    "InternalServerError", "result", "error").increment();
         } catch (Exception e) {
             log.error("kickChatroomMember failed | chatroomId={}, username={}",
                     chatroomId, username, e);
             registry.counter(CustomMetricsName.ImHttpRequestCounter, "reason", "unknown",
-                    "result", "error");
+                    "result", "error").increment();
         }
 
     }
