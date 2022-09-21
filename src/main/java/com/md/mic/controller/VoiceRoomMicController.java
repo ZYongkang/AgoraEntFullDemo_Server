@@ -51,8 +51,7 @@ public class VoiceRoomMicController {
 
     @PostMapping("/voice/room/{roomId}/mic/apply")
     public AddMicApplyResponse addMicApply(@PathVariable("roomId") String roomId,
-            @RequestBody @Validated AddMicApplyRequest request,
-            BindingResult bindingResult,
+            @RequestBody @Validated AddMicApplyRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         ValidationUtil.validate(bindingResult);
         if (user == null) {
@@ -87,7 +86,7 @@ public class VoiceRoomMicController {
         return voiceRoomMicService.getRoomMicInfo(roomInfo);
     }
 
-    //闭麦
+    //闭麦 todo 不要用这种注释
     @PostMapping("/voice/room/{roomId}/mic/close")
     public CloseMicResponse closeMic(@PathVariable("roomId") String roomId,
             @RequestBody @Validated CloseMicRequest request, BindingResult bindingResult,
@@ -135,8 +134,9 @@ public class VoiceRoomMicController {
     //禁言麦位
     @PostMapping("/voice/room/{roomId}/mic/mute")
     public MuteMicResponse muteMic(@PathVariable("roomId") String roomId,
-            @RequestBody MuteMicRequest request,
+            @RequestBody @Validated MuteMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -171,8 +171,9 @@ public class VoiceRoomMicController {
     //交换麦位
     @PostMapping("/voice/room/{roomId}/mic/exchange")
     public ExchangeMicResponse exchangeMic(@PathVariable("roomId") String roomId,
-            @RequestBody ExchangeMicRequest request,
+            @RequestBody @Validated ExchangeMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -186,8 +187,9 @@ public class VoiceRoomMicController {
     @PostMapping("/voice/room/{roomId}/mic/kick")
     public KickUserMicResponse kickUserMic(
             @PathVariable("roomId") String roomId,
-            @RequestBody KickUserMicRequest request,
+            @RequestBody @Validated KickUserMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -204,8 +206,9 @@ public class VoiceRoomMicController {
 
     @PostMapping("/voice/room/{roomId}/mic/lock")
     public LockMicResponse lockMic(@PathVariable("roomId") String roomId,
-            @RequestBody LockMicRequest request,
+            @RequestBody @Validated LockMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }

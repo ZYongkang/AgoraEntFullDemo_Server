@@ -12,16 +12,16 @@ public class CreateRoomRequest {
     @NotBlank(message = "name not allow empty")
     private String name;
 
-    @NotNull
+    @NotNull(message = "is_private must not be null")
     @JsonProperty("is_private")
     private Boolean isPrivate;
 
     private String password;
 
-    @NotNull
+    @NotNull(message = "type must not be null")
     private Integer type;
 
-    @NotNull
+    @NotNull(message = "allow_free_join_mic must not be null")
     @JsonProperty("allow_free_join_mic")
     private Boolean allowFreeJoinMic;
 

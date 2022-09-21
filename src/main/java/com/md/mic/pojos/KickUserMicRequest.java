@@ -5,9 +5,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.Value;
 
+import javax.validation.constraints.NotNull;
+
 @Value
 public class KickUserMicRequest {
 
+    @NotNull(message = "kick mic_index must not be null")
     @JsonProperty("mic_index")
     private Integer micIndex;
 

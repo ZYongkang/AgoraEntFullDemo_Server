@@ -54,4 +54,12 @@ public interface VoiceRoomUserService extends IService<VoiceRoomUser> {
      * @param kickUid
      */
     void kickVoiceRoomUser(String roomId, String ownerUid, String kickUid);
+
+    /**
+     * 修改房间用户麦位信息
+     * @param roomId
+     * @param uid
+     * @param micIndex
+     */
+    void updateVoiceRoomUserMicIndex(String roomId, String uid, Integer micIndex);
 }

@@ -240,6 +240,19 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         }
     }
 
+    @Override
+    @Transactional
+    public void updateVoiceRoomUserMicIndex(String roomId, String uid, Integer micIndex) {
+        if (micIndex == null) {
+            return;
+        }
+        VoiceRoomUser voiceRoomUser = findByRoomIdAndUid(roomId, uid);
+        if (voiceRoomUser != null) {
+            voiceRoomUser = voiceRoomUser.updateMicIndex(micIndex);
+            updateById(voiceRoomUser);
+        }
+    }
+
     private Long incrClickCount(String roomId) {
         String key = String.format("room:voice:%s:memberCount", roomId);
         return redisTemplate.opsForValue().increment(key);

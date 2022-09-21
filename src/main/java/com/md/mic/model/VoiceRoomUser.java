@@ -30,4 +30,8 @@ public class VoiceRoomUser {
         return VoiceRoomUser.builder().roomId(roomId).uid(uid).micIndex(-1).build();
     }
 
+    public VoiceRoomUser updateMicIndex(Integer micIndex) {
+        return this.toBuilder().micIndex(micIndex).build();
+    }
+
 }

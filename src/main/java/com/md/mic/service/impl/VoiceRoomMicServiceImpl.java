@@ -760,6 +760,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
         String metadataKey = buildMicKey(micIndex);
 
+        //todo 这个地方如果imApi失败了，会报空指针，最好处理一下
         Map<String, String> metadata =
                 imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey)).getMetadata();
 

@@ -36,8 +36,7 @@ public class VoiceRoomGiftController {
     private Integer rankingLength;
 
     @GetMapping("/voice/room/{roomId}/gift/list")
-    public GetGiftListResponse listGift(@PathVariable("roomId") String roomId,
-            @RequestAttribute(name = "user", required = false) UserDTO user) {
+    public GetGiftListResponse listGift(@PathVariable("roomId") String roomId) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         List<GiftRecord> giftRecordList =
                 giftRecordService.getRankingListByRoomId(roomId, voiceRoom.getOwner(),
