@@ -146,18 +146,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
         String ownerUid = voiceRoom.getOwner();
 
-        String redisLockKey = buildMicLockKey(chatroomId);
-
-        RLock micLock = redisson.getLock(redisLockKey);
-        boolean lockKey = false;
-        try {
-            lockKey = micLock.tryLock(5000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            log.error("get redis lock error", e);
-        }
-        if (!lockKey) {
-            throw new MicAlreadyExistsException("mic init already exists");
-        }
         try {
             Map<String, String> metadata =
                     imApi.listChatRoomMetadata(chatroomId, Arrays.asList(buildMicKey(0)))
@@ -206,8 +194,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         } catch (Exception e) {
             log.error("init mic to easemob failed | roomId={}, err=", chatroomId, e);
             throw e;
-        } finally {
-            micLock.unlock();
         }
     }
 
@@ -768,10 +754,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     private String buildMicLockKey(Integer micIndex) {
         return buildMicKey(micIndex) + "_lock";
-    }
-
-    private String buildMicLockKey(String roomId) {
-        return roomId + "_lock";
     }
 
     private MicMetadataValue buildMicMetadataValue(String chatroomId, Integer micIndex) {

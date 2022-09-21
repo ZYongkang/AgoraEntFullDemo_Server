@@ -14,7 +14,6 @@ import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
 import com.md.mic.service.VoiceRoomUserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,7 +50,7 @@ public class VoiceRoomMicController {
 
     @PostMapping("/voice/room/{roomId}/mic/apply")
     public AddMicApplyResponse addMicApply(@PathVariable("roomId") String roomId,
-            @RequestBody AddMicApplyRequest request,
+            @RequestBody(required = false) AddMicApplyRequest request,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new UserNotFoundException();
@@ -61,10 +60,10 @@ public class VoiceRoomMicController {
             throw new VoiceRoomSecurityException("admin can not apply mic");
         }
         Boolean result =
-                micApplyUserService.addMicApply(user.getUid(), roomInfo, request.getMicIndex());
+                micApplyUserService.addMicApply(user.getUid(), roomInfo,
+                        request == null ? null : request.getMicIndex());
         return new AddMicApplyResponse(result);
     }
-
 
     @DeleteMapping("/voice/room/{roomId}/mic/apply")
     public DeleteMicApplyResponse deleteMicApply(@PathVariable("roomId") String roomId,
@@ -78,7 +77,9 @@ public class VoiceRoomMicController {
     }
 
     @GetMapping("/voice/room/{roomId}/mic")
-    public List<MicInfo> getRoomMicInfo(@RequestAttribute(name = "user", required = false) UserDTO user,@PathVariable("roomId") String roomId) {
+    public List<MicInfo> getRoomMicInfo(
+            @RequestAttribute(name = "user", required = false) UserDTO user,
+            @PathVariable("roomId") String roomId) {
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         return voiceRoomMicService.getRoomMicInfo(roomInfo);
     }
@@ -156,7 +157,7 @@ public class VoiceRoomMicController {
         UnMuteMicResponse response = new UnMuteMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = voiceRoomService.findByRoomId(roomId);
         if (!roomInfo.getOwner().equals(user.getUid())) {
-           throw new VoiceRoomSecurityException("only the owner can operate");
+            throw new VoiceRoomSecurityException("only the owner can operate");
         }
         this.voiceRoomMicService.unMuteMic(roomInfo.getChatroomId(), micIndex);
 
@@ -228,7 +229,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can unlock mic");
         }
-        this.voiceRoomMicService.unLockMic(roomInfo.getChatroomId(),micIndex);
+        this.voiceRoomMicService.unLockMic(roomInfo.getChatroomId(), micIndex);
         return response;
     }
 
@@ -248,7 +249,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can invite");
         }
-        validateMicPermissions(roomId,request.getUid());
+        validateMicPermissions(roomId, request.getUid());
         this.voiceRoomMicService.invite(roomInfo, request.getMicIndex(), request.getUid());
         return response;
     }
@@ -296,9 +297,6 @@ public class VoiceRoomMicController {
         return new ApplyAgreeOnMicResponse(Boolean.TRUE.equals(result));
     }
 
-
-
-
     //用户同意邀请上麦申请
     @PostMapping("/voice/room/{roomId}/mic/invite/agree")
     public InviteAgreeOnMicResponse agreeInvite(
@@ -338,7 +336,6 @@ public class VoiceRoomMicController {
         return new InviteAgreeOnMicResponse(Boolean.TRUE.equals(result));
     }
 
-
     private VoiceRoom validateMicPermissions(String roomId, String uid) {
         VoiceRoom roomInfo = voiceRoomService.findByRoomId(roomId);
         VoiceRoomUser voiceRoomUser =
@@ -348,6 +345,5 @@ public class VoiceRoomMicController {
         }
         return roomInfo;
     }
-
 
 }

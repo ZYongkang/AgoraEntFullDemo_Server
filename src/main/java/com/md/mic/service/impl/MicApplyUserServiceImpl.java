@@ -12,16 +12,15 @@ import com.md.mic.exception.MicApplyRepeatException;
 import com.md.mic.exception.MicIndexNullException;
 import com.md.mic.model.MicApplyUser;
 import com.md.mic.model.VoiceRoom;
-import com.md.mic.pojos.vo.MicApplyVO;
 import com.md.mic.pojos.PageInfo;
 import com.md.mic.pojos.UserDTO;
+import com.md.mic.pojos.vo.MicApplyVO;
 import com.md.mic.repository.MicApplyUserMapper;
 import com.md.mic.service.MicApplyUserService;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,7 +86,8 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
                 return Boolean.TRUE;
             } catch (Exception e) {
                 log.error("addMicApply error,uid:{},roomId:{}", uid, roomId, e);
-                if (e instanceof SQLIntegrityConstraintViolationException) {
+                if (e instanceof SQLIntegrityConstraintViolationException
+                        || e instanceof MicApplyRepeatException) {
                     throw new MicApplyRepeatException();
                 }
                 throw new MicApplyException();
@@ -135,7 +135,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     @Override
     public Boolean refuseApply(VoiceRoom roomInfo, String uid, Integer micIndex) {
 
-        deleteMicApply(uid,roomInfo.getRoomId());
+        deleteMicApply(uid, roomInfo.getRoomId());
 
         UserDTO applyUser = this.userService.getByUid(uid);
         UserDTO ownerUser = this.userService.getByUid(roomInfo.getOwner());
@@ -150,7 +150,6 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
                 CustomEventType.APPLY_REFUSED.getValue(), customExtensions, new HashMap<>());
         return Boolean.TRUE;
     }
-
 
     @Override public PageInfo<MicApplyVO> getByPage(String roomId, String cursor, Integer limit) {
         List<MicApplyUser> micApplyUser;
@@ -187,13 +186,13 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
         }
         List<String> ownerUidList =
                 micApplyUser.stream().map(MicApplyUser::getUid).collect(Collectors.toList());
-        Map<String, UserDTO> ownerMap =new HashMap<>();
-        if(!CollectionUtils.isEmpty(ownerUidList)){
-            ownerMap=userService.findByUidList(ownerUidList);
+        Map<String, UserDTO> ownerMap = new HashMap<>();
+        if (!CollectionUtils.isEmpty(ownerUidList)) {
+            ownerMap = userService.findByUidList(ownerUidList);
         }
 
         List<MicApplyVO> list = new ArrayList<>();
-        for(MicApplyUser applyUser:micApplyUser){
+        for (MicApplyUser applyUser : micApplyUser) {
             UserDTO userDTO = ownerMap.get(applyUser.getUid());
             long createdAt = applyUser.getCreatedAt().toInstant(ZoneOffset.of(zoneOffset))
                     .toEpochMilli();
