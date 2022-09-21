@@ -97,7 +97,7 @@ public class VoiceRoomMicController {
         }
         VoiceRoom voiceRoom = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.closeMic(user.getUid(), voiceRoom.getChatroomId(),
-                request.getMicIndex());
+                request.getMicIndex(), voiceRoom.getRoomId());
         return new CloseMicResponse(Boolean.TRUE);
     }
 
@@ -112,7 +112,7 @@ public class VoiceRoomMicController {
         OpenMicResponse response = new OpenMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.openMic(user.getUid(), roomInfo.getChatroomId(),
-                micIndex);
+                micIndex, roomInfo.getRoomId());
         return response;
     }
 
@@ -127,7 +127,7 @@ public class VoiceRoomMicController {
         LeaveMicResponse response = new LeaveMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.leaveMic(user.getUid(), roomInfo.getChatroomId(),
-                micIndex);
+                micIndex, roomInfo.getRoomId());
         return response;
     }
 
@@ -145,7 +145,8 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new VoiceRoomSecurityException("only the owner can operate");
         }
-        this.voiceRoomMicService.muteMic(roomInfo.getChatroomId(), request.getMicIndex());
+        this.voiceRoomMicService
+                .muteMic(roomInfo.getChatroomId(), request.getMicIndex(), roomInfo.getRoomId());
 
         return response;
     }
@@ -163,7 +164,8 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new VoiceRoomSecurityException("only the owner can operate");
         }
-        this.voiceRoomMicService.unMuteMic(roomInfo.getChatroomId(), micIndex);
+        this.voiceRoomMicService
+                .unMuteMic(roomInfo.getChatroomId(), micIndex, roomInfo.getRoomId());
 
         return response;
     }
@@ -180,7 +182,7 @@ public class VoiceRoomMicController {
         ExchangeMicResponse response = new ExchangeMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.exchangeMic(roomInfo.getChatroomId(),
-                request.getFrom(), request.getTo(), user.getUid());
+                request.getFrom(), request.getTo(), user.getUid(),roomInfo.getRoomId());
         return response;
     }
 
@@ -199,7 +201,7 @@ public class VoiceRoomMicController {
             throw new IllegalArgumentException("only the admin can kick mic");
         }
         this.voiceRoomMicService.kickUserMic(roomInfo.getChatroomId(), request.getMicIndex(),
-                request.getUid());
+                request.getUid(), roomInfo.getRoomId());
 
         return response;
     }
@@ -217,7 +219,8 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can lock mic");
         }
-        this.voiceRoomMicService.lockMic(roomInfo.getChatroomId(), request.getMicIndex());
+        this.voiceRoomMicService
+                .lockMic(roomInfo.getChatroomId(), request.getMicIndex(), roomInfo.getRoomId());
         return response;
     }
 
@@ -236,15 +239,16 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can unlock mic");
         }
-        this.voiceRoomMicService.unLockMic(roomInfo.getChatroomId(), micIndex);
+        this.voiceRoomMicService
+                .unLockMic(roomInfo.getChatroomId(), micIndex, roomInfo.getRoomId());
         return response;
     }
 
-    //群主邀请上麦
     @PostMapping("/voice/room/{roomId}/mic/invite")
     public InviteUserOnMicResponse invite(@PathVariable("roomId") String roomId,
-            @RequestBody InviteUserOnMicRequest request,
+            @RequestBody @Validated InviteUserOnMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -261,11 +265,10 @@ public class VoiceRoomMicController {
         return response;
     }
 
-    //群主同意上麦申请
     @PostMapping("/voice/room/{roomId}/mic/apply/agree")
     public ApplyAgreeOnMicResponse agreeApply(
             @PathVariable("roomId") String roomId,
-            @RequestBody ApplyAgreeOnMicRequest request, BindingResult bindingResult,
+            @RequestBody @Validated ApplyAgreeOnMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         ValidationUtil.validate(bindingResult);
         if (user == null) {
@@ -283,12 +286,12 @@ public class VoiceRoomMicController {
         return new ApplyAgreeOnMicResponse(Boolean.TRUE.equals(result));
     }
 
-    //群主拒绝上麦申请
     @PostMapping("/voice/room/{roomId}/mic/apply/refuse")
     public ApplyAgreeOnMicResponse refuseApply(
             @PathVariable("roomId") String roomId,
-            @RequestBody ApplyRefuseOnMicRequest request,
+            @RequestBody @Validated ApplyRefuseOnMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -304,12 +307,12 @@ public class VoiceRoomMicController {
         return new ApplyAgreeOnMicResponse(Boolean.TRUE.equals(result));
     }
 
-    //用户同意邀请上麦申请
     @PostMapping("/voice/room/{roomId}/mic/invite/agree")
     public InviteAgreeOnMicResponse agreeInvite(
             @PathVariable("roomId") String roomId,
-            @RequestBody InviteAgreeOnMicRequest request,
+            @RequestBody @Validated InviteAgreeOnMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -326,7 +329,6 @@ public class VoiceRoomMicController {
         return new InviteAgreeOnMicResponse(Boolean.TRUE.equals(result));
     }
 
-    //用户拒绝上麦邀请
     @GetMapping("/voice/room/{roomId}/mic/invite/refuse")
     public InviteAgreeOnMicResponse refuseInvite(
             @PathVariable("roomId") String roomId,

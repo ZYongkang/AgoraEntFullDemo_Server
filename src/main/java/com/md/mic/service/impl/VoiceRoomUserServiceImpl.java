@@ -208,7 +208,7 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
             if (voiceRoomUser != null) {
                 micApplyUserService.deleteMicApply(uid, roomId);
                 voiceRoomMicService.leaveMic(uid, voiceRoom.getChatroomId(),
-                        voiceRoomUser.getMicIndex());
+                        voiceRoomUser.getMicIndex(),voiceRoom.getRoomId());
                 baseMapper.deleteById(voiceRoomUser);
                 decrMemberCount(roomId);
                 redisTemplate.delete(key(roomId, uid));
