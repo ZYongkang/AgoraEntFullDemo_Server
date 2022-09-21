@@ -51,7 +51,7 @@ public class VoiceRoomMicController {
 
     @PostMapping("/voice/room/{roomId}/mic/apply")
     public AddMicApplyResponse addMicApply(@PathVariable("roomId") String roomId,
-            @RequestBody @Validated AddMicApplyRequest request, BindingResult bindingResult,
+            @RequestBody(required = false) @Validated AddMicApplyRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         ValidationUtil.validate(bindingResult);
         if (user == null) {
