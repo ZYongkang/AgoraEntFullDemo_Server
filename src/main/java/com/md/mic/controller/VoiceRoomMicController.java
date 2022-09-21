@@ -15,6 +15,7 @@ import com.md.mic.service.VoiceRoomService;
 import com.md.mic.service.VoiceRoomUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -50,8 +51,10 @@ public class VoiceRoomMicController {
 
     @PostMapping("/voice/room/{roomId}/mic/apply")
     public AddMicApplyResponse addMicApply(@PathVariable("roomId") String roomId,
-            @RequestBody(required = false) AddMicApplyRequest request,
+            @RequestBody @Validated AddMicApplyRequest request,
+            BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -87,8 +90,9 @@ public class VoiceRoomMicController {
     //闭麦
     @PostMapping("/voice/room/{roomId}/mic/close")
     public CloseMicResponse closeMic(@PathVariable("roomId") String roomId,
-            @RequestBody CloseMicRequest request,
+            @RequestBody @Validated CloseMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }

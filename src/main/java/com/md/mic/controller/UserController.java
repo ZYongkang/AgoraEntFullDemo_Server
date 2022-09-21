@@ -1,5 +1,6 @@
 package com.md.mic.controller;
 
+import com.alibaba.druid.sql.visitor.functions.Bin;
 import com.md.common.util.token.TokenProvider;
 import com.md.mic.common.jwt.util.VoiceRoomJwtUtil;
 import com.md.common.util.ValidationUtil;

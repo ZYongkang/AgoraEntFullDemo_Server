@@ -24,8 +24,10 @@ public class VoiceRoomUser {
 
     private String uid;
 
+    private Integer micIndex;
+
     public static VoiceRoomUser create(String roomId, String uid) {
-        return VoiceRoomUser.builder().roomId(roomId).uid(uid).build();
+        return VoiceRoomUser.builder().roomId(roomId).uid(uid).micIndex(-1).build();
     }
 
 }

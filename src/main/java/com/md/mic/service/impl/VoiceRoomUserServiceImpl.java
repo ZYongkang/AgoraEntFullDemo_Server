@@ -13,9 +13,7 @@ import com.md.mic.model.VoiceRoomUser;
 import com.md.mic.pojos.PageInfo;
 import com.md.mic.pojos.UserDTO;
 import com.md.mic.repository.VoiceRoomUserMapper;
-import com.md.mic.service.UserService;
-import com.md.mic.service.VoiceRoomService;
-import com.md.mic.service.VoiceRoomUserService;
+import com.md.mic.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,6 +51,12 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
 
     @Resource
     private EncryptionUtil encryptionUtil;
+
+    @Resource
+    private VoiceRoomMicService voiceRoomMicService;
+
+    @Resource
+    private MicApplyUserService micApplyUserService;
 
     @Value("${voice.room.redis.cache.ttl:PT1H}")
     private Duration ttl;
@@ -148,7 +152,7 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
                             .eq(VoiceRoomUser::getUid, uid);
             voiceRoomUser = baseMapper.selectOne(queryWrapper);
             if (voiceRoomUser != null) {
-                String json = null;
+                String json;
                 try {
                     json = objectMapper.writeValueAsString(voiceRoomUser);
                     redisTemplate.opsForValue().set(key(roomId, uid), json, ttl);
@@ -202,6 +206,9 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         } else {
             VoiceRoomUser voiceRoomUser = findByRoomIdAndUid(roomId, uid);
             if (voiceRoomUser != null) {
+                micApplyUserService.deleteMicApply(uid, roomId);
+                voiceRoomMicService.leaveMic(uid, voiceRoom.getChatroomId(),
+                        voiceRoomUser.getMicIndex());
                 baseMapper.deleteById(voiceRoomUser);
                 decrMemberCount(roomId);
                 redisTemplate.delete(key(roomId, uid));
