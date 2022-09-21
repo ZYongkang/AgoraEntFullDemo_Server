@@ -60,7 +60,16 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
         String roomId = roomInfo.getRoomId();
         if (!Boolean.TRUE.equals(roomInfo.getAllowedFreeJoinMic())) {
             try {
-                MicApplyUser micApplyUser = MicApplyUser.builder()
+
+                LambdaQueryWrapper<MicApplyUser> wrapper = new LambdaQueryWrapper<MicApplyUser>()
+                        .eq(MicApplyUser::getUid, uid)
+                        .eq(MicApplyUser::getRoomId, roomId);
+                MicApplyUser micApplyUser = this.getOne(wrapper);
+                if (micApplyUser != null) {
+                    throw new MicApplyRepeatException();
+                }
+
+                micApplyUser = MicApplyUser.builder()
                         .micIndex(micIndex)
                         .roomId(roomId)
                         .uid(uid)
