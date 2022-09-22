@@ -477,8 +477,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
         String toMicKey = buildMicKey(to);
 
-        RLock micFromLock = redisson.getLock(buildMicLockKey(from));
-        RLock micToLock = redisson.getLock(buildMicLockKey(to));
+        RLock micFromLock = redisson.getLock(buildMicLockKey(from, chatroomId));
+        RLock micToLock = redisson.getLock(buildMicLockKey(to, chatroomId));
         boolean fromLockKey = false;
         boolean toLockKey = false;
         try {
@@ -560,7 +560,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     private void updateVoiceRoomMicInfo(String chatroomId, String uid, Integer micIndex,
             Integer micOperateStatus, Boolean isAdminOperate, String roomId) {
         String metadataKey = buildMicKey(micIndex);
-        String redisLockKey = buildMicLockKey(micIndex);
+        String redisLockKey = buildMicLockKey(micIndex, chatroomId);
 
         RLock micLock = redisson.getLock(redisLockKey);
         boolean isContinue = false;
@@ -788,8 +788,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         return METADATA_PREFIX_KEY + "_" + micIndex;
     }
 
-    private String buildMicLockKey(Integer micIndex) {
-        return buildMicKey(micIndex) + "_lock";
+    private String buildMicLockKey(Integer micIndex, String chatRoomId) {
+        return chatRoomId + "_" + buildMicKey(micIndex) + "_lock";
     }
 
     private MicMetadataValue buildMicMetadataValue(String chatroomId, Integer micIndex) {
