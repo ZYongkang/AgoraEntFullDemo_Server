@@ -94,9 +94,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             throw new MicIndexNullException();
         }
         List<MicInfo> micInfos = this.getRoomMicInfo(roomInfo);
-        Optional<MicInfo> micInfo = micInfos.stream().filter((mic) -> {
-            return mic.getUser() == null ? false : mic.getUser().getUid().equals(uid);
-        }).findFirst();
+        Optional<MicInfo> micInfo = micInfos.stream().filter((mic) -> mic.getMember() != null
+                && mic.getMember().getUid().equals(uid)).findFirst();
         String chatroomId = roomInfo.getChatroomId();
         if (micInfo.isPresent()) {
             throw new MicAlreadyExistsException("mic user already exists");
@@ -774,12 +773,13 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new MicInitException();
             }
             MicInfo micInfo =
-                    MicInfo.builder().status(micMetadataValue.getStatus()).index(index).user(user)
+                    MicInfo.builder().status(micMetadataValue.getStatus()).micIndex(index)
+                            .member(user)
                             .build();
             micInfos.add(micInfo);
 
         }
-        micInfos = micInfos.stream().sorted(Comparator.comparing(MicInfo::getIndex)).collect(
+        micInfos = micInfos.stream().sorted(Comparator.comparing(MicInfo::getMicIndex)).collect(
                 Collectors.toList());
         return micInfos;
     }

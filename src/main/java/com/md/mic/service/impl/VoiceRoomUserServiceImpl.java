@@ -206,7 +206,7 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         } else {
             VoiceRoomUser voiceRoomUser = findByRoomIdAndUid(roomId, uid);
             if (voiceRoomUser != null) {
-                micApplyUserService.deleteMicApply(uid, roomId);
+                micApplyUserService.deleteMicApply(uid, voiceRoom, Boolean.FALSE);
                 voiceRoomMicService.leaveMic(uid, voiceRoom.getChatroomId(),
                         voiceRoomUser.getMicIndex(),voiceRoom.getRoomId());
                 baseMapper.deleteById(voiceRoomUser);
@@ -232,7 +232,7 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         }
         VoiceRoomUser voiceRoomUser = findByRoomIdAndUid(roomId, kickUid);
         if (voiceRoomUser != null) {
-            micApplyUserService.deleteMicApply(kickUid, roomId);
+            micApplyUserService.deleteMicApply(kickUid, voiceRoom, Boolean.FALSE);
             voiceRoomMicService.leaveMic(kickUid, voiceRoom.getChatroomId(),
                     voiceRoomUser.getMicIndex(),voiceRoom.getRoomId());
             baseMapper.deleteById(voiceRoomUser);

@@ -43,6 +43,9 @@ public class VoiceRoomMicController {
             @PathVariable("roomId") String roomId,
             @RequestParam(name = "cursor", required = false) String cursor,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
+        if (limit > 100) {
+            throw new IllegalArgumentException("exceeded maximum paging limit");
+        }
         validateMicPermissions(roomId, user.getUid());
         PageInfo<MicApplyVO> pageInfo = micApplyUserService.getByPage(roomId, cursor, limit);
         return new GetMicApplyListResponse(pageInfo.getTotal(), pageInfo.getCursor(),
@@ -108,11 +111,10 @@ public class VoiceRoomMicController {
         if (user == null) {
             throw new UserNotFoundException();
         }
-        OpenMicResponse response = new OpenMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.openMic(user.getUid(), roomInfo.getChatroomId(),
                 micIndex, roomInfo.getRoomId());
-        return response;
+        return new OpenMicResponse(Boolean.TRUE);
     }
 
     @DeleteMapping("/voice/room/{roomId}/mic/leave")
@@ -122,11 +124,10 @@ public class VoiceRoomMicController {
         if (user == null) {
             throw new UserNotFoundException();
         }
-        LeaveMicResponse response = new LeaveMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.leaveMic(user.getUid(), roomInfo.getChatroomId(),
                 micIndex, roomInfo.getRoomId());
-        return response;
+        return new LeaveMicResponse(Boolean.TRUE);
     }
 
     @PostMapping("/voice/room/{roomId}/mic/mute")

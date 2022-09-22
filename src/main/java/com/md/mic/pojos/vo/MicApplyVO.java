@@ -10,7 +10,8 @@ import lombok.Data;
 @Builder
 public class MicApplyVO {
 
-    private Integer index;
+    @JsonProperty("mic_index")
+    private Integer micIndex;
 
     private UserDTO member;
 
@@ -18,9 +19,9 @@ public class MicApplyVO {
     private Long createdAt;
 
     @JsonCreator
-    public MicApplyVO(Integer index, UserDTO member,
+    public MicApplyVO(@JsonProperty("mic_index") Integer micIndex, UserDTO member,
             @JsonProperty("created_at") Long createdAt) {
-        this.index = index;
+        this.micIndex = micIndex;
         this.member = member;
         this.createdAt = createdAt;
     }

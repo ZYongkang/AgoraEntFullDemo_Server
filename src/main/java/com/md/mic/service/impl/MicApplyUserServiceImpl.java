@@ -213,7 +213,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
             UserDTO userDTO = ownerMap.get(applyUser.getUid());
             long createdAt = applyUser.getCreatedAt().toInstant(ZoneOffset.of(zoneOffset))
                     .toEpochMilli();
-            list.add(MicApplyVO.builder().member(userDTO).index(applyUser.getMicIndex())
+            list.add(MicApplyVO.builder().member(userDTO).micIndex(applyUser.getMicIndex())
                     .createdAt(createdAt).build());
         }
         PageInfo<MicApplyVO> pageInfo = new PageInfo<>();
