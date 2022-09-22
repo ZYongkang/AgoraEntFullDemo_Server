@@ -51,7 +51,8 @@ public class VoiceRoomMicController {
 
     @PostMapping("/voice/room/{roomId}/mic/apply")
     public AddMicApplyResponse addMicApply(@PathVariable("roomId") String roomId,
-            @RequestBody(required = false) @Validated AddMicApplyRequest request, BindingResult bindingResult,
+            @RequestBody(required = false) @Validated AddMicApplyRequest request,
+            BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         ValidationUtil.validate(bindingResult);
         if (user == null) {
@@ -73,8 +74,8 @@ public class VoiceRoomMicController {
         if (user == null) {
             throw new UserNotFoundException();
         }
-        validateMicPermissions(roomId, user.getUid());
-        micApplyUserService.deleteMicApply(user.getUid(), roomId);
+        VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
+        micApplyUserService.deleteMicApply(user.getUid(), roomInfo, Boolean.TRUE);
         return new DeleteMicApplyResponse(Boolean.TRUE);
     }
 
@@ -86,7 +87,6 @@ public class VoiceRoomMicController {
         return voiceRoomMicService.getRoomMicInfo(roomInfo);
     }
 
-    //闭麦 todo 不要用这种注释
     @PostMapping("/voice/room/{roomId}/mic/close")
     public CloseMicResponse closeMic(@PathVariable("roomId") String roomId,
             @RequestBody @Validated CloseMicRequest request, BindingResult bindingResult,
@@ -101,7 +101,6 @@ public class VoiceRoomMicController {
         return new CloseMicResponse(Boolean.TRUE);
     }
 
-    //取消关麦、开麦
     @DeleteMapping("/voice/room/{roomId}/mic/close")
     public OpenMicResponse openMic(@PathVariable("roomId") String roomId,
             @RequestParam("mic_index") Integer micIndex,
@@ -116,7 +115,6 @@ public class VoiceRoomMicController {
         return response;
     }
 
-    //下麦
     @DeleteMapping("/voice/room/{roomId}/mic/leave")
     public LeaveMicResponse leaveMic(@PathVariable("roomId") String roomId,
             @RequestParam("mic_index") Integer micIndex,
@@ -131,7 +129,6 @@ public class VoiceRoomMicController {
         return response;
     }
 
-    //禁言麦位
     @PostMapping("/voice/room/{roomId}/mic/mute")
     public MuteMicResponse muteMic(@PathVariable("roomId") String roomId,
             @RequestBody @Validated MuteMicRequest request, BindingResult bindingResult,
@@ -151,7 +148,6 @@ public class VoiceRoomMicController {
         return response;
     }
 
-    //取消禁言
     @DeleteMapping("/voice/room/{roomId}/mic/mute")
     public UnMuteMicResponse unMuteMic(@PathVariable("roomId") String roomId,
             @RequestParam("mic_index") Integer micIndex,
@@ -170,7 +166,6 @@ public class VoiceRoomMicController {
         return response;
     }
 
-    //交换麦位
     @PostMapping("/voice/room/{roomId}/mic/exchange")
     public ExchangeMicResponse exchangeMic(@PathVariable("roomId") String roomId,
             @RequestBody @Validated ExchangeMicRequest request, BindingResult bindingResult,
@@ -182,7 +177,7 @@ public class VoiceRoomMicController {
         ExchangeMicResponse response = new ExchangeMicResponse(Boolean.TRUE);
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
         this.voiceRoomMicService.exchangeMic(roomInfo.getChatroomId(),
-                request.getFrom(), request.getTo(), user.getUid(),roomInfo.getRoomId());
+                request.getFrom(), request.getTo(), user.getUid(), roomInfo.getRoomId());
         return response;
     }
 

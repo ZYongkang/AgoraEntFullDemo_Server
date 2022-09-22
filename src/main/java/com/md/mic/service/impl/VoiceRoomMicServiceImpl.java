@@ -363,13 +363,22 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         if (userDTO == null) {
             throw new BaseException(ErrorCodeEnum.user_not_exist);
         }
-        UserDTO applyUser = userService.getByUid(uid);
+        UserDTO ownerUser = userService.getByUid(roomInfo.getOwner());
 
         Map<String, Object> customExtensions = new HashMap<>();
-        customExtensions.put("user", JSONObject.toJSONString(applyUser));
-        customExtensions.put("mic_index", index.toString());
+        String jsonUser = "";
+        try {
+            jsonUser = objectMapper.writeValueAsString(userDTO);
+        } catch (Exception e) {
+            log.error("write user json failed | uid={}, user={}, e=", uid,
+                    userDTO, e);
+        }
+        customExtensions.put("user", jsonUser);
+        if (index != null) {
+            customExtensions.put("mic_index", index.toString());
+        }
         customExtensions.put("room_id", roomInfo.getRoomId());
-        this.imApi.sendUserCustomMessage(roomInfo.getOwner(), applyUser.getChatUid(),
+        this.imApi.sendChatRoomCustomMessage(ownerUser.getChatUid(), roomInfo.getChatroomId(),
                 CustomEventType.INVITE_SITE.getValue(), customExtensions, new HashMap<>());
     }
 
@@ -391,17 +400,16 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         if (userDTO == null) {
             throw new BaseException(ErrorCodeEnum.user_not_exist);
         }
-        UserDTO applyUser = userService.getByUid(uid);
 
         Map<String, Object> customExtensions = new HashMap<>();
         try {
-            customExtensions.put("user", objectMapper.writeValueAsString(applyUser));
+            customExtensions.put("user", objectMapper.writeValueAsString(userDTO));
         } catch (JsonProcessingException e) {
             log.error("write user json failed | uid={}, user={}, e=", uid,
-                    applyUser, e);
+                    userDTO, e);
         }
         customExtensions.put("room_id", roomInfo.getRoomId());
-        this.imApi.sendUserCustomMessage(userDTO.getChatUid(), roomInfo.getOwner(),
+        this.imApi.sendChatRoomCustomMessage(userDTO.getChatUid(), roomInfo.getChatroomId(),
                 CustomEventType.INVITE_REFUSED.getValue(), customExtensions, new HashMap<>());
 
         return Boolean.TRUE;

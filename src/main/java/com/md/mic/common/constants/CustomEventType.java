@@ -12,6 +12,12 @@ public enum CustomEventType {
      * 申请上麦
      */
     APPLY_SITE("chatroom_applySiteNotify"),
+
+    /**
+     * 取消申请上麦
+     */
+    APPLY_CANCEL("chatroom_cancelApplySiteNotify"),
+
     /**
      * 拒绝申请
      */

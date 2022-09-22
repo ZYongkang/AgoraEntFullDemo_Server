@@ -14,6 +14,7 @@ public class KickUserMicRequest {
     @JsonProperty("mic_index")
     private Integer micIndex;
 
+    @NotNull(message = "kick uid must not be null")
     private String uid;
 
     @JsonCreator
