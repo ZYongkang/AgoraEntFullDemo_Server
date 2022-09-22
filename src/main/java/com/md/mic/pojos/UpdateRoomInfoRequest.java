@@ -20,4 +20,7 @@ public class UpdateRoomInfoRequest {
 
     @JsonProperty("allowed_free_join_mic")
     private Boolean allowedFreeJoinMic;
+
+    @JsonProperty("robot_volume")
+    private Integer robotVolume;
 }

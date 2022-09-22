@@ -75,6 +75,9 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     @Value("${voice.room.robot.count.default:2}")
     private Integer robotCount;
 
+    @Value("${voice.room.robot.volume.default:50}")
+    private Integer defaultRobotVolume;
+
 
     @Override
     @Transactional
@@ -93,8 +96,8 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         }
         int micCount = request.getType() == 0 ? normalRoomMicCount : spaceAudioRoomMicCount;
         voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
-                password, request.getAllowFreeJoinMic(), request.getType(),
-                uid, request.getSoundEffect(), false, micCount, robotCount);
+                password, request.getAllowFreeJoinMic(), request.getType(), uid,
+                request.getSoundEffect(), false, micCount, robotCount, defaultRobotVolume);
         List<MicInfo> micInfos = voiceRoomMicService.initMic(voiceRoom, voiceRoom.getUseRobot());
         try {
             save(voiceRoom);
@@ -209,6 +212,9 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         if (request.getUseRobot() != null) {
             update = update.updateUseRobot(request.getUseRobot());
             voiceRoomMicService.updateRobotMicStatus(update, request.getUseRobot());
+        }
+        if (request.getRobotVolume() != null) {
+            update = update.updateRobotVolume(request.getRobotVolume());
         }
         if (update.equals(source)) {
             return;

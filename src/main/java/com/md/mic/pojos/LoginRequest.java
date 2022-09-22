@@ -15,7 +15,7 @@ public class LoginRequest {
     @JsonProperty("verify_code")
     private String verifyCode;
 
-    @NotBlank(message = "deviceId must not be empty")
+    @NotBlank(message = "device_id must not be empty")
     @JsonProperty("device_id")
     private String deviceId;
 

@@ -59,9 +59,12 @@ public class VoiceRoom {
 
     private Integer robotCount;
 
+    private Integer robotVolume;
+
     public static VoiceRoom create(String name, String chatroomId, Boolean isPrivate,
             String password, Boolean allowedFreeJoinMic, Integer type, String owner,
-            String soundEffect, Boolean useRobot, Integer micCount, Integer robotCount) {
+            String soundEffect, Boolean useRobot, Integer micCount, Integer robotCount,
+            Integer robotVolume) {
         String roomId = buildRoomId(name);
         String channelId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         checkType(type);
@@ -69,7 +72,7 @@ public class VoiceRoom {
                 .channelId(channelId).isPrivate(isPrivate).password(password)
                 .allowedFreeJoinMic(allowedFreeJoinMic).type(type)
                 .owner(owner).soundEffect(soundEffect).useRobot(useRobot)
-                .micCount(micCount).robotCount(robotCount)
+                .micCount(micCount).robotCount(robotCount).robotVolume(robotVolume)
                 .build();
     }
 
@@ -122,6 +125,10 @@ public class VoiceRoom {
 
     public VoiceRoom updateRobotCount(Integer robotCount) {
         return this.toBuilder().robotCount(robotCount).build();
+    }
+
+    public VoiceRoom updateRobotVolume(Integer robotVolume) {
+        return this.toBuilder().robotVolume(robotVolume).build();
     }
 
     private static void checkType(Integer type) {

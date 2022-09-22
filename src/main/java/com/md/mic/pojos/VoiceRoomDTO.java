@@ -53,13 +53,18 @@ public class VoiceRoomDTO {
     @JsonProperty("use_robot")
     private Boolean useRobot;
 
+    @JsonProperty("robot_volume")
+    private Integer robotVolume;
+
+    @JsonProperty("sound_effect")
+    private String soundEffect;
+
     public static VoiceRoomDTO from(VoiceRoom voiceRoom, UserDTO owner, Long memberCount,
             Long clickCount, Long giftAmount) {
         return new VoiceRoomDTO(voiceRoom.getRoomId(), voiceRoom.getChannelId(),
                 voiceRoom.getChatroomId(), voiceRoom.getName(), voiceRoom.getType(),
-                voiceRoom.getIsPrivate(), voiceRoom.getAllowedFreeJoinMic(),
-                owner, memberCount, clickCount, giftAmount, voiceRoom.getAnnouncement(),
-                Collections.emptyList(), voiceRoom.getUseRobot());
+                voiceRoom.getIsPrivate(), voiceRoom.getAllowedFreeJoinMic(), owner, memberCount,
+                clickCount, giftAmount, voiceRoom.getAnnouncement(), Collections.emptyList(),
+                voiceRoom.getUseRobot(), voiceRoom.getRobotVolume(), voiceRoom.getSoundEffect());
     }
-
 }

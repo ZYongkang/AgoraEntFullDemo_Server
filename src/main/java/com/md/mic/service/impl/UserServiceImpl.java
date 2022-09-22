@@ -73,19 +73,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } else {
             String uid = user.getUid();
             boolean isUpdate = false;
+            User update = user;
             if (StringUtils.isNotBlank(name)) {
-                user = user.toBuilder().name(name).build();
+                update = update.toBuilder().name(name).build();
                 isUpdate = true;
             }
             if (StringUtils.isNotBlank(portrait)) {
                 isUpdate = true;
-                user = user.toBuilder().portrait(portrait).build();
+                update = update.toBuilder().portrait(portrait).build();
             }
-            if (isUpdate) {
+            if (isUpdate && !update.equals(user)) {
                 updateById(user);
             }
-            userThirdAccount = userThirdAccountService.getOne(
-                    new LambdaQueryWrapper<UserThirdAccount>().eq(UserThirdAccount::getUid, uid));
+            userThirdAccount = userThirdAccountService.getByUid(uid);
             if (userThirdAccount.getRtcUid() == null) {
                 Long rtcUid = redisTemplate.opsForValue().increment(USER_RTC_RECORD_KEY);
                 userThirdAccount =
