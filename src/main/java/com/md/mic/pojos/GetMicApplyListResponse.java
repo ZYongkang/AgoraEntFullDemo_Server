@@ -1,5 +1,6 @@
 package com.md.mic.pojos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.md.mic.pojos.vo.MicApplyVO;
 import lombok.Value;
 
@@ -12,5 +13,6 @@ public class GetMicApplyListResponse {
 
     private String cursor;
 
+    @JsonProperty("apply_list")
     private List<MicApplyVO> micApply;
 }

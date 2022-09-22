@@ -3,6 +3,7 @@ package com.md.mic.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.md.common.im.ImApi;
 import com.md.mic.common.constants.CustomEventType;
@@ -81,8 +82,10 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
                 customExtensions.put("user", objectMapper.writeValueAsString(applyUser));
                 customExtensions.put("mic_index", String.valueOf(micIndex));
                 customExtensions.put("room_id", roomInfo.getRoomId());
-                this.imApi.sendUserCustomMessage(applyUser.getChatUid(), roomInfo.getOwner(),
-                        CustomEventType.APPLY_SITE.getValue(), customExtensions, new HashMap<>());
+                this.imApi
+                        .sendChatRoomCustomMessage(applyUser.getChatUid(), roomInfo.getChatroomId(),
+                                CustomEventType.APPLY_SITE.getValue(), customExtensions,
+                                new HashMap<>());
                 return Boolean.TRUE;
             } catch (Exception e) {
                 log.error("addMicApply error,uid:{},roomId:{}", uid, roomId, e);
@@ -103,14 +106,28 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     }
 
     @Override
-    public void deleteMicApply(String uid, String roomId) {
+    public void deleteMicApply(String uid, VoiceRoom roomInfo, Boolean sendNotify) {
         LambdaQueryWrapper<MicApplyUser> wrapper = new LambdaQueryWrapper<MicApplyUser>()
                 .eq(MicApplyUser::getUid, uid)
-                .eq(MicApplyUser::getRoomId, roomId);
+                .eq(MicApplyUser::getRoomId, roomInfo.getRoomId());
         int count = this.baseMapper.delete(wrapper);
         if (count == 0) {
             throw new MicApplyRecordNotFoundException();
         }
+        UserDTO applyUser = userService.getByUid(uid);
+        if (Boolean.TRUE.equals(sendNotify)) {
+            Map<String, Object> customExtensions = new HashMap<>();
+            try {
+                customExtensions.put("user", objectMapper.writeValueAsString(applyUser));
+            } catch (JsonProcessingException e) {
+                log.error("write user json failed | uid={}, user={}, e=", uid,
+                        applyUser, e);
+            }
+            customExtensions.put("room_id", roomInfo.getRoomId());
+            this.imApi.sendChatRoomCustomMessage(applyUser.getChatUid(), roomInfo.getChatroomId(),
+                    CustomEventType.APPLY_CANCEL.getValue(), customExtensions, new HashMap<>());
+        }
+
     }
 
     @Override
@@ -127,7 +144,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
         Boolean result =
                 voiceRoomMicService.setRoomMicInfo(roomInfo, uid, micIndex,
                         Boolean.TRUE);
-        deleteMicApply(uid, roomId);
+        deleteMicApply(uid, roomInfo, Boolean.FALSE);
         return result;
 
     }
@@ -135,7 +152,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     @Override
     public Boolean refuseApply(VoiceRoom roomInfo, String uid, Integer micIndex) {
 
-        deleteMicApply(uid, roomInfo.getRoomId());
+        deleteMicApply(uid, roomInfo, Boolean.FALSE);
 
         UserDTO applyUser = this.userService.getByUid(uid);
         UserDTO ownerUser = this.userService.getByUid(roomInfo.getOwner());
