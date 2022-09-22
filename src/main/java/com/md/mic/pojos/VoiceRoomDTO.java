@@ -51,7 +51,7 @@ public class VoiceRoomDTO {
     private List<GiftRecordVO> rankingList;
 
     @JsonProperty("use_robot")
-    private Boolean use_robot;
+    private Boolean useRobot;
 
     public static VoiceRoomDTO from(VoiceRoom voiceRoom, UserDTO owner, Long memberCount,
             Long clickCount, Long giftAmount) {

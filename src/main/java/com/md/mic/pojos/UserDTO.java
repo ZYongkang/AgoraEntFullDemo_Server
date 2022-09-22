@@ -25,6 +25,7 @@ public class UserDTO {
 
     private String portrait;
 
+    @JsonProperty("rtc_uid")
     private Integer rtcUid;
 
     public static UserDTO from(User user, UserThirdAccount userThirdAccount) {
