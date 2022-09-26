@@ -168,19 +168,10 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
 
     @Override
     @Transactional
-    public VoiceRoomUser addVoiceRoomUser(String roomId, String uid, String password) {
+    public VoiceRoomUser addVoiceRoomUser(String roomId, String uid) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (uid.equals(voiceRoom.getOwner())) {
             return VoiceRoomUser.builder().roomId(roomId).uid(uid).build();
-        }
-        if (Boolean.TRUE.equals(voiceRoom.getIsPrivate())) {
-            if (StringUtils.isBlank(password)) {
-                throw new IllegalArgumentException("private room name not allow empty");
-            }
-            boolean checkResult = encryptionUtil.validPassword(password, voiceRoom.getPassword());
-            if (!checkResult) {
-                throw new VoiceRoomSecurityException("wrong password");
-            }
         }
         LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
                 new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId)
