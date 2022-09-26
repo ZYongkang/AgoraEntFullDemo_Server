@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.md.common.im.ImApi;
 import com.md.common.util.EncryptionUtil;
+import com.md.mic.common.constants.CustomEventType;
 import com.md.mic.exception.CreateRoomFailedException;
 import com.md.mic.exception.RoomNotFoundException;
 import com.md.mic.exception.VoiceRoomSecurityException;
@@ -30,10 +31,7 @@ import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZoneOffset;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -227,6 +225,13 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             return;
         }
         updateById(update);
+        if (request.getRobotVolume() != null) {
+            Map<String, Object> customExtensions = new HashMap<>();
+            customExtensions.put("room_id", source.getRoomId());
+            customExtensions.put("volume", request.getRobotVolume().toString());
+            this.imApi.sendChatRoomCustomMessage(userService.getByUid(source.getOwner()).getChatUid(), source.getChatroomId(),
+                    CustomEventType.UPDATE_ROBOT_VOLUME.getValue(), customExtensions, new HashMap<>());
+        }
         Boolean hasKey = redisTemplate.hasKey(key(roomId));
         if (Boolean.TRUE.equals(hasKey)) {
             redisTemplate.delete(key(roomId));

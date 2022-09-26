@@ -35,6 +35,11 @@ public enum CustomEventType {
      * 送礼物
      */
     SEND_GIFT("chatroom_gift"),
+
+    /**
+     * 调节机器人音量
+     */
+    UPDATE_ROBOT_VOLUME("chatroom_updateRobotVolume"),
     ;
 
     private String eventType;

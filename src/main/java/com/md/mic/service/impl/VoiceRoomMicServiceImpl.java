@@ -355,50 +355,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             throw new MicStatusCannotBeModifiedException();
         }
 
-        String fromMicKey = buildMicKey(from);
-        String toMicKey = buildMicKey(to);
-
-        Map<String, String> metadata =
-                imApi.listChatRoomMetadata(chatroomId, Arrays.asList(fromMicKey, toMicKey))
-                        .getMetadata();
-
-        if (metadata.containsKey(fromMicKey) && metadata.containsKey(toMicKey)) {
-
-            MicMetadataValue fromMicMetadataValue = null;
-
-            MicMetadataValue toMicMetadataValue = null;
-
-            try {
-                fromMicMetadataValue = objectMapper
-                        .readValue(metadata.get(fromMicKey), MicMetadataValue.class);
-
-                toMicMetadataValue =
-                        objectMapper.readValue(metadata.get(toMicKey), MicMetadataValue.class);
-
-            } catch (JsonProcessingException e) {
-                log.error(
-                        "parse voice room micMetadataValue json failed | chatroomId={}, uid={},"
-                                + " json={}, e=", chatroomId, uid, e);
-            }
-
-            if (fromMicMetadataValue == null || toMicMetadataValue == null) {
-                throw new MicInitException();
-            }
-
-            if (StringUtils.isEmpty(fromMicMetadataValue.getUid()) || !fromMicMetadataValue.getUid()
-                    .equals(uid)) {
-                throw new MicNotBelongYouException();
-            }
-
-            if (toMicMetadataValue.getStatus() != MicStatus.FREE.getStatus()) {
-                throw new MicStatusCannotBeModifiedException();
-            }
-
-            this.exchangeMicInfo(chatroomId, uid, from, to, roomId);
-
-        } else {
-            throw new MicInitException();
-        }
+        this.exchangeMicInfo(chatroomId, uid, from, to, roomId);
 
     }
 
@@ -414,15 +371,17 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         boolean fromLockKey = false;
         boolean toLockKey = false;
         try {
-            fromLockKey = micFromLock.tryLock(5000, TimeUnit.MILLISECONDS);
-            toLockKey = micToLock.tryLock(5000, TimeUnit.MILLISECONDS);
+            fromLockKey = micFromLock.tryLock(100, TimeUnit.MILLISECONDS);
+            toLockKey = micToLock.tryLock(100, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            log.error("get redis lock error", e);
+            log.error("the thread has been interrupted!");
+            throw new VoiceRoomException("400500", "update room mic info failed",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
         if (!fromLockKey || !toLockKey) {
-            throw new BaseException(ErrorCodeEnum.mic_is_concurrent_operation);
+            throw new VoiceRoomException("400403", "the room mic can not be modified!",
+                    HttpStatus.FORBIDDEN);
         }
-
         try {
 
             Map<String, String> metadata =
@@ -479,10 +438,11 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             }
 
         } finally {
-            if (fromLockKey) {
+            if (micFromLock.isLocked() && micFromLock.isHeldByCurrentThread()) {
                 micFromLock.unlock();
             }
-            if (toLockKey) {
+
+            if (micToLock.isLocked() && micToLock.isHeldByCurrentThread()) {
                 micToLock.unlock();
             }
         }
