@@ -496,7 +496,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
         RLock micLock = redisson.getLock(redisLockKey);
         boolean locked = micLock.isLocked();
-        if (!locked) {
+        if (locked) {
             throw new VoiceRoomException("400403", "the room mic can not be modified!",
                     HttpStatus.FORBIDDEN);
         }
