@@ -23,6 +23,7 @@ import com.md.service.exception.BaseException;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -563,16 +564,22 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         String redisLockKey = buildMicLockKey(micIndex, chatroomId);
 
         RLock micLock = redisson.getLock(redisLockKey);
-        boolean isContinue = false;
+        boolean locked = micLock.isLocked();
+        if (!locked) {
+            throw new VoiceRoomException("400403", "the room mic can not be modified!",
+                    HttpStatus.FORBIDDEN);
+        }
 
         try {
-            isContinue = micLock.tryLock(5000, TimeUnit.MILLISECONDS);
-
+            boolean lock = micLock.tryLock(100, TimeUnit.MILLISECONDS);
+            if (!lock) {
+                throw new VoiceRoomException("400403", "the room mic can not be modified!",
+                        HttpStatus.FORBIDDEN);
+            }
         } catch (InterruptedException e) {
-            log.error("get redis lock error", e);
-        }
-        if (!isContinue) {
-            throw new BaseException(ErrorCodeEnum.mic_is_concurrent_operation);
+            log.error("the thread has been interrupted!");
+            throw new VoiceRoomException("400500", "update room mic info failed",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         try {
@@ -742,7 +749,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             }
 
         } finally {
-            if (isContinue) {
+            if (micLock.isLocked() && micLock.isHeldByCurrentThread()) {
                 micLock.unlock();
             }
         }
