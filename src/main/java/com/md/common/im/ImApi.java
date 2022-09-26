@@ -6,6 +6,7 @@ import com.easemob.im.server.api.metadata.chatroom.AutoDelete;
 import com.easemob.im.server.api.metadata.chatroom.delete.ChatRoomMetadataDeleteResponse;
 import com.easemob.im.server.api.metadata.chatroom.get.ChatRoomMetadataGetResponse;
 import com.easemob.im.server.api.metadata.chatroom.set.ChatRoomMetadataSetResponse;
+import com.easemob.im.server.exception.EMForbiddenException;
 import com.easemob.im.server.model.EMKeyValue;
 import com.easemob.im.server.model.EMPage;
 import com.easemob.im.server.model.EMRoom;
@@ -624,9 +625,15 @@ public class ImApi {
                     chatroomId, username, e);
             addErrorMetricsRecord("kickChatroomMember", "timeout");
         } catch (EMException e) {
-            log.error("kickChatroomMember request easemob failed | chatroomId={}, username={}",
-                    chatroomId, username, e);
-            addErrorMetricsRecord("kickChatroomMember", "InternalServerError");
+            if (e instanceof EMForbiddenException) {
+                log.warn("kickChatroomMember not in chatroom | chatroomId={}, username={}",
+                        chatroomId, username);
+                addErrorMetricsRecord("kickChatroomMember", "notInRoom");
+            } else {
+                log.error("kickChatroomMember request easemob failed | chatroomId={}, username={}",
+                        chatroomId, username, e);
+                addErrorMetricsRecord("kickChatroomMember", "InternalServerError");
+            }
         } catch (Exception e) {
             log.error("kickChatroomMember failed | chatroomId={}, username={}",
                     chatroomId, username, e);
