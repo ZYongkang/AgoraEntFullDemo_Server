@@ -34,10 +34,9 @@ public interface VoiceRoomUserService extends IService<VoiceRoomUser> {
      * 添加房间成员
      * @param roomId
      * @param uid
-     * @param password
      * @return
      */
-    VoiceRoomUser addVoiceRoomUser(String roomId, String uid, String password);
+    VoiceRoomUser addVoiceRoomUser(String roomId, String uid);
 
     /**
      * 删除指定房间成员

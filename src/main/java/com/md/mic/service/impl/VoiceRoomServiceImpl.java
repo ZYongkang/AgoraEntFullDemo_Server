@@ -13,7 +13,10 @@ import com.md.mic.exception.VoiceRoomSecurityException;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
 import com.md.mic.repository.VoiceRoomMapper;
-import com.md.mic.service.*;
+import com.md.mic.service.UserService;
+import com.md.mic.service.VoiceRoomMicService;
+import com.md.mic.service.VoiceRoomService;
+import com.md.mic.service.VoiceRoomUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -251,6 +254,19 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         if (Boolean.TRUE.equals(hasKey)) {
             redisTemplate.delete(key(roomId));
         }
+    }
+
+    @Override
+    public Boolean validPassword(String roomId, String password) {
+        VoiceRoom voiceRoom = this.findByRoomId(roomId);
+        if (Boolean.TRUE.equals(voiceRoom.getIsPrivate())) {
+            if (StringUtils.isBlank(password)) {
+                throw new IllegalArgumentException("private room name not allow empty");
+            }
+            boolean checkResult = encryptionUtil.validPassword(password, voiceRoom.getPassword());
+            return checkResult;
+        }
+        return Boolean.TRUE;
     }
 
     public Long getClickCount(String roomId) {

@@ -11,6 +11,7 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     /**
      * 新建房间
+     *
      * @param owner
      * @param request
      * @return
@@ -19,6 +20,7 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     /**
      * 分页获取房间信息
+     *
      * @param cursor
      * @param limit
      * @param type
@@ -28,6 +30,7 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     /**
      * 根据房间id获取房间信息
+     *
      * @param roomId
      * @return
      */
@@ -35,6 +38,7 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     /**
      * 根据房间id修改房间信息
+     *
      * @param roomId
      * @param request
      * @param owner
@@ -43,6 +47,7 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     /**
      * 根据房间id删除房间
+     *
      * @param roomId
      * @param owner
      */
@@ -50,6 +55,7 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     /**
      * 获取房间点击数
+     *
      * @param roomId
      * @return
      */
@@ -57,8 +63,18 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
 
     /**
      * 获取房间成员数
+     *
      * @param roomId
      * @return
      */
     public Long getMemberCount(String roomId);
+
+    /**
+     * 验证密码
+     *
+     * @param roomId
+     * @param password
+     * @return
+     */
+    public Boolean validPassword(String roomId, String password);
 }

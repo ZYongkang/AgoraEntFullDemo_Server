@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.BindingResultUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.util.function.Tuple2;
@@ -127,5 +128,15 @@ public class VoiceRoomController {
         voiceRoomService.deleteByRoomId(roomId, user.getUid());
         return new DeleteRoomResponse(Boolean.TRUE);
     }
+
+    @PostMapping("/voice/room/{roomId}/validPassword")
+    public ValidateRoomPasswordResponse validPassword(@PathVariable("roomId") String roomId,
+            @RequestBody(required = true) ValidateRoomPasswordRequest request,BindingResult bindingResult,
+            @RequestAttribute(name = "user", required = false) UserDTO user) {
+        ValidationUtil.validate(bindingResult);
+        Boolean result = voiceRoomService.validPassword(roomId, request.getPassword());
+        return new ValidateRoomPasswordResponse(Boolean.TRUE.equals(result));
+    }
+
 
 }

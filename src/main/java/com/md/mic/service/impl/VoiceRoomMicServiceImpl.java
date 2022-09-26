@@ -227,52 +227,21 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     @Override
     public void closeMic(String uid, String chatroomId, Integer micIndex, String roomId) {
 
-        MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
-
-        if (StringUtils.isEmpty(micMetadataValue.getUid()) || !micMetadataValue.getUid()
-                .equals(uid)) {
-            throw new MicNotBelongYouException();
-        }
-        if (micMetadataValue.getStatus() == MicStatus.NORMAL.getStatus()) {
-            this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
-                    MicOperateStatus.CLOSE_MIC.getStatus(), Boolean.FALSE, roomId);
-        } else {
-            throw new MicStatusCannotBeModifiedException();
-        }
+        this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
+                MicOperateStatus.CLOSE_MIC.getStatus(), Boolean.FALSE, roomId);
 
     }
 
     @Override
     public void openMic(String uid, String chatroomId, Integer micIndex, String roomId) {
 
-        MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
-
-        if (StringUtils.isEmpty(micMetadataValue.getUid()) || !micMetadataValue.getUid()
-                .equals(uid)) {
-            throw new MicNotBelongYouException();
-        }
-        if (micMetadataValue.getStatus() == MicStatus.CLOSE.getStatus()) {
-            this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
-                    MicOperateStatus.OPEN_MIC.getStatus(), Boolean.FALSE, roomId);
-        } else {
-            throw new MicStatusCannotBeModifiedException();
-        }
+        this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
+                MicOperateStatus.OPEN_MIC.getStatus(), Boolean.FALSE, roomId);
 
     }
 
     @Override
     public void leaveMic(String uid, String chatroomId, Integer micIndex, String roomId) {
-
-        if (micIndex == null || micIndex < 0) {
-            return;
-        }
-
-        MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
-
-        if (StringUtils.isEmpty(micMetadataValue.getUid()) || !micMetadataValue.getUid()
-                .equals(uid)) {
-            throw new MicNotBelongYouException();
-        }
 
         this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                 MicOperateStatus.LEAVE_MIC.getStatus(), Boolean.FALSE, roomId);
@@ -282,13 +251,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     @Override
     public void muteMic(String chatroomId, Integer micIndex, String roomId) {
 
-        MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
-
-        if (micMetadataValue.getStatus() == MicStatus.MUTE.getStatus()
-                || micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE.getStatus()) {
-            throw new MicStatusCannotBeModifiedException();
-        }
-
         this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                 MicOperateStatus.MUTE_MIC.getStatus(), Boolean.TRUE, roomId);
 
@@ -296,13 +258,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Override
     public void unMuteMic(String chatroomId, Integer micIndex, String roomId) {
-
-        MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
-
-        if (micMetadataValue.getStatus() != MicStatus.MUTE.getStatus()
-                && micMetadataValue.getStatus() != MicStatus.LOCK_AND_MUTE.getStatus()) {
-            throw new MicStatusCannotBeModifiedException();
-        }
 
         this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                 MicOperateStatus.UNMUTE_MIC.getStatus(), Boolean.TRUE, roomId);
@@ -312,16 +267,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     @Override
     public void kickUserMic(String chatroomId, Integer micIndex, String uid, String roomId) {
 
-        MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
-
-        if (StringUtils.isEmpty(micMetadataValue.getUid())) {
-            throw new MicStatusCannotBeModifiedException();
-        }
-
-        if (!micMetadataValue.getUid().equals(uid)) {
-            throw new MicNotCurrentUserException();
-        }
-
         this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                 MicOperateStatus.KICK_MIC.getStatus(), Boolean.TRUE, roomId);
 
@@ -330,13 +275,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     @Override
     public void lockMic(String chatroomId, Integer micIndex, String roomId) {
 
-        MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
-
-        if (micMetadataValue.getStatus() == MicStatus.LOCK.getStatus()
-                || micMetadataValue.getStatus() == MicStatus.LOCK_AND_MUTE.getStatus()) {
-            throw new MicStatusCannotBeModifiedException();
-        }
-
         this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                 MicOperateStatus.LOCK_MIC.getStatus(), Boolean.TRUE, roomId);
 
@@ -344,13 +282,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Override
     public void unLockMic(String chatroomId, Integer micIndex, String roomId) {
-
-        MicMetadataValue micMetadataValue = buildMicMetadataValue(chatroomId, micIndex);
-
-        if (micMetadataValue.getStatus() != MicStatus.LOCK.getStatus()
-                && micMetadataValue.getStatus() != MicStatus.LOCK_AND_MUTE.getStatus()) {
-            throw new MicStatusCannotBeModifiedException();
-        }
 
         this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                 MicOperateStatus.UNLOCK_MIC.getStatus(), Boolean.TRUE, roomId);

@@ -35,16 +35,11 @@ public class VoiceRoomUserController {
 
     @PostMapping("/voice/room/{roomId}/members/join")
     public JoinRoomResponse joinRoom(@PathVariable("roomId") String roomId,
-            @RequestBody(required = false) JoinRoomRequest request,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
         if (user == null) {
             throw new UserNotFoundException("join room user must not be null");
         }
-        String password = null;
-        if (request != null) {
-            password = request.getPassword();
-        }
-        voiceRoomUserService.addVoiceRoomUser(roomId, user.getUid(), password);
+        voiceRoomUserService.addVoiceRoomUser(roomId, user.getUid());
         return new JoinRoomResponse(Boolean.TRUE);
     }
 
