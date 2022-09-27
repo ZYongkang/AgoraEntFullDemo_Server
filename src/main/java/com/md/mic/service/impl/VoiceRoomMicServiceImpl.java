@@ -20,6 +20,7 @@ import com.md.mic.service.VoiceRoomService;
 import com.md.mic.service.VoiceRoomUserService;
 import com.md.service.common.ErrorCodeEnum;
 import com.md.service.exception.BaseException;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -28,6 +29,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -57,6 +60,9 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Resource(name = "voiceRoomRedisson")
     private RedissonClient redisson;
+
+    @Resource
+    private PrometheusMeterRegistry registry;
 
     @Override
     public List<MicInfo> getByRoomId(String roomId) {
@@ -250,10 +256,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     @Override
     public void muteMic(String chatroomId, Integer micIndex, String roomId) {
-
         this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
                 MicOperateStatus.MUTE_MIC.getStatus(), Boolean.TRUE, roomId);
-
     }
 
     @Override
@@ -451,6 +455,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     private void updateVoiceRoomMicInfo(String chatroomId, String uid, Integer micIndex,
             Integer micOperateStatus, Boolean isAdminOperate, String roomId) {
+        Instant now = Instant.now();
         String metadataKey = buildMicKey(micIndex);
         String redisLockKey = buildMicLockKey(micIndex, chatroomId);
 
@@ -643,6 +648,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             if (micLock.isLocked() && micLock.isHeldByCurrentThread()) {
                 micLock.unlock();
             }
+            Duration delay = Duration.between(now, Instant.now());
+            registry.timer("voice.room.mic", "operate", "mute").record(delay);
         }
 
     }
