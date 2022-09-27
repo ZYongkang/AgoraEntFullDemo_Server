@@ -462,6 +462,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         RLock micLock = redisson.getLock(redisLockKey);
         boolean locked = micLock.isLocked();
         if (locked) {
+            Duration delay = Duration.between(now, Instant.now());
+            registry.timer("voice.room.mic.lock", "result", "isLocked").record(delay);
             throw new VoiceRoomException("400403", "the room mic can not be modified!",
                     HttpStatus.FORBIDDEN);
         }
@@ -469,20 +471,27 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         try {
             boolean lock = micLock.tryLock(100, TimeUnit.MILLISECONDS);
             if (!lock) {
+                Duration delay = Duration.between(now, Instant.now());
+                registry.timer("voice.room.mic.lock", "result", "failed").record(delay);
                 throw new VoiceRoomException("400403", "the room mic can not be modified!",
                         HttpStatus.FORBIDDEN);
             }
         } catch (InterruptedException e) {
             log.error("the thread has been interrupted!");
+            Duration delay = Duration.between(now, Instant.now());
+            registry.timer("voice.room.mic.lock", "result", "interrupted").record(delay);
             throw new VoiceRoomException("400500", "update room mic info failed",
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
+        Duration delay = Duration.between(now, Instant.now());
+        registry.timer("voice.room.mic.lock", "result", "success").record(delay);
         try {
-
+            Instant getStartTimeStamp = Instant.now();
             Map<String, String> metadata =
                     imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey))
                             .getMetadata();
+            registry.timer("voice.room.mic.metadata", "operate", "get")
+                    .record(Duration.between(getStartTimeStamp, Instant.now()));
             if (metadata.containsKey(metadataKey)) {
 
                 MicMetadataValue micMetadataValue =
@@ -630,14 +639,19 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 }
 
                 //更新麦位信息
+                Instant updateStartTimeStamp = Instant.now();
                 micMetadataValue = new MicMetadataValue(updateUid, updateStatus);
                 metadata = new HashMap<>();
                 metadata.put(metadataKey, JSONObject.toJSONString(micMetadataValue));
                 imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadata, AutoDelete.DELETE);
-
+                registry.timer("voice.room.mic.metadata", "operate", "set")
+                        .record(Duration.between(updateStartTimeStamp, Instant.now()));
                 if (!StringUtils.isEmpty(roomUserUid)) {
+                    Instant updateUserStartTimeStamp = Instant.now();
                     this.voiceRoomUserService
                             .updateVoiceRoomUserMicIndex(roomId, roomUserUid, roomUsermicIndex);
+                    registry.timer("voice.room.user", "operate", "update")
+                            .record(Duration.between(updateUserStartTimeStamp, Instant.now()));
                 }
 
             } else {
@@ -648,8 +662,8 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             if (micLock.isLocked() && micLock.isHeldByCurrentThread()) {
                 micLock.unlock();
             }
-            Duration delay = Duration.between(now, Instant.now());
-            registry.timer("voice.room.mic", "operate", "mute").record(delay);
+            registry.timer("voice.room.mic", "operate", "mute")
+                    .record(Duration.between(now, Instant.now()));
         }
 
     }

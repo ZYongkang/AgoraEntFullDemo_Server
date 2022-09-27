@@ -12,4 +12,7 @@ public class ImProperties {
     private String clientSecret;
 
     private String baseUri;
+
+    private Integer httpConnectionPoolSize;
+
 }

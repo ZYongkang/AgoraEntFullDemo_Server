@@ -22,6 +22,7 @@ public class ImConfiguration {
                 .setClientId(imProperties.getClientId())
                 .setClientSecret(imProperties.getClientSecret())
                 .setBaseUri(imProperties().getBaseUri())
+                .setHttpConnectionPoolSize(imProperties.getHttpConnectionPoolSize())
                 .build();
         return new EMService(properties);
     }

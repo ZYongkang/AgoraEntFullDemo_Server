@@ -17,6 +17,9 @@ public class MicApplyUser {
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;
+
     private String roomId;
 
     private String uid;
