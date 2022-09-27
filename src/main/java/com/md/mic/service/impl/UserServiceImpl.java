@@ -8,12 +8,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.md.common.im.ImApi;
 import com.md.mic.exception.UserNotFoundException;
 import com.md.mic.exception.VoiceRoomException;
-import com.md.mic.model.UserThirdAccount;
 import com.md.mic.model.User;
+import com.md.mic.model.UserThirdAccount;
 import com.md.mic.pojos.UserDTO;
 import com.md.mic.repository.UserMapper;
-import com.md.mic.service.UserThirdAccountService;
 import com.md.mic.service.UserService;
+import com.md.mic.service.UserThirdAccountService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -170,7 +170,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new UserNotFoundException("user " + uid + " not found");
         }
         UserThirdAccount userThirdAccount = userThirdAccountService.getByUid(uid);
-        return UserDTO.from(user, userThirdAccount);
+        return UserDTO.from(user, userThirdAccount, null);
     }
 
     private String key(String uid) {

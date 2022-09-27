@@ -124,9 +124,19 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         }
         List<String> uidList =
                 voiceRoomUserList.stream().map(VoiceRoomUser::getUid).collect(Collectors.toList());
+        Map<String, Integer> uidMicIndexMap = voiceRoomUserList.stream().collect(Collectors
+                .toMap(VoiceRoomUser::getUid, VoiceRoomUser::getMicIndex, (k1, k2) -> k2));
         Map<String, UserDTO> userDTOMap = userService.findByUidList(uidList);
         List<UserDTO> userDTOList = voiceRoomUserList.stream()
-                .map(voiceRoomUser -> userDTOMap.get(voiceRoomUser.getUid()))
+                .map(voiceRoomUser -> {
+                    UserDTO voiceRoomUserDto = userDTOMap.get(voiceRoomUser.getUid());
+                    return UserDTO.builder()
+                            .uid(voiceRoomUserDto.getUid())
+                            .portrait(voiceRoomUserDto.getPortrait())
+                            .name(voiceRoomUserDto.getName())
+                            .micIndex(uidMicIndexMap.get(voiceRoomUserDto.getUid()))
+                            .build();
+                })
                 .collect(Collectors.toList());
         PageInfo<UserDTO> pageInfo = new PageInfo<>();
         pageInfo.setCursor(cursor);
