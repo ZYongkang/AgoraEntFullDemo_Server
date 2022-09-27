@@ -316,9 +316,6 @@ public class VoiceRoomMicController {
         if (roomInfo == null) {
             throw new RoomNotFoundException(String.format("room %s not found", roomId));
         }
-        if (!user.getUid().equals(request.getUid())) {
-            throw new VoiceRoomSecurityException("agree user is not the operator");
-        }
         Boolean result =
                 voiceRoomMicService.agreeInvite(roomInfo, user.getUid(),
                         request.getMicIndex());
