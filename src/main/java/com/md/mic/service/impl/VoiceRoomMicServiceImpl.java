@@ -249,6 +249,9 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     @Override
     public void leaveMic(String uid, String chatroomId, Integer micIndex, String roomId) {
 
+        if(micIndex<1){
+            return;
+        }
         this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
                 MicOperateStatus.LEAVE_MIC.getStatus(), Boolean.FALSE, roomId);
 

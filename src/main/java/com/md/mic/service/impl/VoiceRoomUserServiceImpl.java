@@ -260,6 +260,7 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         if (voiceRoomUser != null) {
             voiceRoomUser = voiceRoomUser.updateMicIndex(micIndex);
             updateById(voiceRoomUser);
+            redisTemplate.delete(key(roomId, uid));
         }
     }
 

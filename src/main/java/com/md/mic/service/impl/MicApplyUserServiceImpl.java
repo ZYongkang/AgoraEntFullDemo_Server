@@ -20,6 +20,7 @@ import com.md.mic.repository.MicApplyUserMapper;
 import com.md.mic.service.MicApplyUserService;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
+import com.md.mic.service.VoiceRoomUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,6 +54,9 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
 
     @Resource
     private VoiceRoomMicService voiceRoomMicService;
+
+    @Resource
+    private VoiceRoomUserService voiceRoomUserService;
 
     @Override
     @Transactional
