@@ -18,6 +18,7 @@ import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
 import com.md.mic.service.VoiceRoomUserService;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +31,7 @@ import reactor.util.function.Tuples;
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -63,6 +65,9 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     @Resource
     private EncryptionUtil encryptionUtil;
 
+    @Resource
+    private PrometheusMeterRegistry registry;
+
     @Value("${voice.room.redis.cache.ttl:PT1H}")
     private Duration ttl;
 
@@ -88,8 +93,11 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         String uid = owner.getUid();
         VoiceRoom voiceRoom;
         String userChatId = owner.getChatUid();
+        Instant now = Instant.now();
         String chatRoomId = imApi.createChatRoom(request.getName(), userChatId,
                 Collections.singletonList(userChatId), request.getName());
+        registry.timer("create.easemob.chatroom", "result", "success")
+                .record(Duration.between(now, Instant.now()));
         if (StringUtils.isBlank(chatRoomId)) {
             throw new CreateRoomFailedException("create chatroom failed!");
         }
@@ -101,9 +109,15 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
                 password, request.getAllowFreeJoinMic(), request.getType(), uid,
                 request.getSoundEffect(), false, micCount, robotCount, defaultRobotVolume);
+        Instant initMicStartTimeStamp = Instant.now();
         List<MicInfo> micInfos = voiceRoomMicService.initMic(voiceRoom, voiceRoom.getUseRobot());
+        registry.timer("create.easemob.chatroomMetadata", "result", "success")
+                .record(Duration.between(initMicStartTimeStamp, Instant.now()));
         try {
+            Instant saveDbTimeStamp = Instant.now();
             save(voiceRoom);
+            registry.timer("save.voice.room", "result", "success")
+                    .record(Duration.between(saveDbTimeStamp, Instant.now()));
         } catch (Exception e) {
             log.error("save voice room to db failed | room={}, err=", voiceRoom, e);
             imApi.deleteChatRoom(voiceRoom.getChatroomId());
