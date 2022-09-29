@@ -11,6 +11,7 @@ import com.md.mic.service.GiftRecordService;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.util.function.Tuple2;
 
 import javax.annotation.Resource;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +48,9 @@ public class VoiceRoomController {
     @Value("${ranking.length:100}")
     private Integer rankingLength;
 
+    @Resource
+    private PrometheusMeterRegistry registry;
+
     @PostMapping("/voice/room/create")
     public CreateRoomResponse createVoiceRoom(
             @RequestBody @Validated CreateRoomRequest request, BindingResult result,
@@ -57,8 +63,10 @@ public class VoiceRoomController {
         if (isPrivate && StringUtils.isEmpty(request.getPassword())) {
             throw new IllegalArgumentException("private room password must not be null!");
         }
+        Instant now = Instant.now();
         Tuple2<VoiceRoomDTO, List<MicInfo>> tuples = voiceRoomService.create(user, request);
-
+        registry.timer("create.voice.room", "result", "success")
+                .record(Duration.between(now, Instant.now()));
         return new CreateRoomResponse(tuples.getT1(), tuples.getT2());
     }
 
