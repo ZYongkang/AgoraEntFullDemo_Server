@@ -103,7 +103,10 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         }
         String password = request.getPassword();
         if (Boolean.TRUE.equals(request.getIsPrivate())) {
+            Instant encryptionStartTimeStamp = Instant.now();
             password = encryptionUtil.getEncryptedPwd(password);
+            registry.timer("voice.room.password.encryption", "result", "success")
+                    .record(Duration.between(encryptionStartTimeStamp, Instant.now()));
         }
         int micCount = request.getType() == 0 ? normalRoomMicCount : spaceAudioRoomMicCount;
         voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
@@ -123,7 +126,10 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             imApi.deleteChatRoom(voiceRoom.getChatroomId());
             throw e;
         }
+        Instant incrRoomCountStartTimeStamp = Instant.now();
         incrRoomCountByType(voiceRoom.getType());
+        registry.timer("voice.room.count", "result", "success")
+                .record(Duration.between(incrRoomCountStartTimeStamp, Instant.now()));
         Long clickCount = 0L;
         Long memberCount = 0L;
         Long giftAmount = 0L;
