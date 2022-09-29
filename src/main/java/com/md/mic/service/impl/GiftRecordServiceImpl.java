@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -46,7 +45,6 @@ public class GiftRecordServiceImpl extends ServiceImpl<GiftRecordMapper, GiftRec
     }
 
     @Override
-    @Transactional
     public void addGiftRecord(String roomId, String uid, GiftId giftId, Integer num, String toUid) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (StringUtils.isBlank(toUid)) {

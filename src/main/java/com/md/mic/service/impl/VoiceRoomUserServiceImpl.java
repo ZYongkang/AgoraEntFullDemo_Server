@@ -63,17 +63,10 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     private Duration ttl;
 
     @Override
-    @Transactional
     public void deleteByRoomId(String roomId) {
         LambdaQueryWrapper<VoiceRoomUser> queryWrapper =
                 new LambdaQueryWrapper<VoiceRoomUser>().eq(VoiceRoomUser::getRoomId, roomId);
-        List<VoiceRoomUser> voiceRoomUserList = baseMapper.selectList(queryWrapper);
-        if (voiceRoomUserList == null || voiceRoomUserList.isEmpty()) {
-            return;
-        }
-        List<Integer> idList =
-                voiceRoomUserList.stream().map(VoiceRoomUser::getId).collect(Collectors.toList());
-        baseMapper.deleteBatchIds(idList);
+        baseMapper.delete(queryWrapper);
         cleanMemberCount(roomId);
         cleanClickCount(roomId);
     }
@@ -124,17 +117,11 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
         }
         List<String> uidList =
                 voiceRoomUserList.stream().map(VoiceRoomUser::getUid).collect(Collectors.toList());
-        Map<String, Integer> uidMicIndexMap = voiceRoomUserList.stream().collect(Collectors
-                .toMap(VoiceRoomUser::getUid, VoiceRoomUser::getMicIndex, (k1, k2) -> k2));
         Map<String, UserDTO> userDTOMap = userService.findByUidList(uidList);
         List<UserDTO> userDTOList = voiceRoomUserList.stream()
                 .map(voiceRoomUser -> {
                     UserDTO voiceRoomUserDto = userDTOMap.get(voiceRoomUser.getUid());
-                    return UserDTO.builder()
-                            .uid(voiceRoomUserDto.getUid())
-                            .portrait(voiceRoomUserDto.getPortrait())
-                            .name(voiceRoomUserDto.getName())
-                            .micIndex(uidMicIndexMap.get(voiceRoomUserDto.getUid()))
+                    return voiceRoomUserDto.toBuilder().micIndex(voiceRoomUser.getMicIndex())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -177,7 +164,6 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     }
 
     @Override
-    @Transactional
     public VoiceRoomUser addVoiceRoomUser(String roomId, String uid) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (uid.equals(voiceRoom.getOwner())) {
@@ -228,7 +214,6 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     }
 
     @Override
-    @Transactional
     public void kickVoiceRoomUser(String roomId, String ownerUid, String kickUid) {
         VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
         if (!ownerUid.equals(voiceRoom.getOwner())) {
@@ -251,7 +236,6 @@ public class VoiceRoomUserServiceImpl extends ServiceImpl<VoiceRoomUserMapper, V
     }
 
     @Override
-    @Transactional
     public void updateVoiceRoomUserMicIndex(String roomId, String uid, Integer micIndex) {
         if (micIndex == null) {
             return;

@@ -23,9 +23,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
@@ -83,8 +80,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
 
 
     @Override
-    @Transactional
-    public Tuple2<VoiceRoomDTO, List<MicInfo>> create(UserDTO owner, CreateRoomRequest request) {
+    public VoiceRoom create(UserDTO owner, CreateRoomRequest request) {
         String uid = owner.getUid();
         VoiceRoom voiceRoom;
         String userChatId = owner.getChatUid();
@@ -101,7 +97,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
         voiceRoom = VoiceRoom.create(request.getName(), chatRoomId, request.getIsPrivate(),
                 password, request.getAllowFreeJoinMic(), request.getType(), uid,
                 request.getSoundEffect(), false, micCount, robotCount, defaultRobotVolume);
-        List<MicInfo> micInfos = voiceRoomMicService.initMic(voiceRoom, voiceRoom.getUseRobot());
         try {
             save(voiceRoom);
         } catch (Exception e) {
@@ -110,12 +105,7 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
             throw e;
         }
         incrRoomCountByType(voiceRoom.getType());
-        Long clickCount = 0L;
-        Long memberCount = 0L;
-        Long giftAmount = 0L;
-        VoiceRoomDTO roomDTO =
-                VoiceRoomDTO.from(voiceRoom, owner, memberCount, clickCount, giftAmount);
-        return Tuples.of(roomDTO, micInfos);
+        return voiceRoom;
     }
 
     @Override
@@ -191,7 +181,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     }
 
     @Override
-    @Transactional
     public void updateByRoomId(String roomId, UpdateRoomInfoRequest request, String owner) {
         VoiceRoom source = findByRoomId(roomId);
         if (!owner.equals(source.getOwner())) {
@@ -242,7 +231,6 @@ public class VoiceRoomServiceImpl extends ServiceImpl<VoiceRoomMapper, VoiceRoom
     }
 
     @Override
-    @Transactional
     public void deleteByRoomId(String roomId, String owner) {
         VoiceRoom voiceRoom = findByRoomId(roomId);
         if (!owner.equals(voiceRoom.getOwner())) {

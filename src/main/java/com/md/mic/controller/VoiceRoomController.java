@@ -11,16 +11,17 @@ import com.md.mic.service.GiftRecordService;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
 import com.md.mic.service.VoiceRoomService;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.BindingResultUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import reactor.util.function.Tuple2;
 
 import javax.annotation.Resource;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,9 @@ public class VoiceRoomController {
     @Value("${ranking.length:100}")
     private Integer rankingLength;
 
+    @Resource
+    private PrometheusMeterRegistry registry;
+
     @PostMapping("/voice/room/create")
     public CreateRoomResponse createVoiceRoom(
             @RequestBody @Validated CreateRoomRequest request, BindingResult result,
@@ -57,9 +61,20 @@ public class VoiceRoomController {
         if (isPrivate && StringUtils.isEmpty(request.getPassword())) {
             throw new IllegalArgumentException("private room password must not be null!");
         }
-        Tuple2<VoiceRoomDTO, List<MicInfo>> tuples = voiceRoomService.create(user, request);
-
-        return new CreateRoomResponse(tuples.getT1(), tuples.getT2());
+        Instant now = Instant.now();
+        VoiceRoom voiceRoom = voiceRoomService.create(user, request);
+        registry.timer("create.voice.room", "result", "success")
+                .record(Duration.between(now, Instant.now()));
+        Instant initMicStartTimeStamp = Instant.now();
+        List<MicInfo> micInfos = voiceRoomMicService.initMic(voiceRoom, voiceRoom.getUseRobot());
+        registry.timer("create.voice.room.mic", "result", "success")
+                .record(Duration.between(initMicStartTimeStamp, Instant.now()));
+        Long clickCount = 0L;
+        Long memberCount = 0L;
+        Long giftAmount = 0L;
+        VoiceRoomDTO roomDTO =
+                VoiceRoomDTO.from(voiceRoom, user, memberCount, clickCount, giftAmount);
+        return new CreateRoomResponse(roomDTO, micInfos);
     }
 
     @GetMapping("/voice/room/list")
