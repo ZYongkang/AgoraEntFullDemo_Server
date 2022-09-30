@@ -20,12 +20,10 @@ import com.md.mic.repository.MicApplyUserMapper;
 import com.md.mic.service.MicApplyUserService;
 import com.md.mic.service.UserService;
 import com.md.mic.service.VoiceRoomMicService;
-import com.md.mic.service.VoiceRoomUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -56,7 +54,6 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     private VoiceRoomMicService voiceRoomMicService;
 
     @Override
-    @Transactional
     public Boolean addMicApply(String uid, VoiceRoom roomInfo, Integer micIndex) {
         String roomId = roomInfo.getRoomId();
         if (!Boolean.TRUE.equals(roomInfo.getAllowedFreeJoinMic())) {

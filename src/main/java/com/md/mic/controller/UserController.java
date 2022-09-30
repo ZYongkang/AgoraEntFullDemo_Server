@@ -1,16 +1,19 @@
 package com.md.mic.controller;
 
-import com.alibaba.druid.sql.visitor.functions.Bin;
+import com.md.common.util.ValidationUtil;
 import com.md.common.util.token.TokenProvider;
 import com.md.mic.common.jwt.util.VoiceRoomJwtUtil;
-import com.md.common.util.ValidationUtil;
-import com.md.mic.model.User;
-import com.md.mic.pojos.*;
+import com.md.mic.pojos.LoginRequest;
+import com.md.mic.pojos.LoginResponse;
+import com.md.mic.pojos.UserDTO;
 import com.md.mic.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 

@@ -16,10 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.BindingResultUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import reactor.util.function.Tuple2;
 
 import javax.annotation.Resource;
 import java.time.Duration;
@@ -64,10 +62,19 @@ public class VoiceRoomController {
             throw new IllegalArgumentException("private room password must not be null!");
         }
         Instant now = Instant.now();
-        Tuple2<VoiceRoomDTO, List<MicInfo>> tuples = voiceRoomService.create(user, request);
+        VoiceRoom voiceRoom = voiceRoomService.create(user, request);
         registry.timer("create.voice.room", "result", "success")
                 .record(Duration.between(now, Instant.now()));
-        return new CreateRoomResponse(tuples.getT1(), tuples.getT2());
+        Instant initMicStartTimeStamp = Instant.now();
+        List<MicInfo> micInfos = voiceRoomMicService.initMic(voiceRoom, voiceRoom.getUseRobot());
+        registry.timer("create.voice.room.mic", "result", "success")
+                .record(Duration.between(initMicStartTimeStamp, Instant.now()));
+        Long clickCount = 0L;
+        Long memberCount = 0L;
+        Long giftAmount = 0L;
+        VoiceRoomDTO roomDTO =
+                VoiceRoomDTO.from(voiceRoom, user, memberCount, clickCount, giftAmount);
+        return new CreateRoomResponse(roomDTO, micInfos);
     }
 
     @GetMapping("/voice/room/list")

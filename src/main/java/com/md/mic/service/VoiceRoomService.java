@@ -3,9 +3,6 @@ package com.md.mic.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.*;
-import reactor.util.function.Tuple2;
-
-import java.util.List;
 
 public interface VoiceRoomService extends IService<VoiceRoom> {
 
@@ -16,7 +13,7 @@ public interface VoiceRoomService extends IService<VoiceRoom> {
      * @param request
      * @return
      */
-    Tuple2<VoiceRoomDTO, List<MicInfo>> create(UserDTO owner, CreateRoomRequest request);
+    VoiceRoom create(UserDTO owner, CreateRoomRequest request);
 
     /**
      * 分页获取房间信息
