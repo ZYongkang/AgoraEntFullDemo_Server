@@ -2,6 +2,7 @@ package com.md.mic.service;
 
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.MicInfo;
+import com.md.mic.pojos.UserDTO;
 
 import java.util.List;
 
@@ -11,17 +12,17 @@ public interface VoiceRoomMicService {
 
     List<MicInfo> getRoomMicInfo(VoiceRoom voiceRoom);
 
-    Boolean setRoomMicInfo(VoiceRoom roomInfo, String uid, Integer micIndex, boolean inOrder);
+    Boolean setRoomMicInfo(VoiceRoom roomInfo, UserDTO user, Integer micIndex, boolean inOrder);
 
     List<MicInfo> initMic(VoiceRoom voiceRoom, Boolean isActive);
 
     void updateRobotMicStatus(VoiceRoom voiceRoom, Boolean isActive);
 
-    void closeMic(String uid, String chatroomId, Integer micIndex, String roomId);
+    void closeMic(UserDTO user, String chatroomId, Integer micIndex, String roomId);
 
-    void openMic(String uid, String chatroomId, Integer index, String roomId);
+    void openMic(UserDTO user, String chatroomId, Integer index, String roomId);
 
-    void leaveMic(String uid, String chatroomId, Integer index, String roomId);
+    void leaveMic(UserDTO user, String chatroomId, Integer index, String roomId);
 
     void muteMic(String chatroomId, Integer index, String roomId);
 
@@ -35,7 +36,7 @@ public interface VoiceRoomMicService {
 
     void invite(VoiceRoom roomInfo, Integer index, String uid);
 
-    Boolean agreeInvite(VoiceRoom roomInfo, String uid, Integer micIndex);
+    Boolean agreeInvite(VoiceRoom roomInfo, UserDTO user, Integer micIndex);
 
     Boolean refuseInvite(VoiceRoom roomInfo, String uid);
 

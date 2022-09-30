@@ -92,7 +92,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public Boolean setRoomMicInfo(VoiceRoom roomInfo, String uid, Integer micIndex,
+    public Boolean setRoomMicInfo(VoiceRoom roomInfo, UserDTO user, Integer micIndex,
             boolean inOrder) {
 
         boolean hasMic = false;
@@ -102,7 +102,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         }
         List<MicInfo> micInfos = this.getRoomMicInfo(roomInfo);
         Optional<MicInfo> micInfo = micInfos.stream().filter((mic) -> mic.getMember() != null
-                && mic.getMember().getUid().equals(uid)).findFirst();
+                && mic.getMember().getUid().equals(user.getUid())).findFirst();
         String chatroomId = roomInfo.getChatroomId();
         if (micInfo.isPresent()) {
             throw new MicAlreadyExistsException("mic user already exists");
@@ -118,11 +118,12 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 throw new MicIndexExceedLimitException("mic index exceed the minimum");
             }
             try {
-                this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
+                this.updateVoiceRoomMicInfo(chatroomId, user, micIndex,
                         MicOperateStatus.UP_MIC.getStatus(), Boolean.FALSE, roomInfo.getRoomId());
                 hasMic = true;
             } catch (Exception e) {
-                log.warn("on mic failure,chatroomId:{},uid:{},index:{}", chatroomId, uid, micIndex,
+                log.warn("on mic failure,chatroomId:{},user:{},index:{}", chatroomId, user,
+                        micIndex,
                         e);
             }
         }
@@ -132,13 +133,13 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             //按顺序上麦
             for (int index = 1; index < micCount; index++) {
                 try {
-                    this.updateVoiceRoomMicInfo(chatroomId, uid, index,
+                    this.updateVoiceRoomMicInfo(chatroomId, user, index,
                             MicOperateStatus.UP_MIC.getStatus(), Boolean.FALSE,
                             roomInfo.getRoomId());
                     hasMic = true;
                     break;
                 } catch (Exception e) {
-                    log.warn("on mic failure,roomId:{},uid:{},index:{}", chatroomId, uid, index,
+                    log.warn("on mic failure,roomId:{},uid:{},index:{}", chatroomId, user, index,
                             e);
                 }
 
@@ -158,19 +159,13 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         String ownerUid = voiceRoom.getOwner();
 
         try {
-            Map<String, String> metadata =
-                    imApi.listChatRoomMetadata(chatroomId, Arrays.asList(buildMicKey(0)))
-                            .getMetadata();
-            if (metadata.size() > 0) {
-                throw new MicAlreadyExistsException("mic init already exists");
-            }
-
             Map<String, String> metadataMap = new HashMap<>();
             for (int micIndex = 0; micIndex < micCount; micIndex++) {
                 String micKey = buildMicKey(micIndex);
                 MicMetadataValue micMetadataValue;
                 if (micIndex == 0) {
-                    micMetadataValue = new MicMetadataValue(ownerUid, MicStatus.NORMAL.getStatus());
+                    micMetadataValue = new MicMetadataValue(this.userService.getByUid(ownerUid),
+                            MicStatus.NORMAL.getStatus());
                 } else {
                     micMetadataValue = new MicMetadataValue(null, MicStatus.FREE.getStatus());
                 }
@@ -231,28 +226,28 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void closeMic(String uid, String chatroomId, Integer micIndex, String roomId) {
+    public void closeMic(UserDTO user, String chatroomId, Integer micIndex, String roomId) {
 
-        this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
+        this.updateVoiceRoomMicInfo(chatroomId, user, micIndex,
                 MicOperateStatus.CLOSE_MIC.getStatus(), Boolean.FALSE, roomId);
 
     }
 
     @Override
-    public void openMic(String uid, String chatroomId, Integer micIndex, String roomId) {
+    public void openMic(UserDTO user, String chatroomId, Integer micIndex, String roomId) {
 
-        this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
+        this.updateVoiceRoomMicInfo(chatroomId, user, micIndex,
                 MicOperateStatus.OPEN_MIC.getStatus(), Boolean.FALSE, roomId);
 
     }
 
     @Override
-    public void leaveMic(String uid, String chatroomId, Integer micIndex, String roomId) {
+    public void leaveMic(UserDTO user, String chatroomId, Integer micIndex, String roomId) {
 
-        if(micIndex<1){
+        if (micIndex < 1) {
             return;
         }
-        this.updateVoiceRoomMicInfo(chatroomId, uid, micIndex,
+        this.updateVoiceRoomMicInfo(chatroomId, user, micIndex,
                 MicOperateStatus.LEAVE_MIC.getStatus(), Boolean.FALSE, roomId);
 
     }
@@ -321,11 +316,11 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public Boolean agreeInvite(VoiceRoom roomInfo, String uid, Integer micIndex) {
+    public Boolean agreeInvite(VoiceRoom roomInfo, UserDTO user, Integer micIndex) {
         if (micIndex == null) {
-            return setRoomMicInfo(roomInfo, uid, null, Boolean.TRUE);
+            return setRoomMicInfo(roomInfo, user, null, Boolean.TRUE);
         } else {
-            return setRoomMicInfo(roomInfo, uid, micIndex, Boolean.FALSE);
+            return setRoomMicInfo(roomInfo, user, micIndex, Boolean.FALSE);
         }
 
     }
@@ -430,11 +425,17 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 int currentStatus = fromMicMetadataValue.getStatus();
 
                 fromMicMetadataValue = new MicMetadataValue(null, MicStatus.FREE.getStatus());
-                toMicMetadataValue = new MicMetadataValue(uid, currentStatus);
+                toMicMetadataValue =
+                        new MicMetadataValue(this.userService.getByUid(uid), currentStatus);
 
                 metadata = new HashMap<>();
-                metadata.put(fromMicKey, JSONObject.toJSONString(fromMicMetadataValue));
-                metadata.put(toMicKey, JSONObject.toJSONString(toMicMetadataValue));
+                try {
+                    metadata.put(fromMicKey, objectMapper.writeValueAsString(fromMicMetadataValue));
+                    metadata.put(toMicKey, objectMapper.writeValueAsString(toMicMetadataValue));
+                } catch (Exception e) {
+                    log.error("parse json error", e);
+                }
+
                 imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadata, AutoDelete.DELETE);
 
                 this.voiceRoomUserService
@@ -456,7 +457,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
     }
 
-    private void updateVoiceRoomMicInfo(String chatroomId, String uid, Integer micIndex,
+    private void updateVoiceRoomMicInfo(String chatroomId, UserDTO user, Integer micIndex,
             Integer micOperateStatus, Boolean isAdminOperate, String roomId) {
         Instant now = Instant.now();
         String metadataKey = buildMicKey(micIndex);
@@ -497,15 +498,28 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     .record(Duration.between(getStartTimeStamp, Instant.now()));
             if (metadata.containsKey(metadataKey)) {
 
-                MicMetadataValue micMetadataValue =
-                        JSONObject
-                                .parseObject(metadata.get(metadataKey), MicMetadataValue.class);
+                MicMetadataValue micMetadataValue = null;
+
+                try {
+                    micMetadataValue = objectMapper
+                            .readValue(metadata.get(metadataKey), MicMetadataValue.class);
+
+                } catch (JsonProcessingException e) {
+                    log.error(
+                            "parse voice room micMetadataValue json failed ", e);
+                }
 
                 Integer updateStatus = null;
                 String updateUid = micMetadataValue.getUid();
 
                 String roomUserUid = null;
                 Integer roomUsermicIndex = -1;
+
+                String uid = null;
+
+                if (user != null) {
+                    uid = user.getUid();
+                }
 
                 if (!Boolean.TRUE.equals(isAdminOperate) && !StringUtils
                         .isEmpty(micMetadataValue.getUid())
@@ -643,9 +657,24 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
                 //更新麦位信息
                 Instant updateStartTimeStamp = Instant.now();
-                micMetadataValue = new MicMetadataValue(updateUid, updateStatus);
+
+                if (updateUid == null) {
+                    micMetadataValue =
+                            new MicMetadataValue(null, updateStatus);
+                } else if (updateUid.equals(micMetadataValue.getUid())) {
+                    micMetadataValue =
+                            new MicMetadataValue(micMetadataValue.getMember(), updateStatus);
+                } else {
+                    micMetadataValue =
+                            new MicMetadataValue(user, updateStatus);
+                }
+
                 metadata = new HashMap<>();
-                metadata.put(metadataKey, JSONObject.toJSONString(micMetadataValue));
+                try {
+                    metadata.put(metadataKey, objectMapper.writeValueAsString(micMetadataValue));
+                } catch (Exception e) {
+                    log.error("parse json error", e);
+                }
                 imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadata, AutoDelete.DELETE);
                 registry.timer("voice.room.mic.metadata", "operate", "set")
                         .record(Duration.between(updateStartTimeStamp, Instant.now()));
@@ -676,14 +705,19 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         for (Map.Entry<String, String> entry : metadata.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
-            MicMetadataValue micMetadataValue =
-                    JSONObject.parseObject(value, MicMetadataValue.class);
+            MicMetadataValue micMetadataValue = null;
 
-            UserDTO user = null;
-            if (!StringUtils.isEmpty(micMetadataValue.getUid())) {
-                //查询用户信息
-                user = this.userService.getByUid(micMetadataValue.getUid());
+            try {
+                micMetadataValue = objectMapper
+                        .readValue(value, MicMetadataValue.class);
+
+            } catch (JsonProcessingException e) {
+                log.error(
+                        "parse voice room micMetadataValue json failed ", e);
             }
+
+            UserDTO user = micMetadataValue.getMember();
+
             int index = -1;
             try {
                 index = Integer.parseInt(key.split("_")[1]);

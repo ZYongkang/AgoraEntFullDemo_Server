@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -54,8 +55,10 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
     private VoiceRoomMicService voiceRoomMicService;
 
     @Override
-    public Boolean addMicApply(String uid, VoiceRoom roomInfo, Integer micIndex) {
+    @Transactional
+    public Boolean addMicApply(UserDTO user, VoiceRoom roomInfo, Integer micIndex) {
         String roomId = roomInfo.getRoomId();
+        String uid = user.getUid();
         if (!Boolean.TRUE.equals(roomInfo.getAllowedFreeJoinMic())) {
             try {
 
@@ -97,7 +100,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
             if (micIndex == null) {
                 throw new MicIndexNullException();
             }
-            return this.voiceRoomMicService.setRoomMicInfo(roomInfo, uid, micIndex,
+            return this.voiceRoomMicService.setRoomMicInfo(roomInfo, user, micIndex,
                     Boolean.FALSE);
         }
 
@@ -140,7 +143,7 @@ public class MicApplyUserServiceImpl extends ServiceImpl<MicApplyUserMapper, Mic
         }
         Integer micIndex = micApplyUser.getMicIndex();
         Boolean result =
-                voiceRoomMicService.setRoomMicInfo(roomInfo, uid, micIndex,
+                voiceRoomMicService.setRoomMicInfo(roomInfo, userService.getByUid(uid), micIndex,
                         Boolean.TRUE);
         deleteMicApply(uid, roomInfo, Boolean.FALSE);
         return result;

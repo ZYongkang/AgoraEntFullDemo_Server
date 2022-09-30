@@ -4,11 +4,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.md.mic.model.MicApplyUser;
 import com.md.mic.model.VoiceRoom;
 import com.md.mic.pojos.PageInfo;
+import com.md.mic.pojos.UserDTO;
 import com.md.mic.pojos.vo.MicApplyVO;
 
 public interface MicApplyUserService extends IService<MicApplyUser> {
 
-    Boolean addMicApply(String uid, VoiceRoom roomInfo, Integer micIndex);
+    Boolean addMicApply(UserDTO user, VoiceRoom roomInfo, Integer micIndex);
 
     void deleteMicApply(String uid, VoiceRoom roomInfo, Boolean sendNotify);
 

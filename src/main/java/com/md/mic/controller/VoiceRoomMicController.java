@@ -66,7 +66,7 @@ public class VoiceRoomMicController {
             throw new VoiceRoomSecurityException("admin can not apply mic");
         }
         Boolean result =
-                micApplyUserService.addMicApply(user.getUid(), roomInfo,
+                micApplyUserService.addMicApply(user, roomInfo,
                         request == null ? null : request.getMicIndex());
         return new AddMicApplyResponse(result);
     }
@@ -99,7 +99,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException();
         }
         VoiceRoom voiceRoom = validateMicPermissions(roomId, user.getUid());
-        this.voiceRoomMicService.closeMic(user.getUid(), voiceRoom.getChatroomId(),
+        this.voiceRoomMicService.closeMic(user, voiceRoom.getChatroomId(),
                 request.getMicIndex(), voiceRoom.getRoomId());
         return new CloseMicResponse(Boolean.TRUE);
     }
@@ -112,7 +112,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException();
         }
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
-        this.voiceRoomMicService.openMic(user.getUid(), roomInfo.getChatroomId(),
+        this.voiceRoomMicService.openMic(user, roomInfo.getChatroomId(),
                 micIndex, roomInfo.getRoomId());
         return new OpenMicResponse(Boolean.TRUE);
     }
@@ -125,7 +125,7 @@ public class VoiceRoomMicController {
             throw new UserNotFoundException();
         }
         VoiceRoom roomInfo = validateMicPermissions(roomId, user.getUid());
-        this.voiceRoomMicService.leaveMic(user.getUid(), roomInfo.getChatroomId(),
+        this.voiceRoomMicService.leaveMic(user, roomInfo.getChatroomId(),
                 micIndex, roomInfo.getRoomId());
         return new LeaveMicResponse(Boolean.TRUE);
     }
@@ -317,7 +317,7 @@ public class VoiceRoomMicController {
             throw new RoomNotFoundException(String.format("room %s not found", roomId));
         }
         Boolean result =
-                voiceRoomMicService.agreeInvite(roomInfo, user.getUid(),
+                voiceRoomMicService.agreeInvite(roomInfo, user,
                         request.getMicIndex());
         return new InviteAgreeOnMicResponse(Boolean.TRUE.equals(result));
     }

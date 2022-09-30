@@ -40,6 +40,10 @@ public enum CustomEventType {
      * 调节机器人音量
      */
     UPDATE_ROBOT_VOLUME("chatroom_updateRobotVolume"),
+    /**
+     * 加入语聊房
+     */
+    JOIN_VOICE_ROOM("chatroom_join"),
     ;
 
     private String eventType;
