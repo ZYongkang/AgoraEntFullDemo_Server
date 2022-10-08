@@ -28,7 +28,7 @@ public interface VoiceRoomMicService {
 
     void unMuteMic(String chatroomId, Integer index, String roomId);
 
-    void kickUserMic(String chatroomId, Integer index, String uid, String roomId);
+    void kickUserMic(VoiceRoom voiceRoom, Integer index, String uid, String roomId);
 
     void lockMic(String chatroomId, Integer index, String roomId);
 

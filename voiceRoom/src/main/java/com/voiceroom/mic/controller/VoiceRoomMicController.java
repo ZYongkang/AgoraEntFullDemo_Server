@@ -187,7 +187,6 @@ public class VoiceRoomMicController {
             @PathVariable("roomId") String roomId,
             @RequestBody @Validated KickUserMicRequest request, BindingResult bindingResult,
             @RequestAttribute(name = "user", required = false) UserDTO user) {
-        ValidationUtil.validate(bindingResult);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -196,7 +195,7 @@ public class VoiceRoomMicController {
         if (!roomInfo.getOwner().equals(user.getUid())) {
             throw new IllegalArgumentException("only the admin can kick mic");
         }
-        this.voiceRoomMicService.kickUserMic(roomInfo.getChatroomId(), request.getMicIndex(),
+        this.voiceRoomMicService.kickUserMic(roomInfo, request.getMicIndex(),
                 request.getUid(), roomInfo.getRoomId());
 
         return response;

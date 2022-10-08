@@ -10,6 +10,7 @@ import com.voiceroom.mic.common.constants.MicOperateStatus;
 import com.voiceroom.mic.common.constants.MicStatus;
 import com.voiceroom.mic.exception.*;
 import com.voiceroom.mic.model.VoiceRoom;
+import com.voiceroom.mic.model.VoiceRoomUser;
 import com.voiceroom.mic.pojos.MicInfo;
 import com.voiceroom.mic.pojos.MicMetadataValue;
 import com.voiceroom.mic.pojos.UserDTO;
@@ -268,9 +269,17 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
     }
 
     @Override
-    public void kickUserMic(String chatroomId, Integer micIndex, String uid, String roomId) {
+    public void kickUserMic(VoiceRoom roomInfo, Integer micIndex, String uid, String roomId) {
 
-        this.updateVoiceRoomMicInfo(chatroomId, null, micIndex,
+        VoiceRoomUser voiceRoomUser =
+                voiceRoomUserService.findByRoomIdAndUid(roomInfo.getRoomId(), uid);
+
+        if (voiceRoomUser == null || voiceRoomUser.getMicIndex() == null
+                || voiceRoomUser.getMicIndex() == -1) {
+            return;
+        }
+
+        this.updateVoiceRoomMicInfo(roomInfo.getChatroomId(), null, voiceRoomUser.getMicIndex(),
                 MicOperateStatus.KICK_MIC.getStatus(), Boolean.TRUE, roomId);
 
     }
@@ -388,11 +397,17 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
         }
         try {
 
-            Map<String, String> metadata =
-                    imApi.listChatRoomMetadata(chatroomId, Arrays.asList(fromMicKey, toMicKey))
-                            .getMetadata();
+            ChatRoomMetadataGetResponse chatRoomMetadataGetResponse =
+                    imApi.listChatRoomMetadata(chatroomId, Arrays.asList(fromMicKey, toMicKey));
+            if (chatRoomMetadataGetResponse == null) {
+                throw new VoiceRoomException("400500", "easemob service rquest failed",
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
 
-            if (metadata.containsKey(fromMicKey) && metadata.containsKey(toMicKey)) {
+            Map<String, String> metadata = chatRoomMetadataGetResponse.getMetadata();
+
+            if (metadata != null && metadata.containsKey(fromMicKey) && metadata
+                    .containsKey(toMicKey)) {
 
                 MicMetadataValue fromMicMetadataValue = null;
 
@@ -503,7 +518,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
             metadata = chatRoomMetadataGetResponse.getMetadata();
             registry.timer("voice.room.mic.metadata", "operate", "get")
                     .record(Duration.between(getStartTimeStamp, Instant.now()));
-            if (metadata.containsKey(metadataKey)) {
+            if (metadata != null && metadata.containsKey(metadataKey)) {
 
                 MicMetadataValue micMetadataValue = null;
 
@@ -759,7 +774,6 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
 
         String metadataKey = buildMicKey(micIndex);
 
-        //todo 这个地方如果imApi失败了，会报空指针，最好处理一下
         Map<String, String> metadata = null;
         ChatRoomMetadataGetResponse chatRoomMetadataGetResponse =
                 imApi.listChatRoomMetadata(chatroomId, Arrays.asList(metadataKey));
@@ -768,7 +782,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
         metadata = chatRoomMetadataGetResponse.getMetadata();
-        if (metadata.containsKey(metadataKey)) {
+        if (metadata != null && metadata.containsKey(metadataKey)) {
 
             MicMetadataValue micMetadataValue = null;
 
