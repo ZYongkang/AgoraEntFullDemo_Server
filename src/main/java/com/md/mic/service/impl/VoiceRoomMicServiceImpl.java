@@ -439,7 +439,7 @@ public class VoiceRoomMicServiceImpl implements VoiceRoomMicService {
                 imApi.setChatRoomMetadata(OPERATOR, chatroomId, metadata, AutoDelete.DELETE);
 
                 this.voiceRoomUserService
-                        .updateVoiceRoomUserMicIndex(roomId, fromMicMetadataValue.getUid(), to);
+                        .updateVoiceRoomUserMicIndex(roomId, toMicMetadataValue.getUid(), to);
 
             } else {
                 throw new MicInitException();
