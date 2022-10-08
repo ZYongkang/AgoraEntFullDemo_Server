@@ -1,5 +1,6 @@
 package com.md.mic.pojos;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,6 +31,23 @@ public class UserDTO {
 
     @JsonProperty("mic_index")
     private Integer micIndex;
+
+    @JsonCreator
+    public UserDTO(@JsonProperty("uid") String uid,
+            @JsonProperty("chat_uid") String chatUid,
+            @JsonProperty("chat_uuid") String chatUuid,
+            @JsonProperty("name") String name,
+            @JsonProperty("portrait") String portrait,
+            @JsonProperty("rtc_uid") Integer rtcUid,
+            @JsonProperty("mic_index") Integer micIndex) {
+        this.uid = uid;
+        this.chatUid = chatUid;
+        this.chatUuid = chatUuid;
+        this.name = name;
+        this.portrait = portrait;
+        this.rtcUid = rtcUid;
+        this.micIndex = micIndex;
+    }
 
     public static UserDTO from(User user, UserThirdAccount userThirdAccount, Integer micIndex) {
         return UserDTO.builder()
