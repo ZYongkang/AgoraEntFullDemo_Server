@@ -1,4 +1,4 @@
-# Agora泛娱乐FullDemo Common Service & Voice Room Service
+# Voice Room Service
 
 ## 项目配置
 
@@ -7,7 +7,7 @@
 ## 编译与运行方法
 
 1. 创建MySQL数据库，数据库名可自定义，配置到连接中即可
-2. 使用doc/sql，初始化数据表
+2. 使用doc/ddl.sql，初始化数据表
 3. 使用IDEA打开本工程
 4. 按项目配置需求配置服务
    * 配置环信IM（可以通过环信控制台申请获得）
@@ -35,5 +35,5 @@
      * spring.redis.password为redis连接密码，如果为空则留空即可
    * 其他配置
      * 其他服务配置都有默认参数，如果你对Spring配置熟悉，可以按自己服务需求进行调整
-7. 在”研判中心“ -> "生命周期"中，双击package，开始打包，或在命令行中运行`mvn clean package -P dev`或`mvn clean packege -P prod` 在./voiceRoom/target目录下生成 `voiceRoom-0.0.1-SNAPSHOT.jar`
+7. 在命令行中运行`mvn clean package -P dev`或`mvn clean packege -P prod` 在./voiceRoom/target目录下生成 `voiceRoom-0.0.1-SNAPSHOT.jar`
 8. 将目标jar上传至指定服务器，执行`nohup java -jar voiceRoom-0.0.1-SNAPSHOT.jar &` ，服务即可运行

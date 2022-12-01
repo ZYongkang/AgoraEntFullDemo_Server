@@ -21,20 +21,14 @@
 
     <modules>
         <module>voiceRoom</module>
-        <module>ktvOnlie</module>
     </modules>
 
     <properties>
         <java.version>1.8</java.version>
-        <swagger.version>2.9.2</swagger.version>
         <spring-cloud.version>Hoxton.SR1</spring-cloud.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -53,13 +47,6 @@
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-generator</artifactId>
             <version>3.5.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <version>2.3.28</version>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -114,21 +101,7 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
         </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>${swagger.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>${swagger.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>1.5.19</version>
-        </dependency>
+
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
@@ -154,23 +127,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>net.sourceforge.htmlunit</groupId>
-            <artifactId>htmlunit</artifactId>
-            <version>2.27</version>
-        </dependency>
-
-        <dependency>
-            <groupId>net.sourceforge.jexcelapi</groupId>
-            <artifactId>jxl</artifactId>
-            <version>2.6.10</version>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-            <version>5.7.21</version>
-        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -179,11 +135,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.aliyun</groupId>
-            <artifactId>dysmsapi20170525</artifactId>
-            <version>2.0.13</version>
         </dependency>
         <dependency>
             <groupId>org.redisson</groupId>
@@ -214,31 +165,6 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.10.5</version>
             <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.qiniu</groupId>
-            <artifactId>qiniu-java-sdk</artifactId>
-            <version>7.11.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>3.14.2</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.8.5</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.qiniu</groupId>
-            <artifactId>happy-dns-java</artifactId>
-            <version>0.1.6</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
