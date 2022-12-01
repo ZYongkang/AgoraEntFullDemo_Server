@@ -89,4 +89,9 @@ public class VoiceRoomJwtUtil {
         return claims;
     }
 
+    public String getJwt(String uid) {
+        String tokenKey = "user_token:" + uid;
+        redisTemplate.expire(tokenKey, Integer.parseInt(exTime), TimeUnit.DAYS);
+        return redisTemplate.opsForValue().get(tokenKey);
+    }
 }

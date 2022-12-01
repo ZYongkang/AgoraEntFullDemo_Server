@@ -1,8 +1,11 @@
 package com.voiceroom.mic.controller;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.voiceroom.common.util.ValidationUtil;
+import com.voiceroom.common.util.token.TokenProvider;
 import com.voiceroom.mic.exception.UserNotFoundException;
+import com.voiceroom.mic.exception.VoiceRoomSecurityException;
 import com.voiceroom.mic.model.GiftRecord;
 import com.voiceroom.mic.model.VoiceRoom;
 import com.voiceroom.mic.pojos.*;
@@ -49,6 +52,9 @@ public class VoiceRoomController {
     @Resource
     private PrometheusMeterRegistry registry;
 
+    @Resource
+    private TokenProvider tokenProvider;
+
     @PostMapping("/voice/room/create")
     public CreateRoomResponse createVoiceRoom(
             @RequestBody @Validated CreateRoomRequest request, BindingResult result,
@@ -88,6 +94,23 @@ public class VoiceRoomController {
         PageInfo<RoomListDTO> pageInfo = voiceRoomService.getByPage(cursor, limit, type);
         return new GetRoomListResponse(pageInfo.getTotal(), pageInfo.getCursor(),
                 pageInfo.getList());
+    }
+
+    @GetMapping("/voice/room/{roomId}/rtc/token")
+    public GetVoiceRoomRtcTokenResponse getVoiceRoomRtcToken(
+            @PathVariable("roomId") String roomId,
+            @RequestParam("channel_id") String channelId,
+            @RequestAttribute(name = "user", required = false) UserDTO user) {
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+        VoiceRoom voiceRoom = voiceRoomService.findByRoomId(roomId);
+        String voiceRoomChannelId = voiceRoom.getChannelId();
+        if (!voiceRoomChannelId.equals(channelId)) {
+            throw new VoiceRoomSecurityException("room channel id not equals request channel id");
+        }
+        String token = tokenProvider.buildRtcToken(user, channelId);
+        return new GetVoiceRoomRtcTokenResponse(token);
     }
 
     @GetMapping("/voice/room/{roomId}")

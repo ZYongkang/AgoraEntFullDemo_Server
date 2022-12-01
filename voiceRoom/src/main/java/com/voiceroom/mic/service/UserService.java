@@ -18,6 +18,8 @@ public interface UserService extends IService<User> {
      */
     UserDTO loginDevice(String deviceId, String name, String portrait);
 
+    UserDTO loginDeviceWithPhone(String deviceId, String name, String portrait, String phone);
+
     /**
      * 根据uid批量获取用户信息
      * @param ownerUidList

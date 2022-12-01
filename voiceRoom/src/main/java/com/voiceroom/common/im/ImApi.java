@@ -2,16 +2,26 @@ package com.voiceroom.common.im;
 
 import com.easemob.im.server.EMException;
 import com.easemob.im.server.EMService;
+import com.easemob.im.server.api.DefaultErrorMapper;
+import com.easemob.im.server.api.ErrorMapper;
 import com.easemob.im.server.api.metadata.chatroom.AutoDelete;
 import com.easemob.im.server.api.metadata.chatroom.delete.ChatRoomMetadataDeleteResponse;
 import com.easemob.im.server.api.metadata.chatroom.get.ChatRoomMetadataGetResponse;
 import com.easemob.im.server.api.metadata.chatroom.set.ChatRoomMetadataSetResponse;
+import com.easemob.im.server.api.token.Token;
 import com.easemob.im.server.exception.EMForbiddenException;
+import com.easemob.im.server.exception.EMNotFoundException;
+import com.easemob.im.server.exception.EMUnknownException;
 import com.easemob.im.server.model.EMKeyValue;
 import com.easemob.im.server.model.EMPage;
 import com.easemob.im.server.model.EMRoom;
 import com.easemob.im.server.model.EMUser;
+import com.easemob.im.shaded.io.netty.buffer.ByteBuf;
+import com.easemob.im.shaded.io.netty.buffer.ByteBufUtil;
 import com.easemob.im.shaded.io.netty.handler.timeout.TimeoutException;
+import com.easemob.im.shaded.reactor.core.publisher.Mono;
+import com.easemob.im.shaded.reactor.netty.http.client.HttpClient;
+import com.easemob.im.shaded.reactor.netty.http.client.HttpClientResponse;
 import com.voiceroom.mic.common.constants.CustomMetricsName;
 import com.voiceroom.mic.model.UserThirdAccount;
 import io.micrometer.core.instrument.Tag;
@@ -19,16 +29,16 @@ import io.micrometer.prometheus.PrometheusMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Resource;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * imAPI。
@@ -45,6 +55,9 @@ public class ImApi {
 
     @Value("${http.request.timeout:PT10s}")
     private Duration timeout;
+
+    @Value("${im.easemob.baseUri}")
+    private String baseUrl;
 
     /**
      * 不指定密码创建用户
@@ -642,6 +655,58 @@ public class ImApi {
 
     }
 
+    public void sendSmsCode(String phone, String code) {
+        Token token = emService.token().getAppToken().block();
+        if (token == null) {
+            log.error("get easemob im app token failed");
+            throw new EMNotFoundException("get app token failed");
+        }
+        HttpClient httpClient = emService.getContext().getHttpClient().block();
+        URI uri = URI.create(String.format("%s/send/message", baseUrl));
+        String o = httpClient.headers(
+                        headers -> headers.add(HttpHeaders.CONTENT_TYPE, "application/json"))
+                .post()
+                .uri(uri)
+                .send(Mono.create(sink -> {
+                    Map<String, Object> request = new HashMap<>();
+                    Map<String, String> payload = new HashMap<>();
+                    payload.put("telephone", phone);
+                    payload.put("content", String.format(
+                            "验证码：%s，有效期5分钟。您正在注册环信DEMO应用，如非本人操作，请忽略。",
+                            code));
+                    request.put("pushType", "sms");
+                    request.put("payload", payload);
+                    sink.success(emService.getContext().getCodec()
+                            .encode(request));
+                }))
+                .responseSingle((rsp, buf) -> Mono.zip(Mono.just(rsp), buf))
+                .flatMap((tuple2) -> {
+                    HttpClientResponse clientResponse = tuple2.getT1();
+                    return Mono.defer(() -> {
+                                ErrorMapper mapper = new DefaultErrorMapper();
+                                mapper.statusCode(clientResponse);
+                                mapper.checkError((ByteBuf) tuple2.getT2());
+                                return Mono.just(tuple2.getT2());
+                            }).onErrorResume((e) -> e instanceof EMException ?
+                                    Mono.error(e) :
+                                    Mono.error(new EMUnknownException(e.getMessage())))
+                            .flatMap((buf) -> {
+                                String str;
+                                if (buf.hasArray()) { // 处理堆缓冲区
+                                    str = new String(buf.array(),
+                                            buf.arrayOffset() + buf.readerIndex(),
+                                            buf.readableBytes());
+                                } else { // 处理直接缓冲区以及复合缓冲区
+                                    byte[] bytes = new byte[buf.readableBytes()];
+                                    buf.getBytes(buf.readerIndex(), bytes);
+                                    str = new String(bytes, 0, buf.readableBytes());
+                                }
+                                return Mono.just(str);
+                            });
+                }).block();
+        log.info("send sms code success , response is {}", o);
+    }
+
     private void addMetricsTimerRecord(String method, Duration duration) {
         List<Tag> tags = new ArrayList<>();
         Tag uriTag = Tag.of("method", method);
@@ -679,5 +744,9 @@ public class ImApi {
         tags.add(failedTag);
         tags.add(uriTag);
         return tags;
+    }
+
+    public String createUserToken(String chatUid) {
+        return emService.token().getUserTokenWithInherit(chatUid);
     }
 }

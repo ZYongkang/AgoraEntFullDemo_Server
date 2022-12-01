@@ -53,6 +53,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional
     public UserDTO loginDevice(String deviceId, String name, String portrait) {
+        return loginDeviceWithPhone(deviceId, name, portrait, null);
+    }
+
+    @Override
+    @Transactional
+    public UserDTO loginDeviceWithPhone(String deviceId, String name, String portrait, String phone) {
         LambdaQueryWrapper<User> queryWrapper =
                 new LambdaQueryWrapper<User>().eq(User::getDeviceId, deviceId);
         User user = getOne(queryWrapper);
@@ -65,7 +71,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             String chatUid = String.format("u%s",
                     UUID.randomUUID().toString().replace("-", "")
                             .substring(1));
-            user = User.create(name, deviceId, portrait);
+            user = User.create(name, deviceId, portrait, phone);
             save(user);
             try {
                 userThirdAccount = imApi.createUser(user.getUid(), chatUid);
@@ -82,7 +88,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 imApi.deleteUser(chatUid);
                 throw e;
             }
-        } else {
+        }
+        else {
             String uid = user.getUid();
             boolean isUpdate = false;
             User update = user;
@@ -93,6 +100,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (StringUtils.isNotBlank(portrait)) {
                 isUpdate = true;
                 update = update.toBuilder().portrait(portrait).build();
+            }
+            if (StringUtils.isNotBlank(phone)) {
+                isUpdate = true;
+                update = update.toBuilder().phone(phone).build();
             }
             if (isUpdate && !update.equals(user)) {
                 updateById(update);
